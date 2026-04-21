@@ -10,27 +10,27 @@
 <title>Planning Poker</title>
 <style>
   :root {
-    --bg: #f4f6fb;
-    --bg-grad-1: #eef2ff;
-    --bg-grad-2: #fef3f8;
-    --fg: #0f1420;
-    --muted: #64707f;
-    --card: #ffffff;
-    --surface-1: #f8fafc;
-    --surface-2: #ffffff;
-    --border: #e3e7ef;
-    --border-strong: #ccd3e0;
-    --accent: #4f46ff;
-    --accent-2: #8b5cf6;
-    --accent-fg: #ffffff;
-    --glow: rgba(79, 70, 255, 0.35);
-    --danger: #dc2626;
-    --ok: #16a34a;
-    --warn: #d97706;
-    --gold: #f5a623;
-    --shadow-1: 0 1px 2px rgba(15,20,32,.04);
-    --shadow-2: 0 1px 2px rgba(15,20,32,.04), 0 8px 24px rgba(15,20,32,.06);
-    --shadow-3: 0 4px 12px rgba(15,20,32,.08), 0 24px 48px rgba(15,20,32,.12);
+    --bg: #f5efe4;
+    --bg-grad-1: #f9ecd9;
+    --bg-grad-2: #f3e4cf;
+    --fg: #1f1a14;
+    --muted: #7a6f5f;
+    --card: #fbf7ef;
+    --surface-1: #f7f0e1;
+    --surface-2: #fbf7ef;
+    --border: #e4dbc9;
+    --border-strong: #c9bca5;
+    --accent: #b5421f;
+    --accent-2: #9a3516;
+    --accent-fg: #fffaf1;
+    --glow: rgba(181, 66, 31, 0.30);
+    --danger: #9a2b2b;
+    --ok: #4f7a3a;
+    --warn: #c17a12;
+    --gold: #c88a1e;
+    --shadow-1: 0 1px 2px rgba(31,26,20,.05);
+    --shadow-2: 0 1px 2px rgba(31,26,20,.05), 0 8px 24px rgba(31,26,20,.07);
+    --shadow-3: 0 4px 12px rgba(31,26,20,.09), 0 24px 48px rgba(31,26,20,.14);
     --r-sm: 6px;
     --r-md: 10px;
     --r-lg: 14px;
@@ -40,31 +40,31 @@
     --t-slow: 480ms;
     --ease-out: cubic-bezier(.2,.8,.2,1);
     --ease-spring: cubic-bezier(.34,1.56,.64,1);
-    --header-bg: rgba(255,255,255,.78);
+    --header-bg: rgba(251,247,239,.82);
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --bg: #0b0e14;
-      --bg-grad-1: #121828;
-      --bg-grad-2: #1a1426;
-      --fg: #e8ecf5;
-      --muted: #8a94a6;
-      --card: #151a24;
-      --surface-1: #1a2030;
-      --surface-2: #1e2536;
-      --border: #262e40;
-      --border-strong: #3a4258;
-      --accent: #6d78ff;
-      --accent-2: #a78bfa;
-      --accent-fg: #ffffff;
-      --glow: rgba(109, 120, 255, 0.45);
-      --ok: #22c55e;
-      --warn: #f59e0b;
-      --gold: #fbbf24;
+      --bg: #1a140f;
+      --bg-grad-1: #231a12;
+      --bg-grad-2: #2a1d12;
+      --fg: #efe6d5;
+      --muted: #9a8f7d;
+      --card: #221b14;
+      --surface-1: #2a221a;
+      --surface-2: #302619;
+      --border: #3a2f23;
+      --border-strong: #594a36;
+      --accent: #e06a3b;
+      --accent-2: #b94f27;
+      --accent-fg: #1a140f;
+      --glow: rgba(224, 106, 59, 0.35);
+      --ok: #8cbd6e;
+      --warn: #e4a54e;
+      --gold: #e4a54e;
       --shadow-1: 0 1px 2px rgba(0,0,0,.4);
       --shadow-2: 0 1px 2px rgba(0,0,0,.4), 0 10px 30px rgba(0,0,0,.35);
       --shadow-3: 0 4px 16px rgba(0,0,0,.5), 0 28px 60px rgba(0,0,0,.55);
-      --header-bg: rgba(15,19,29,.72);
+      --header-bg: rgba(26,20,15,.75);
     }
   }
   @media (prefers-reduced-motion: reduce) {
@@ -180,6 +180,91 @@
   .sound-toggle:hover { border-color: var(--accent); color: var(--fg); transform: translateY(-1px); }
   .sound-toggle.on { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 45%, transparent); background: color-mix(in srgb, var(--accent) 8%, var(--surface-1)); }
   .sound-toggle svg { width: 16px; height: 16px; display: block; }
+  .help-toggle {
+    width: 34px; height: 34px;
+    display: inline-flex; align-items: center; justify-content: center;
+    padding: 0;
+    border-radius: 50%;
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    color: var(--muted);
+    transition: color var(--t-fast), border-color var(--t-fast), background var(--t-fast), transform var(--t-fast);
+  }
+  .help-toggle:hover { border-color: var(--accent); color: var(--fg); transform: translateY(-1px); }
+  .help-toggle svg { width: 16px; height: 16px; display: block; }
+  .help-overlay {
+    position: fixed; inset: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px;
+    background: rgba(31,26,20,.5);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    animation: help-fade-in var(--t-med) var(--ease-out);
+  }
+  @media (prefers-color-scheme: dark) {
+    .help-overlay { background: rgba(0,0,0,.6); }
+  }
+  .help-modal {
+    position: relative;
+    width: 100%;
+    max-width: 680px;
+    max-height: 85vh;
+    overflow-y: auto;
+    padding: 24px 26px;
+    box-shadow: var(--shadow-3);
+    animation: help-pop-in var(--t-med) var(--ease-spring);
+  }
+  .help-modal h2 { font-size: 18px; margin: 0 0 4px; }
+  .help-modal .help-tagline { color: var(--muted); font-size: 13px; margin: 0 0 18px; }
+  .help-modal h3 {
+    font-size: 14px; font-weight: 600; margin: 18px 0 8px;
+    color: var(--accent);
+    letter-spacing: -.005em;
+  }
+  .help-modal h3:first-of-type { margin-top: 4px; }
+  .help-modal p, .help-modal li { font-size: 13px; line-height: 1.55; margin: 6px 0; }
+  .help-modal ul { margin: 6px 0 6px 0; padding-left: 20px; }
+  .help-modal strong { color: var(--fg); font-weight: 600; }
+  .help-modal kbd {
+    display: inline-block;
+    padding: 1px 7px;
+    font: 600 12px/1.4 ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    color: var(--fg);
+    background: var(--surface-1);
+    border: 1px solid var(--border-strong);
+    border-bottom-width: 2px;
+    border-radius: 5px;
+    min-width: 18px;
+    text-align: center;
+  }
+  .help-modal .shortcut-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 4px 0;
+    font-size: 13px;
+  }
+  .help-modal .shortcut-row kbd { flex-shrink: 0; }
+  .help-close {
+    position: absolute; top: 12px; right: 12px;
+    width: 32px; height: 32px;
+    display: inline-flex; align-items: center; justify-content: center;
+    padding: 0;
+    border-radius: 50%;
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 18px; line-height: 1;
+    cursor: pointer;
+  }
+  .help-close:hover { border-color: var(--accent); color: var(--fg); }
+  @keyframes help-fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes help-pop-in {
+    from { opacity: 0; transform: translateY(8px) scale(.98); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
   select, input, textarea, button {
     font: inherit; color: inherit;
     background: var(--surface-2);
@@ -453,7 +538,7 @@
     animation: fade-slide-up .4s var(--ease-out) both, consensus-glow 2.4s ease-in-out 2;
   }
   .stat.consensus-yes .v {
-    background: linear-gradient(135deg, var(--gold), #e08a00);
+    background: linear-gradient(135deg, var(--gold), #a56410);
     -webkit-background-clip: text; background-clip: text;
     color: transparent;
   }
@@ -828,6 +913,118 @@
     50%      { box-shadow: 0 0 0 6px color-mix(in srgb, var(--gold) 35%, transparent), 0 0 40px color-mix(in srgb, var(--gold) 30%, transparent); }
   }
 
+  /* ---------- Stats view ---------- */
+  .stats-hero {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+  }
+  .hero-card {
+    padding: 18px 16px;
+    border-radius: var(--r-lg);
+    background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 10%, var(--surface-1)), var(--surface-1));
+    border: 1px solid color-mix(in srgb, var(--accent) 22%, var(--border));
+    text-align: center;
+    box-shadow: var(--shadow-1);
+  }
+  .hero-card .hero-k { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; font-weight: 600; }
+  .hero-card .hero-v {
+    font-size: 32px; font-weight: 800; letter-spacing: -.02em;
+    margin-top: 4px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    -webkit-background-clip: text; background-clip: text;
+    color: transparent;
+  }
+  .stats-table-wrap { overflow-x: auto; }
+  .stats-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .stats-table th, .stats-table td {
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--border);
+    text-align: left;
+    vertical-align: middle;
+  }
+  .stats-table thead th {
+    font-size: 11px; text-transform: uppercase; letter-spacing: .06em;
+    color: var(--muted); font-weight: 600;
+    background: var(--surface-1);
+    position: sticky; top: 0;
+  }
+  .stats-table tbody tr:hover { background: var(--surface-1); }
+  .stats-table .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .stats-table a { color: var(--accent); text-decoration: none; }
+  .stats-table a:hover { text-decoration: underline; }
+  .user-cell { display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .user-cell .mini-avatar {
+    flex-shrink: 0;
+    width: 26px; height: 26px; border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    color: #fff; font-weight: 700; font-size: 11px;
+    background: linear-gradient(135deg, var(--av-1, #888), var(--av-2, #555));
+    box-shadow: inset 0 -2px 3px rgba(0,0,0,.15);
+    text-shadow: 0 1px 1px rgba(0,0,0,.15);
+  }
+  .user-cell .user-name {
+    font-weight: 600;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .hist-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 18px;
+  }
+  .hist-heading {
+    font-size: 12px; text-transform: uppercase; letter-spacing: .06em;
+    color: var(--muted); font-weight: 600; margin: 0 0 8px;
+  }
+  .histogram { display: grid; gap: 4px; }
+  .hist-row {
+    display: grid;
+    grid-template-columns: 48px 1fr 36px;
+    gap: 8px; align-items: center;
+    font-size: 12px;
+  }
+  .hist-label { color: var(--muted); font-weight: 600; text-align: right; font-variant-numeric: tabular-nums; }
+  .hist-bar-wrap {
+    height: 14px;
+    background: var(--surface-1);
+    border-radius: 7px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .hist-bar {
+    height: 100%;
+    width: var(--pct, 0%);
+    background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 70%, transparent), var(--accent));
+    border-radius: 7px 0 0 7px;
+    transition: width var(--t-med) var(--ease-out);
+  }
+  .hist-val { font-variant-numeric: tabular-nums; text-align: right; color: var(--fg); font-weight: 600; }
+  .activity-bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 2px;
+    height: 80px;
+    padding: 4px 0;
+  }
+  .activity-col {
+    flex: 1;
+    min-width: 4px;
+    height: var(--pct, 0%);
+    background: linear-gradient(180deg, var(--accent), var(--accent-2));
+    border-radius: 2px 2px 0 0;
+    min-height: 2px;
+    transition: height var(--t-med) var(--ease-out);
+    cursor: default;
+  }
+  .activity-col.empty {
+    background: var(--border);
+    height: 2px;
+  }
+
   /* ---------- Mobile ---------- */
   @media (max-width: 640px) {
     main { padding: 18px 14px 60px; }
@@ -839,6 +1036,9 @@
     .float-card { transform: scale(.7); }
     header { padding: 10px 14px; gap: 8px; }
     header h1 { font-size: 14px; }
+    .help-overlay { padding: 10px; }
+    .help-modal { padding: 20px 18px; max-height: 92vh; }
+    .help-modal h2 { font-size: 16px; }
   }
 </style>
 </head>
@@ -854,6 +1054,9 @@
     <option value="hivemq">HiveMQ</option>
     <option value="emqx">EMQX</option>
   </select>
+  <button id="helpToggle" class="help-toggle" type="button" title="Handleiding openen" aria-label="Handleiding openen">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+  </button>
   <button id="soundToggle" class="sound-toggle" type="button" aria-pressed="false" title="Geluidseffecten aan/uit">
     <svg id="soundIconOff" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
     <svg id="soundIconOn" class="hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
@@ -960,9 +1163,152 @@
       <h2>Resultaat</h2>
       <div class="stats" id="stats"></div>
     </div>
+
+    <div class="panel" style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+      <span class="hint">Benieuwd naar globale statistieken over alle kamers?</span>
+      <div class="spacer" style="flex:1;"></div>
+      <a id="statsRoomLink" class="mod-toggle" href="#stats=1" target="_blank" rel="noopener">📊 Alle stats</a>
+    </div>
+  </section>
+
+  <!-- Stats view -->
+  <section id="statsView" class="hidden">
+    <div class="panel">
+      <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+        <h2 style="margin:0;">📊 Globale statistieken</h2>
+        <span id="statsStatus" class="hint"></span>
+        <div class="spacer" style="flex:1;"></div>
+        <button id="statsBackBtn">Terug</button>
+      </div>
+      <p class="hint" style="margin-top:8px;">Alle rooms die ooit via deze app zijn gespeeld, gebundeld onder één globale bucket.</p>
+    </div>
+
+    <div class="panel">
+      <div class="stats-hero">
+        <div class="hero-card"><div class="hero-k">Rooms</div><div class="hero-v" id="statsHeroRooms">0</div></div>
+        <div class="hero-card"><div class="hero-k">Rondes</div><div class="hero-v" id="statsHeroRounds">0</div></div>
+        <div class="hero-card"><div class="hero-k">Tickets geschat</div><div class="hero-v" id="statsHeroTickets">0</div></div>
+        <div class="hero-card"><div class="hero-k">Deelnemers</div><div class="hero-v" id="statsHeroUsers">0</div></div>
+      </div>
+      <div class="stats" id="statsSecondary" style="margin-top:14px;"></div>
+    </div>
+
+    <div class="panel">
+      <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:10px;">
+        <h2 style="margin:0;">Top deelnemers</h2>
+        <div class="spacer" style="flex:1;"></div>
+        <label for="statsSort" style="margin:0; font-size:12px;">Sorteer</label>
+        <select id="statsSort">
+          <option value="votesCast">Meeste stemmen</option>
+          <option value="rounds">Meeste rondes</option>
+          <option value="rooms">Meeste rooms</option>
+          <option value="agreement">Hoogste overeenkomst</option>
+          <option value="avgVote">Hoogste gem. stem</option>
+          <option value="speed">Snelst stemmen</option>
+        </select>
+      </div>
+      <div id="statsUsers" class="stats-table-wrap"></div>
+    </div>
+
+    <div class="panel">
+      <h2>Verdelingen</h2>
+      <div class="hist-grid">
+        <div>
+          <h3 class="hist-heading">Alle stemmen</h3>
+          <div id="statsVoteHist" class="histogram"></div>
+        </div>
+        <div>
+          <h3 class="hist-heading">Finale estimates</h3>
+          <div id="statsEstHist" class="histogram"></div>
+        </div>
+        <div>
+          <h3 class="hist-heading">Ronde-duur</h3>
+          <div id="statsDurHist" class="histogram"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Activiteit (laatste 90 dagen)</h2>
+      <div id="statsActivity" class="activity-bars"></div>
+    </div>
+
+    <div class="panel">
+      <h2>Rooms-archief</h2>
+      <div id="statsRooms" class="stats-table-wrap"></div>
+    </div>
+
+    <div class="panel">
+      <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:10px;">
+        <h2 style="margin:0;">Tickets-archief</h2>
+        <div class="spacer" style="flex:1;"></div>
+        <input id="statsTicketFilter" placeholder="Filter op titel of kamercode…" style="max-width:280px;">
+      </div>
+      <div id="statsTickets" class="stats-table-wrap"></div>
+    </div>
   </section>
 
 </main>
+
+<div id="helpOverlay" class="help-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+  <div class="help-modal panel" role="document">
+    <button id="helpClose" class="help-close" type="button" aria-label="Handleiding sluiten" title="Sluiten">&times;</button>
+    <h2 id="helpTitle">Handleiding</h2>
+    <p class="help-tagline">Alles wat je nodig hebt om snel op weg te zijn.</p>
+
+    <h3>Wat is dit?</h3>
+    <p>Planning Poker is een techniek om samen met een team een inschatting te maken van werk. Iedereen kiest tegelijk een kaart, en na het onthullen bespreek je verschillen tot je consensus hebt.</p>
+    <p><strong>Let op:</strong> deze app gebruikt een <strong>publieke</strong> MQTT broker. Gebruik geen vertrouwelijke namen of gegevens — iedereen die jouw kamercode kent kan meeluisteren.</p>
+
+    <h3>Een kamer starten of joinen</h3>
+    <ul>
+      <li>Vul je <strong>naam</strong>, <strong>rol</strong> en een <strong>kamercode</strong> in op het startscherm.</li>
+      <li>Typ een bestaande code om mee te doen, of bedenk een nieuwe code om een kamer aan te maken. Kamercodes zijn hoofdletter-ongevoelig.</li>
+      <li>Deel de kamer met collega's via <strong>Link kopiëren</strong> — iedereen met de link komt direct binnen.</li>
+    </ul>
+
+    <h3>Stemmen</h3>
+    <ul>
+      <li>Klik op een kaart om te stemmen. Je kunt je stem wijzigen tot de moderator onthult.</li>
+      <li><kbd>?</kbd> betekent <em>geen mening</em> of onduidelijk.</li>
+      <li><kbd>☕</kbd> vraagt een pauze aan.</li>
+    </ul>
+
+    <h3>Toetsenbord-shortcuts</h3>
+    <div class="shortcut-row"><kbd>1</kbd>–<kbd>9</kbd><span>Kies de 1e t/m 9e kaart uit het deck</span></div>
+    <div class="shortcut-row"><kbd>0</kbd><span>Kies de 10e kaart (indien aanwezig)</span></div>
+    <div class="shortcut-row"><kbd>?</kbd><span>Stem <em>geen mening</em></span></div>
+    <div class="shortcut-row"><kbd>C</kbd><span>Vraag een pauze aan (koffie)</span></div>
+    <div class="shortcut-row"><kbd>Esc</kbd><span>Sluit deze handleiding</span></div>
+
+    <h3>Onthullen &amp; consensus</h3>
+    <ul>
+      <li>Alleen de <strong>host</strong> of een <strong>moderator</strong> kan kaarten onthullen of een nieuwe ronde starten.</li>
+      <li>Na het onthullen zie je het resultaat met een uitsplitsing per rol (Ontwikkelaar, Tester, Andere).</li>
+      <li>Een <strong>gouden gloed</strong> rond het resultaat betekent dat iedereen dezelfde kaart koos — consensus bereikt.</li>
+    </ul>
+
+    <h3>Tickets</h3>
+    <ul>
+      <li>Voeg tickets toe met <strong>Ticket toevoegen</strong>. Titel is verplicht, beschrijving optioneel.</li>
+      <li>JIRA-codes (bv. <code>VO-1234</code>) worden automatisch herkend en gelinkt.</li>
+      <li>Per ticket wordt de stemgeschiedenis bewaard zodat je later de uitkomst terugziet.</li>
+    </ul>
+
+    <h3>Rollen &amp; moderator-rechten</h3>
+    <ul>
+      <li>De <strong>host</strong> is degene die de kamer als eerste aanmaakte.</li>
+      <li>De host kan <strong>moderator-rechten</strong> delen met of intrekken bij andere deelnemers.</li>
+      <li>Een moderator kan deelnemers uit de kamer verwijderen (kick).</li>
+    </ul>
+
+    <h3>Geluid &amp; broker</h3>
+    <ul>
+      <li>Zet geluidseffecten aan of uit met de knop naast deze handleiding.</li>
+      <li>Heb je verbindingsproblemen? Wissel tussen <strong>HiveMQ</strong> en <strong>EMQX</strong> bovenin — beide zijn publieke MQTT brokers.</li>
+    </ul>
+  </div>
+</div>
 
 <script src="https://unpkg.com/mqtt@5.3.4/dist/mqtt.min.js"></script>
 <script>
@@ -970,6 +1316,9 @@
   'use strict';
 
   const TOPIC_ROOT = 'vo-planpoker-4f9k';
+  const STATS_GUID = '99761b44-ed34-4072-ada3-709cff3c2a0e';
+  const STATS_ROOT = `${TOPIC_ROOT}/stats/${STATS_GUID}`;
+  const statsTopic = (...parts) => [STATS_ROOT, ...parts].join('/');
   const JIRA_BASE = 'https://mvgond.atlassian.net/browse/';
   const JIRA_KEY_RE = /\b([A-Z][A-Z0-9]+-\d+)\b/;
   const extractJiraKey = (text) => {
@@ -1023,6 +1372,15 @@
     lastVotedIds: new Set(),  // detect new voters for ripple animation
     participantsRendered: false, // skip ripple on very first render
     kicked: false,         // set once we've been kicked so we only react once
+    view: 'landing',       // 'landing' | 'room' | 'stats'
+    roundStartedAt: {},    // roundId -> epoch ms (when we first saw the round start locally)
+    voterFirstVoteAt: {},  // clientId -> { roundId: epoch ms } for time-to-vote
+    statsKnownTickets: new Set(),      // ticketId -> firstSeenAt already published
+    statsKnownParticipants: new Set(), // clientId -> firstSeenAt already published
+    statsClient: null,     // separate mqtt client for stats view
+    statsShards: null,     // topic -> parsed payload (viewer-only)
+    statsRenderTimer: null,
+    statsSortBy: 'votesCast', // top-users sort key
   };
 
   const prefersReducedMotion = () =>
@@ -1174,6 +1532,28 @@
     soundIconOn:   $('soundIconOn'),
     soundIconOff:  $('soundIconOff'),
     activeTicketChip: $('activeTicketChip'),
+    helpToggle:    $('helpToggle'),
+    helpOverlay:   $('helpOverlay'),
+    helpClose:     $('helpClose'),
+    statsView:        $('statsView'),
+    statsStatus:      $('statsStatus'),
+    statsBackBtn:     $('statsBackBtn'),
+    statsHeroRooms:   $('statsHeroRooms'),
+    statsHeroRounds:  $('statsHeroRounds'),
+    statsHeroTickets: $('statsHeroTickets'),
+    statsHeroUsers:   $('statsHeroUsers'),
+    statsSecondary:   $('statsSecondary'),
+    statsSort:        $('statsSort'),
+    statsUsers:       $('statsUsers'),
+    statsVoteHist:    $('statsVoteHist'),
+    statsEstHist:     $('statsEstHist'),
+    statsDurHist:     $('statsDurHist'),
+    statsActivity:    $('statsActivity'),
+    statsRooms:       $('statsRooms'),
+    statsTicketFilter:$('statsTicketFilter'),
+    statsTickets:     $('statsTickets'),
+    statsRoomLink:    $('statsRoomLink'),
+    openStatsBtn:     $('openStatsBtn'),
   };
 
   // ---------- Helpers ----------
@@ -1183,9 +1563,14 @@
     const h = location.hash.replace(/^#/, '');
     const p = new URLSearchParams(h);
     const room = p.get('room');
-    return { room: room ? room.toLowerCase() : room, scale: p.get('scale') };
+    return {
+      room: room ? room.toLowerCase() : room,
+      scale: p.get('scale'),
+      stats: p.get('stats'),
+    };
   };
   const writeHash = () => {
+    if (state.view === 'stats') { location.hash = 'stats=1'; return; }
     const p = new URLSearchParams();
     p.set('room', state.roomId);
     p.set('scale', state.scale);
@@ -1197,6 +1582,10 @@
     p.set('scale', state.scale);
     const base = location.origin + location.pathname + location.search;
     return base + '#' + p.toString();
+  };
+  const statsUrl = () => {
+    const base = location.origin + location.pathname + location.search;
+    return base + '#stats=1';
   };
 
   const setConn = (cls, label) => {
@@ -1289,8 +1678,53 @@
     return modes.length === 1 ? modes[0] : null; // only auto-save if unambiguous
   };
 
+  // Pure summary over a list of { name, role, card } votes.
+  const computeRoundSummary = (votes, scale) => {
+    const voteCount = votes.length;
+    if (!voteCount) return { voteCount: 0, mode: null, consensus: false, avg: null, min: null, max: null, numericCount: 0 };
+    const counts = {};
+    for (const v of votes) counts[v.card] = (counts[v.card] || 0) + 1;
+    const maxN = Math.max(...Object.values(counts));
+    const modes = Object.entries(counts).filter(([, n]) => n === maxN).map(([c]) => c);
+    const mode = modes.length === 1 ? modes[0] : null;
+    const consensus = votes.every(v => v.card === votes[0].card);
+    let avg = null, min = null, max = null, numericCount = 0;
+    if (scale === 'fib') {
+      const nums = votes.map(v => parseFloat(v.card)).filter(n => Number.isFinite(n));
+      numericCount = nums.length;
+      if (nums.length) {
+        avg = nums.reduce((a, b) => a + b, 0) / nums.length;
+        min = Math.min(...nums);
+        max = Math.max(...nums);
+      }
+    }
+    return { voteCount, mode, consensus, avg, min, max, numericCount };
+  };
+
+  // Designated stats writer for this room: the present moderator with the lowest clientId.
+  // Ensures at most one client publishes stats shards per room at any given moment.
+  // The `statsReady` gate gives retained shards a moment to arrive before we start writing,
+  // so we don't overwrite history with zero-initialized aggregates.
+  const isStatsWriter = () => {
+    if (!state.roomId || !state.client?.connected || !state.statsReady) return false;
+    const set = new Set([effectiveHost(), ...state.moderators].filter(Boolean));
+    const present = [...set].filter(cid => state.participants[cid] || cid === state.clientId);
+    if (!present.length) return false;
+    present.sort();
+    return present[0] === state.clientId;
+  };
+
   // ---------- Render ----------
   function render() {
+    if (state.view === 'stats') {
+      el.landing.classList.add('hidden');
+      el.room.classList.add('hidden');
+      el.statsView?.classList.remove('hidden');
+      el.roomTag.classList.add('hidden');
+      el.activeTicketChip.classList.add('hidden');
+      return;
+    }
+    el.statsView?.classList.add('hidden');
     if (!state.roomId) {
       el.landing.classList.remove('hidden');
       el.room.classList.add('hidden');
@@ -1868,18 +2302,29 @@
 
     client.on('connect', () => {
       setConn('ok', 'verbonden met ' + broker.label);
-      client.subscribe(`${TOPIC_ROOT}/${state.roomId}/#`, { qos: 0 }, (err) => {
+      const roomTopics = `${TOPIC_ROOT}/${state.roomId}/#`;
+      const statsTopics = `${STATS_ROOT}/rooms/${state.roomId}/#`;
+      state.statsReady = false;
+      client.subscribe([roomTopics, statsTopics], { qos: 0 }, (err) => {
         if (err) {
           console.error('subscribe failed', err);
           setConn('err', 'subscribe mislukt');
           return;
         }
         announceSelf();
+        // Let retained stats shards settle in before this client starts acting as writer.
+        setTimeout(() => {
+          state.statsReady = true;
+          // Proactively flush what we already know so even idle rooms get a meta shard.
+          statsWriteRoomMeta({ immediate: true });
+          for (const cid of Object.keys(state.participants)) statsWriteParticipant(cid);
+          for (const t of state.tickets) statsWriteTicket(t.id);
+        }, 1200);
       });
     });
 
-    client.on('reconnect', () => setConn('', 'herverbinden…'));
-    client.on('close',     () => setConn('err', 'losgekoppeld'));
+    client.on('reconnect', () => { state.statsReady = false; setConn('', 'herverbinden…'); });
+    client.on('close',     () => { state.statsReady = false; setConn('err', 'losgekoppeld'); });
     client.on('error',     (e) => { console.error(e); setConn('err', 'fout: ' + (e.message || e)); });
 
     client.on('message', (t, payloadBuf) => {
@@ -1919,7 +2364,204 @@
     );
   }
 
+  // ---------- Stats writer ----------
+  // Publishes retained shards under STATS_ROOT so the /stats view can reconstruct history.
+  // Only the designated stats writer (see isStatsWriter) emits these; everyone else no-ops.
+  function statsPublish(subPath, payload) {
+    if (!state.client?.connected) return;
+    const body = payload == null ? '' : JSON.stringify(payload);
+    state.client.publish(`${STATS_ROOT}/${subPath}`, body, { qos: 0, retain: true });
+  }
+
+  let statsMetaTimer = null;
+  function statsWriteRoomMeta(opts = {}) {
+    if (!isStatsWriter()) return;
+    const path = `rooms/${state.roomId}/meta`;
+    const doIt = () => {
+      statsMetaTimer = null;
+      statsPublish(path, {
+        v: 1,
+        roomId: state.roomId,
+        scale: state.scale,
+        createdAt: state.statsRoomCreatedAt || Date.now(),
+        lastSeenAt: Date.now(),
+      });
+    };
+    if (opts.immediate) { if (statsMetaTimer) { clearTimeout(statsMetaTimer); statsMetaTimer = null; } doIt(); return; }
+    if (statsMetaTimer) return; // already scheduled
+    statsMetaTimer = setTimeout(doIt, 1500);
+  }
+
+  function statsWriteParticipant(clientId) {
+    if (!isStatsWriter()) return;
+    const p = state.participants[clientId];
+    const now = Date.now();
+    const existing = state.statsKnownParticipants.has(clientId);
+    const firstSeenAt = existing ? (state._statsParticipantFirstSeen?.[clientId] || now) : now;
+    state._statsParticipantFirstSeen = state._statsParticipantFirstSeen || {};
+    if (!existing) state._statsParticipantFirstSeen[clientId] = firstSeenAt;
+    state.statsKnownParticipants.add(clientId);
+    // Aggregated counters live on the shard — we read them from state.statsParticipantAgg
+    // (see statsRecordRoundReveal which maintains this incrementally).
+    const agg = (state.statsParticipantAgg && state.statsParticipantAgg[clientId]) || {};
+    statsPublish(`rooms/${state.roomId}/participants/${clientId}`, {
+      v: 1,
+      roomId: state.roomId,
+      clientId,
+      name: p?.name || agg.name || '',
+      role: normalizeRole(p?.role || agg.role),
+      firstSeenAt,
+      lastSeenAt: now,
+      roundsParticipated: agg.roundsParticipated || 0,
+      votesCast: agg.votesCast || 0,
+      sumNumericVotes: agg.sumNumericVotes || 0,
+      countNumericVotes: agg.countNumericVotes || 0,
+      agreementCount: agg.agreementCount || 0,
+      totalTimeToVoteMs: agg.totalTimeToVoteMs || 0,
+      timeToVoteCount: agg.timeToVoteCount || 0,
+      fastestTimeToVoteMs: agg.fastestTimeToVoteMs ?? null,
+      voteHistogram: agg.voteHistogram || {},
+    });
+  }
+
+  function statsWriteTicket(ticketId, opts = {}) {
+    if (!isStatsWriter()) return;
+    const t = state.tickets.find(x => x.id === ticketId);
+    if (!t) return;
+    const now = Date.now();
+    const existing = state.statsKnownTickets.has(ticketId);
+    state._statsTicketFirstSeen = state._statsTicketFirstSeen || {};
+    if (!existing) state._statsTicketFirstSeen[ticketId] = now;
+    state.statsKnownTickets.add(ticketId);
+    const firstSeenAt = state._statsTicketFirstSeen[ticketId] || now;
+    const votes = Array.isArray(t.votes) ? t.votes : [];
+    const consensus = votes.length > 0 && votes.every(v => v.card === votes[0].card);
+    statsPublish(`rooms/${state.roomId}/tickets/${ticketId}`, {
+      v: 1,
+      roomId: state.roomId,
+      ticketId,
+      title: t.title,
+      firstSeenAt,
+      estimatedAt: t.estimate != null ? (opts.estimatedAt || now) : null,
+      finalEstimate: t.estimate ?? null,
+      roundsNeeded: opts.roundsNeeded || 1,
+      consensus,
+    });
+  }
+
+  // Called once after a reveal, after the vote snapshot settled. Appends a round shard
+  // and increments per-participant aggregates for every voter.
+  function statsRecordRoundReveal() {
+    if (!isStatsWriter()) return;
+    const roundId = state.roundId;
+    const startedAt = state.roundStartedAt[roundId] || null;
+    const revealedAt = Date.now();
+    const durationMs = startedAt ? Math.max(0, revealedAt - startedAt) : null;
+    const votesRaw = Object.entries(state.votes).filter(([, v]) => v && v.roundId === roundId);
+    const voters = votesRaw.map(([cid, v]) => {
+      const name = cid === state.clientId ? state.name : (v.name || state.participants[cid]?.name || '');
+      const role = normalizeRole(cid === state.clientId ? state.role : (v.role || state.participants[cid]?.role));
+      return { cid, name, role, card: String(v.card) };
+    }).filter(x => x.name);
+    if (!voters.length) return;
+    const summary = computeRoundSummary(voters.map(x => ({ name: x.name, role: x.role, card: x.card })), state.scale);
+    const ticketId = state.activeTicketId || null;
+    statsPublish(`rooms/${state.roomId}/rounds/${roundId}`, {
+      v: 1,
+      roomId: state.roomId,
+      roundId,
+      ticketId,
+      startedAt,
+      revealedAt,
+      durationMs,
+      voteCount: summary.voteCount,
+      consensus: summary.consensus,
+      mode: summary.mode,
+      avg: summary.avg,
+      min: summary.min,
+      max: summary.max,
+      votes: voters.map(v => ({ name: v.name, role: v.role, card: v.card })),
+    });
+    state.statsParticipantAgg = state.statsParticipantAgg || {};
+    for (const v of voters) {
+      const agg = state.statsParticipantAgg[v.cid] || {
+        name: v.name, role: v.role,
+        roundsParticipated: 0, votesCast: 0,
+        sumNumericVotes: 0, countNumericVotes: 0,
+        agreementCount: 0,
+        totalTimeToVoteMs: 0, timeToVoteCount: 0, fastestTimeToVoteMs: null,
+        voteHistogram: {},
+      };
+      agg.name = v.name; agg.role = v.role;
+      agg.roundsParticipated += 1;
+      agg.votesCast += 1;
+      agg.voteHistogram[v.card] = (agg.voteHistogram[v.card] || 0) + 1;
+      const numeric = parseFloat(v.card);
+      if (Number.isFinite(numeric)) { agg.sumNumericVotes += numeric; agg.countNumericVotes += 1; }
+      if (summary.mode != null && v.card === summary.mode) agg.agreementCount += 1;
+      const firstVoteAt = state.voterFirstVoteAt[v.cid]?.[roundId];
+      if (firstVoteAt && startedAt) {
+        const ttv = Math.max(0, firstVoteAt - startedAt);
+        agg.totalTimeToVoteMs += ttv;
+        agg.timeToVoteCount += 1;
+        agg.fastestTimeToVoteMs = agg.fastestTimeToVoteMs == null ? ttv : Math.min(agg.fastestTimeToVoteMs, ttv);
+      }
+      state.statsParticipantAgg[v.cid] = agg;
+      statsWriteParticipant(v.cid);
+    }
+    statsWriteRoomMeta({ immediate: true });
+  }
+
   function handleMessage(t, payload) {
+    const statsPrefix = `${STATS_ROOT}/rooms/${state.roomId}/`;
+    if (t.startsWith(statsPrefix)) {
+      // Seed in-memory aggregates from retained stats shards so increments don't overwrite history.
+      const sub = t.slice(statsPrefix.length);
+      if (!payload) return;
+      try {
+        const parsed = JSON.parse(payload);
+        if (sub === 'meta') {
+          if (typeof parsed.createdAt === 'number') state.statsRoomCreatedAt = state.statsRoomCreatedAt ?? parsed.createdAt;
+        } else if (sub.startsWith('participants/')) {
+          const cid = sub.slice('participants/'.length);
+          state.statsParticipantAgg = state.statsParticipantAgg || {};
+          if (!state.statsParticipantAgg[cid]) {
+            state.statsParticipantAgg[cid] = {
+              name: parsed.name || '', role: normalizeRole(parsed.role),
+              roundsParticipated: parsed.roundsParticipated || 0,
+              votesCast: parsed.votesCast || 0,
+              sumNumericVotes: parsed.sumNumericVotes || 0,
+              countNumericVotes: parsed.countNumericVotes || 0,
+              agreementCount: parsed.agreementCount || 0,
+              totalTimeToVoteMs: parsed.totalTimeToVoteMs || 0,
+              timeToVoteCount: parsed.timeToVoteCount || 0,
+              fastestTimeToVoteMs: parsed.fastestTimeToVoteMs ?? null,
+              voteHistogram: { ...(parsed.voteHistogram || {}) },
+            };
+            state.statsKnownParticipants.add(cid);
+            state._statsParticipantFirstSeen = state._statsParticipantFirstSeen || {};
+            if (typeof parsed.firstSeenAt === 'number') state._statsParticipantFirstSeen[cid] = parsed.firstSeenAt;
+          }
+        } else if (sub.startsWith('tickets/')) {
+          const tid = sub.slice('tickets/'.length);
+          state.statsKnownTickets.add(tid);
+          state._statsTicketFirstSeen = state._statsTicketFirstSeen || {};
+          state._statsTicketRounds = state._statsTicketRounds || {};
+          if (typeof parsed.firstSeenAt === 'number') state._statsTicketFirstSeen[tid] = parsed.firstSeenAt;
+          if (typeof parsed.roundsNeeded === 'number') {
+            state._statsTicketRounds[tid] = Math.max(state._statsTicketRounds[tid] || 0, parsed.roundsNeeded);
+          }
+        } else if (sub.startsWith('rounds/')) {
+          const rid = parseInt(sub.slice('rounds/'.length), 10);
+          if (Number.isFinite(rid)) {
+            state.statsRoundsRecorded = state.statsRoundsRecorded || new Set();
+            state.statsRoundsRecorded.add(`${state.roomId}:${rid}`);
+          }
+        }
+      } catch (e) { /* ignore */ }
+      return;
+    }
+
     const prefix = `${TOPIC_ROOT}/${state.roomId}/`;
     if (!t.startsWith(prefix)) return;
     const rest = t.slice(prefix.length);
@@ -1930,8 +2572,10 @@
         const meta = JSON.parse(payload);
         if (meta.scale && SCALES[meta.scale]) state.scale = meta.scale;
         if (meta.host) state.host = meta.host;
+        if (typeof meta.createdAt === 'number') state.statsRoomCreatedAt = meta.createdAt;
         writeHash();
         render();
+        statsWriteRoomMeta();
       } catch (e) { /* ignore */ }
       return;
     }
@@ -1949,6 +2593,11 @@
           // Reset local state for a fresh round.
           state.myCard = null;
           publishStatus(false);
+        }
+        // First time we see this round in a non-revealed state, mark its start.
+        // If we joined mid-reveal we still mark it (best-effort; durationMs will be short).
+        if (!state.roundStartedAt[state.roundId]) {
+          state.roundStartedAt[state.roundId] = Date.now();
         }
         if (state.revealed) {
           // Everyone publishes their real vote now.
@@ -1971,6 +2620,8 @@
           const parsed = JSON.parse(payload);
           parsed.role = normalizeRole(parsed.role);
           state.participants[id] = parsed;
+          statsWriteParticipant(id);
+          statsWriteRoomMeta();
         } catch (e) {}
       }
       render();
@@ -1981,7 +2632,16 @@
       const id = rest.slice('status/'.length);
       if (!payload) delete state.statuses[id];
       else {
-        try { state.statuses[id] = JSON.parse(payload); } catch (e) {}
+        try {
+          const parsed = JSON.parse(payload);
+          state.statuses[id] = parsed;
+          if (parsed && parsed.hasVoted && typeof parsed.roundId === 'number') {
+            state.voterFirstVoteAt[id] = state.voterFirstVoteAt[id] || {};
+            if (!state.voterFirstVoteAt[id][parsed.roundId]) {
+              state.voterFirstVoteAt[id][parsed.roundId] = Date.now();
+            }
+          }
+        } catch (e) {}
       }
       render();
       return;
@@ -2129,6 +2789,13 @@
       i === idx ? { ...t, votes: fresh, estimate: nextEstimate } : t
     );
     publishTickets();
+    // Track rounds-needed per ticket: count how many reveals happened on this ticket.
+    state._statsTicketRounds = state._statsTicketRounds || {};
+    state._statsTicketRounds[state.activeTicketId] = (state._statsTicketRounds[state.activeTicketId] || 0) + 1;
+    statsWriteTicket(state.activeTicketId, {
+      estimatedAt: nextEstimate != null ? Date.now() : null,
+      roundsNeeded: state._statsTicketRounds[state.activeTicketId],
+    });
   }
 
   let snapshotTimer = null;
@@ -2137,6 +2804,13 @@
     snapshotTimer = setTimeout(() => {
       snapshotTimer = null;
       snapshotActiveVotesIfChanged();
+      // Record the reveal in global stats exactly once per (room, roundId).
+      state.statsRoundsRecorded = state.statsRoundsRecorded || new Set();
+      const key = `${state.roomId}:${state.roundId}`;
+      if (state.revealed && !state.statsRoundsRecorded.has(key)) {
+        state.statsRoundsRecorded.add(key);
+        statsRecordRoundReveal();
+      }
     }, 400);
   }
 
@@ -2229,6 +2903,7 @@
     const shouldAutoActivate = !state.activeTicketId;
     state.tickets = [...state.tickets, ticket];
     publishTickets();
+    statsWriteTicket(ticket.id);
     // If nothing is currently active, start voting on the new ticket right away.
     if (shouldAutoActivate) {
       const anyVoteActivity =
@@ -2289,6 +2964,435 @@
     location.reload();
   }
 
+  // ---------- Stats viewer ----------
+  function openStatsView() {
+    state.view = 'stats';
+    state.statsShards = state.statsShards || new Map();
+    writeHash();
+    render();
+    statsConnectViewer();
+    scheduleStatsRender();
+  }
+
+  function closeStatsView() {
+    if (state.statsClient) {
+      try { state.statsClient.end(true); } catch (e) {}
+      state.statsClient = null;
+    }
+    state.view = state.roomId ? 'room' : 'landing';
+    location.hash = state.roomId ? shareUrlHashOnly() : '';
+    render();
+  }
+  const shareUrlHashOnly = () => {
+    const p = new URLSearchParams();
+    p.set('room', state.roomId);
+    p.set('scale', state.scale);
+    return p.toString();
+  };
+
+  function statsConnectViewer() {
+    if (state.statsClient) return;
+    const broker = BROKERS[state.brokerKey];
+    const client = mqtt.connect(broker.url, {
+      clientId: 'pp-stats-' + crypto.randomUUID().slice(0, 8),
+      clean: true,
+      keepalive: 30,
+      reconnectPeriod: 3000,
+      connectTimeout: 10000,
+    });
+    state.statsClient = client;
+    const setStatus = (label) => { if (el.statsStatus) el.statsStatus.textContent = label; };
+    setStatus('verbinden met ' + broker.label + '…');
+    client.on('connect', () => {
+      setStatus('verbonden — statistieken laden…');
+      client.subscribe(`${STATS_ROOT}/#`, { qos: 0 }, (err) => {
+        if (err) { setStatus('subscribe mislukt'); return; }
+        // After ~1.2s of silence we assume initial retained delivery is done.
+        setTimeout(() => setStatus(''), 1500);
+      });
+    });
+    client.on('message', (t, payloadBuf) => {
+      const payload = payloadBuf.toString();
+      if (!t.startsWith(STATS_ROOT + '/')) return;
+      const key = t.slice(STATS_ROOT.length + 1);
+      if (!payload) state.statsShards.delete(key);
+      else {
+        try { state.statsShards.set(key, JSON.parse(payload)); } catch (e) {}
+      }
+      scheduleStatsRender();
+    });
+    client.on('error', (e) => { console.error('stats mqtt', e); setStatus('fout: ' + (e.message || e)); });
+  }
+
+  function scheduleStatsRender() {
+    if (state.statsRenderTimer) return;
+    state.statsRenderTimer = setTimeout(() => {
+      state.statsRenderTimer = null;
+      if (state.view === 'stats') renderStatsView();
+    }, 200);
+  }
+
+  // Aggregates all stats shards into a structured object for rendering.
+  function aggregateStats(shards) {
+    const rooms = new Map();         // roomId -> meta
+    const rounds = [];               // array of round payloads
+    const tickets = [];              // array of ticket payloads
+    const participantsRaw = [];      // array of participant payloads
+    for (const [key, val] of shards) {
+      if (!val || typeof val !== 'object') continue;
+      const parts = key.split('/');
+      if (parts[0] !== 'rooms' || !parts[1]) continue;
+      const roomId = parts[1];
+      const kind = parts[2];
+      if (kind === 'meta') rooms.set(roomId, val);
+      else if (kind === 'rounds') rounds.push(val);
+      else if (kind === 'tickets') tickets.push(val);
+      else if (kind === 'participants') participantsRaw.push(val);
+    }
+
+    // Per-user aggregation across rooms, grouped by normalized name (case-insensitive, trimmed).
+    const userKey = (name) => String(name || '').trim().toLowerCase();
+    const users = new Map();
+    for (const p of participantsRaw) {
+      const k = userKey(p.name);
+      if (!k) continue;
+      const u = users.get(k) || {
+        name: p.name, roles: { dev: 0, tester: 0, other: 0 },
+        votesCast: 0, roundsParticipated: 0, sumNumericVotes: 0, countNumericVotes: 0,
+        agreementCount: 0, totalTimeToVoteMs: 0, timeToVoteCount: 0,
+        fastestTimeToVoteMs: null, voteHistogram: {}, rooms: new Set(),
+        firstSeenAt: p.firstSeenAt || null, lastSeenAt: p.lastSeenAt || null,
+      };
+      u.votesCast += p.votesCast || 0;
+      u.roundsParticipated += p.roundsParticipated || 0;
+      u.sumNumericVotes += p.sumNumericVotes || 0;
+      u.countNumericVotes += p.countNumericVotes || 0;
+      u.agreementCount += p.agreementCount || 0;
+      u.totalTimeToVoteMs += p.totalTimeToVoteMs || 0;
+      u.timeToVoteCount += p.timeToVoteCount || 0;
+      if (p.fastestTimeToVoteMs != null) {
+        u.fastestTimeToVoteMs = u.fastestTimeToVoteMs == null ? p.fastestTimeToVoteMs : Math.min(u.fastestTimeToVoteMs, p.fastestTimeToVoteMs);
+      }
+      for (const [card, n] of Object.entries(p.voteHistogram || {})) {
+        u.voteHistogram[card] = (u.voteHistogram[card] || 0) + n;
+      }
+      u.roles[normalizeRole(p.role)] = (u.roles[normalizeRole(p.role)] || 0) + 1;
+      u.rooms.add(p.roomId);
+      if (p.firstSeenAt != null) u.firstSeenAt = u.firstSeenAt == null ? p.firstSeenAt : Math.min(u.firstSeenAt, p.firstSeenAt);
+      if (p.lastSeenAt != null) u.lastSeenAt = u.lastSeenAt == null ? p.lastSeenAt : Math.max(u.lastSeenAt, p.lastSeenAt);
+      // Prefer the latest seen display name
+      if (p.lastSeenAt != null && u._lastSeenForName == null || (p.lastSeenAt > (u._lastSeenForName || 0))) {
+        u.name = p.name; u._lastSeenForName = p.lastSeenAt;
+      }
+      users.set(k, u);
+    }
+
+    // Totals
+    const totalRooms = rooms.size;
+    const totalRounds = rounds.length;
+    const totalTicketsCreated = tickets.length;
+    const totalTickets = tickets.filter(t => t.finalEstimate != null).length;
+    const totalVotes = rounds.reduce((a, r) => a + (r.voteCount || 0), 0);
+    const totalUniqueParticipants = users.size;
+    let totalSessionMs = 0;
+    for (const m of rooms.values()) {
+      if (m.createdAt && m.lastSeenAt && m.lastSeenAt > m.createdAt) totalSessionMs += (m.lastSeenAt - m.createdAt);
+    }
+    const consensusRounds = rounds.filter(r => r.consensus).length;
+    const consensusRate = totalRounds ? consensusRounds / totalRounds : 0;
+    const durs = rounds.map(r => r.durationMs).filter(d => typeof d === 'number' && d > 0);
+    const avgRoundDurationMs = durs.length ? durs.reduce((a, b) => a + b, 0) / durs.length : null;
+
+    // Global vote histogram
+    const voteHistogram = {};
+    for (const r of rounds) {
+      for (const v of (r.votes || [])) voteHistogram[v.card] = (voteHistogram[v.card] || 0) + 1;
+    }
+    // Estimate histogram
+    const estimateHistogram = {};
+    for (const t of tickets) {
+      if (t.finalEstimate != null) estimateHistogram[t.finalEstimate] = (estimateHistogram[t.finalEstimate] || 0) + 1;
+    }
+    // Duration buckets
+    const durationBuckets = { '<30s': 0, '30–60s': 0, '1–2m': 0, '2–5m': 0, '5m+': 0 };
+    for (const d of durs) {
+      if (d < 30000) durationBuckets['<30s']++;
+      else if (d < 60000) durationBuckets['30–60s']++;
+      else if (d < 120000) durationBuckets['1–2m']++;
+      else if (d < 300000) durationBuckets['2–5m']++;
+      else durationBuckets['5m+']++;
+    }
+    // Activity per day (last 90 days)
+    const DAY = 86400000;
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const startDay = today.getTime() - 89 * DAY;
+    const activityDays = [];
+    for (let i = 0; i < 90; i++) {
+      const d = new Date(startDay + i * DAY);
+      activityDays.push({ ts: d.getTime(), label: d.toLocaleDateString('nl-NL', { day: '2-digit', month: '2-digit' }), rounds: 0 });
+    }
+    for (const r of rounds) {
+      if (!r.revealedAt) continue;
+      const dayStart = new Date(r.revealedAt); dayStart.setHours(0, 0, 0, 0);
+      const idx = Math.round((dayStart.getTime() - startDay) / DAY);
+      if (idx >= 0 && idx < 90) activityDays[idx].rounds += 1;
+    }
+
+    // Rooms overview rows
+    const roomRows = [...rooms.entries()].map(([roomId, meta]) => {
+      const rRounds = rounds.filter(r => r.roomId === roomId);
+      const rTickets = tickets.filter(t => t.roomId === roomId);
+      const rParticipants = participantsRaw.filter(p => p.roomId === roomId);
+      const rConsensus = rRounds.length ? rRounds.filter(r => r.consensus).length / rRounds.length : 0;
+      return {
+        roomId, scale: meta.scale, createdAt: meta.createdAt, lastSeenAt: meta.lastSeenAt,
+        durationMs: (meta.lastSeenAt || 0) - (meta.createdAt || 0),
+        roundCount: rRounds.length,
+        ticketCount: rTickets.length,
+        participantCount: new Set(rParticipants.map(p => userKey(p.name)).filter(Boolean)).size,
+        consensusRate: rConsensus,
+      };
+    }).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+
+    return {
+      totals: {
+        totalRooms, totalRounds, totalTickets, totalTicketsCreated,
+        totalVotes, totalUniqueParticipants, totalSessionMs,
+        consensusRate, avgRoundDurationMs,
+        avgParticipantsPerRoom: totalRooms ? (totalUniqueParticipants / totalRooms) : 0,
+      },
+      users: [...users.values()],
+      voteHistogram, estimateHistogram, durationBuckets, activityDays,
+      roomRows, rounds, tickets,
+    };
+  }
+
+  const fmtDuration = (ms) => {
+    if (!ms || ms <= 0) return '—';
+    const s = Math.round(ms / 1000);
+    if (s < 60) return s + 's';
+    const m = Math.floor(s / 60), rs = s % 60;
+    if (m < 60) return m + 'm ' + (rs ? rs + 's' : '').trim();
+    const h = Math.floor(m / 60), rm = m % 60;
+    if (h < 48) return h + 'h ' + (rm ? rm + 'm' : '').trim();
+    return Math.floor(h / 24) + 'd';
+  };
+  const fmtDate = (ts) => ts ? new Date(ts).toLocaleString('nl-NL', { year: '2-digit', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : '—';
+  const fmtPct = (r) => (r * 100).toFixed(0) + '%';
+  const fmtNum = (n, d = 0) => n == null || !Number.isFinite(n) ? '—' : d ? n.toFixed(d).replace(/\.?0+$/, '') : Math.round(n).toString();
+
+  function renderHistogramBars(container, data, opts = {}) {
+    container.innerHTML = '';
+    const entries = opts.order ? opts.order.filter(k => data[k] != null).map(k => [k, data[k] || 0]) : Object.entries(data);
+    if (!entries.length) {
+      const p = document.createElement('p'); p.className = 'hint'; p.textContent = 'Nog geen gegevens.'; container.appendChild(p); return;
+    }
+    const max = Math.max(1, ...entries.map(([, n]) => n));
+    for (const [label, n] of entries) {
+      const row = document.createElement('div');
+      row.className = 'hist-row';
+      const lab = document.createElement('div'); lab.className = 'hist-label'; lab.textContent = label;
+      const barWrap = document.createElement('div'); barWrap.className = 'hist-bar-wrap';
+      const bar = document.createElement('div'); bar.className = 'hist-bar';
+      bar.style.setProperty('--pct', (n / max * 100) + '%');
+      barWrap.appendChild(bar);
+      const val = document.createElement('div'); val.className = 'hist-val'; val.textContent = n;
+      row.appendChild(lab); row.appendChild(barWrap); row.appendChild(val);
+      container.appendChild(row);
+    }
+  }
+
+  function renderStatsView() {
+    const agg = aggregateStats(state.statsShards || new Map());
+    const t = agg.totals;
+
+    // Hero cards
+    if (el.statsHeroRooms) {
+      animateCountUp(el.statsHeroRooms, t.totalRooms);
+      animateCountUp(el.statsHeroRounds, t.totalRounds);
+      animateCountUp(el.statsHeroTickets, t.totalTickets);
+      animateCountUp(el.statsHeroUsers, t.totalUniqueParticipants);
+    }
+
+    // Secondary stats
+    if (el.statsSecondary) {
+      el.statsSecondary.innerHTML = '';
+      const rows = [
+        ['Totaal stemmen', fmtNum(t.totalVotes)],
+        ['Tickets aangemaakt', fmtNum(t.totalTicketsCreated)],
+        ['Consensus', fmtPct(t.consensusRate)],
+        ['Gem. ronde-duur', fmtDuration(t.avgRoundDurationMs)],
+        ['Totale spel-tijd', fmtDuration(t.totalSessionMs)],
+        ['Gem. deelnemers/room', fmtNum(t.avgParticipantsPerRoom, 1)],
+      ];
+      for (const [k, v] of rows) {
+        const w = document.createElement('div'); w.className = 'stat';
+        const kEl = document.createElement('div'); kEl.className = 'k'; kEl.textContent = k;
+        const vEl = document.createElement('div'); vEl.className = 'v'; vEl.textContent = v;
+        w.appendChild(kEl); w.appendChild(vEl);
+        el.statsSecondary.appendChild(w);
+      }
+    }
+
+    // Top users
+    if (el.statsUsers) {
+      el.statsUsers.innerHTML = '';
+      const users = [...agg.users];
+      const sortBy = state.statsSortBy || 'votesCast';
+      const keyFn = {
+        votesCast:  u => u.votesCast,
+        rounds:     u => u.roundsParticipated,
+        rooms:      u => u.rooms.size,
+        agreement:  u => u.votesCast ? (u.agreementCount / u.votesCast) : 0,
+        avgVote:    u => u.countNumericVotes ? (u.sumNumericVotes / u.countNumericVotes) : 0,
+        speed:      u => u.timeToVoteCount ? -(u.totalTimeToVoteMs / u.timeToVoteCount) : -Infinity,
+      }[sortBy] || (u => u.votesCast);
+      users.sort((a, b) => keyFn(b) - keyFn(a));
+
+      if (!users.length) {
+        const p = document.createElement('p'); p.className = 'hint'; p.textContent = 'Nog geen deelnemers.'; el.statsUsers.appendChild(p);
+      } else {
+        const table = document.createElement('table'); table.className = 'stats-table';
+        table.innerHTML = `<thead><tr>
+          <th>Deelnemer</th>
+          <th class="num">Stemmen</th>
+          <th class="num">Rondes</th>
+          <th class="num">Rooms</th>
+          <th class="num">Gem. stem</th>
+          <th class="num">Top kaart</th>
+          <th class="num">Overeenkomst</th>
+          <th class="num">Snelheid</th>
+        </tr></thead>`;
+        const tbody = document.createElement('tbody');
+        for (const u of users.slice(0, 50)) {
+          const avgVote = u.countNumericVotes ? (u.sumNumericVotes / u.countNumericVotes) : null;
+          const agreement = u.votesCast ? (u.agreementCount / u.votesCast) : null;
+          const avgSpeed = u.timeToVoteCount ? (u.totalTimeToVoteMs / u.timeToVoteCount) : null;
+          const hist = u.voteHistogram || {};
+          const histEntries = Object.entries(hist);
+          const topCardMax = histEntries.length ? Math.max(...histEntries.map(([, n]) => n)) : 0;
+          const topCards = histEntries.filter(([, n]) => n === topCardMax).map(([c]) => c);
+          const tr = document.createElement('tr');
+          const colors = avatarColors(u.name);
+          tr.innerHTML = `
+            <td class="user-cell">
+              <span class="mini-avatar" style="--av-1:${colors.a};--av-2:${colors.b}">${initialsFor(u.name)}</span>
+              <span class="user-name">${escapeHtml(u.name)}</span>
+            </td>
+            <td class="num">${fmtNum(u.votesCast)}</td>
+            <td class="num">${fmtNum(u.roundsParticipated)}</td>
+            <td class="num">${fmtNum(u.rooms.size)}</td>
+            <td class="num">${avgVote != null ? avgVote.toFixed(2).replace(/\.?0+$/, '') : '—'}</td>
+            <td class="num">${topCardMax > 0 ? escapeHtml(topCards.join(', ')) : '—'}</td>
+            <td class="num">${agreement != null ? fmtPct(agreement) : '—'}</td>
+            <td class="num">${fmtDuration(avgSpeed)}</td>
+          `;
+          tbody.appendChild(tr);
+        }
+        table.appendChild(tbody);
+        el.statsUsers.appendChild(table);
+      }
+    }
+
+    // Distributions
+    const fibOrder = ['0','1','2','3','5','8','13','20','40','100','?','\u2615'];
+    const tshirtOrder = ['XS','S','M','L','XL','XXL','?','\u2615'];
+    const allOrder = [...fibOrder, ...tshirtOrder.filter(x => !fibOrder.includes(x))];
+    if (el.statsVoteHist) renderHistogramBars(el.statsVoteHist, agg.voteHistogram, { order: allOrder });
+    if (el.statsEstHist) renderHistogramBars(el.statsEstHist, agg.estimateHistogram, { order: allOrder });
+    if (el.statsDurHist) renderHistogramBars(el.statsDurHist, agg.durationBuckets, { order: ['<30s','30–60s','1–2m','2–5m','5m+'] });
+
+    // Activity bars
+    if (el.statsActivity) {
+      el.statsActivity.innerHTML = '';
+      const maxRounds = Math.max(1, ...agg.activityDays.map(d => d.rounds));
+      for (const d of agg.activityDays) {
+        const col = document.createElement('div');
+        col.className = 'activity-col';
+        col.title = `${d.label} — ${d.rounds} ronde${d.rounds === 1 ? '' : 's'}`;
+        col.style.setProperty('--pct', (d.rounds / maxRounds * 100) + '%');
+        if (d.rounds === 0) col.classList.add('empty');
+        el.statsActivity.appendChild(col);
+      }
+    }
+
+    // Rooms archive
+    if (el.statsRooms) {
+      el.statsRooms.innerHTML = '';
+      if (!agg.roomRows.length) {
+        const p = document.createElement('p'); p.className = 'hint'; p.textContent = 'Nog geen rooms.'; el.statsRooms.appendChild(p);
+      } else {
+        const table = document.createElement('table'); table.className = 'stats-table';
+        table.innerHTML = `<thead><tr>
+          <th>Kamercode</th><th>Start</th><th>Duur</th>
+          <th class="num">Rondes</th><th class="num">Tickets</th><th class="num">Deelnemers</th>
+          <th class="num">Consensus</th><th>Schaal</th>
+        </tr></thead>`;
+        const tbody = document.createElement('tbody');
+        for (const r of agg.roomRows.slice(0, 100)) {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td><span class="room-code">${escapeHtml(r.roomId)}</span></td>
+            <td>${fmtDate(r.createdAt)}</td>
+            <td>${fmtDuration(r.durationMs)}</td>
+            <td class="num">${fmtNum(r.roundCount)}</td>
+            <td class="num">${fmtNum(r.ticketCount)}</td>
+            <td class="num">${fmtNum(r.participantCount)}</td>
+            <td class="num">${r.roundCount ? fmtPct(r.consensusRate) : '—'}</td>
+            <td>${r.scale === 'fib' ? 'Fib' : 'T-shirt'}</td>
+          `;
+          tbody.appendChild(tr);
+        }
+        table.appendChild(tbody);
+        el.statsRooms.appendChild(table);
+      }
+    }
+
+    // Tickets archive
+    if (el.statsTickets) {
+      el.statsTickets.innerHTML = '';
+      const filterText = (el.statsTicketFilter?.value || '').trim().toLowerCase();
+      const rows = agg.tickets
+        .filter(t => !filterText || (t.title || '').toLowerCase().includes(filterText) || (t.roomId || '').toLowerCase().includes(filterText))
+        .sort((a, b) => (b.firstSeenAt || 0) - (a.firstSeenAt || 0));
+      if (!rows.length) {
+        const p = document.createElement('p'); p.className = 'hint';
+        p.textContent = filterText ? 'Geen tickets gevonden voor die filter.' : 'Nog geen tickets.';
+        el.statsTickets.appendChild(p);
+      } else {
+        const table = document.createElement('table'); table.className = 'stats-table';
+        table.innerHTML = `<thead><tr>
+          <th>Titel</th><th>Kamer</th><th>Datum</th>
+          <th class="num">Estimate</th><th class="num">Rondes</th><th class="num">Consensus</th>
+        </tr></thead>`;
+        const tbody = document.createElement('tbody');
+        for (const tk of rows.slice(0, 200)) {
+          const jira = jiraUrlForTitle(tk.title);
+          const titleCell = jira
+            ? `<a href="${jira}" target="_blank" rel="noopener">${escapeHtml(tk.title)}</a>`
+            : escapeHtml(tk.title || '—');
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${titleCell}</td>
+            <td><span class="room-code">${escapeHtml(tk.roomId)}</span></td>
+            <td>${fmtDate(tk.firstSeenAt)}</td>
+            <td class="num">${tk.finalEstimate != null ? escapeHtml(String(tk.finalEstimate)) : '—'}</td>
+            <td class="num">${fmtNum(tk.roundsNeeded)}</td>
+            <td class="num">${tk.finalEstimate == null ? '—' : (tk.consensus ? 'Ja' : 'Nee')}</td>
+          `;
+          tbody.appendChild(tr);
+        }
+        table.appendChild(tbody);
+        el.statsTickets.appendChild(table);
+      }
+    }
+  }
+
+  const escapeHtml = (s) => String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+
+
   function joinRoom(roomId) {
     const name = el.nameInput.value.trim();
     if (!name) { el.nameInput.focus(); return; }
@@ -2346,8 +3450,28 @@
   });
   syncSoundToggle();
 
+  // Help modal
+  const openHelp = () => {
+    el.helpOverlay.classList.remove('hidden');
+    el.helpClose.focus();
+  };
+  const closeHelp = () => {
+    el.helpOverlay.classList.add('hidden');
+    el.helpToggle.focus();
+  };
+  const isHelpOpen = () => !el.helpOverlay.classList.contains('hidden');
+  el.helpToggle.addEventListener('click', openHelp);
+  el.helpClose.addEventListener('click', closeHelp);
+  el.helpOverlay.addEventListener('click', (e) => {
+    if (e.target === el.helpOverlay) closeHelp();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && isHelpOpen()) { e.preventDefault(); closeHelp(); }
+  });
+
   // Keyboard shortcuts for cards (when room visible and not typing in input)
   document.addEventListener('keydown', (e) => {
+    if (isHelpOpen()) return;
     if (!state.roomId || state.revealed) return;
     if (e.ctrlKey || e.metaKey || e.altKey) return;
     const tag = document.activeElement?.tagName;
@@ -2406,13 +3530,30 @@
     }
   });
 
+  // ---------- Stats bindings ----------
+  if (el.openStatsBtn) el.openStatsBtn.addEventListener('click', () => openStatsView());
+  if (el.statsBackBtn) el.statsBackBtn.addEventListener('click', () => closeStatsView());
+  if (el.statsSort) el.statsSort.addEventListener('change', () => {
+    state.statsSortBy = el.statsSort.value;
+    renderStatsView();
+  });
+  if (el.statsTicketFilter) el.statsTicketFilter.addEventListener('input', () => scheduleStatsRender());
+
+  window.addEventListener('hashchange', () => {
+    const h = parseHash();
+    if (h.stats && state.view !== 'stats') openStatsView();
+    else if (!h.stats && state.view === 'stats') closeStatsView();
+  });
+
   // ---------- Init ----------
   el.nameInput.value = state.name;
   el.roleInput.value = state.role;
   el.brokerSelect.value = state.brokerKey;
 
   const hash = parseHash();
-  if (hash.room) {
+  if (hash.stats) {
+    openStatsView();
+  } else if (hash.room) {
     el.joinCodeInput.value = hash.room;
     if (hash.scale && SCALES[hash.scale]) {
       // hint only; the host's `meta` retained message is authoritative.
