@@ -974,9 +974,9 @@
     el.statsPanel.classList.remove('hidden');
     el.stats.innerHTML = '';
 
-    const votes = Object.entries(state.votes)
-      .filter(([, v]) => v && v.roundId === state.roundId)
-      .map(([, v]) => v.card);
+    const roundVotes = Object.entries(state.votes)
+      .filter(([, v]) => v && v.roundId === state.roundId);
+    const votes = roundVotes.map(([, v]) => v.card);
 
     const addStat = (k, v) => {
       const w = document.createElement('div');
@@ -1007,6 +1007,67 @@
 
     const consensus = votes.length > 0 && votes.every(v => v === votes[0]);
     addStat('Consensus', consensus ? 'Ja (' + votes[0] + ')' : 'Nee');
+
+    renderRoleBreakdown(roundVotes);
+  }
+
+  function renderRoleBreakdown(roundVotes) {
+    const existing = document.getElementById('roleBreakdown');
+    if (existing) existing.remove();
+    if (!roundVotes.length) return;
+
+    const byRole = { dev: [], tester: [], other: [] };
+    for (const [id, v] of roundVotes) byRole[participantRole(id)].push(String(v.card));
+    const activeRoles = ROLE_KEYS.filter(k => byRole[k].length > 0);
+    if (activeRoles.length < 2) return; // only show when there's something to compare
+
+    const wrap = document.createElement('div');
+    wrap.id = 'roleBreakdown';
+    wrap.style.marginTop = '14px';
+
+    const heading = document.createElement('p');
+    heading.className = 'role-group-title';
+    heading.style.marginBottom = '8px';
+    heading.textContent = 'Per rol';
+    wrap.appendChild(heading);
+
+    const grid = document.createElement('div');
+    grid.className = 'stats';
+
+    for (const key of activeRoles) {
+      const cards = byRole[key];
+      const counts = {};
+      for (const c of cards) counts[c] = (counts[c] || 0) + 1;
+      const maxN = Math.max(...Object.values(counts));
+      const modes = Object.entries(counts).filter(([, n]) => n === maxN).map(([c]) => c);
+      const modeText = modes.join(', ');
+
+      let detail = 'meest: ' + modeText;
+      if (isFib()) {
+        const numeric = cards.map(parseFloat).filter(Number.isFinite);
+        if (numeric.length) {
+          const avg = numeric.reduce((a, b) => a + b, 0) / numeric.length;
+          detail += ' · \u00f8 ' + avg.toFixed(2).replace(/\.00$/, '');
+        }
+      }
+
+      const w = document.createElement('div');
+      w.className = 'stat';
+      const kEl = document.createElement('div');
+      kEl.className = 'k';
+      kEl.textContent = ROLES[key].plural + ' (' + cards.length + ')';
+      const vEl = document.createElement('div');
+      vEl.className = 'v';
+      vEl.style.fontSize = '14px';
+      vEl.style.fontWeight = '500';
+      vEl.textContent = detail;
+      w.appendChild(kEl);
+      w.appendChild(vEl);
+      grid.appendChild(w);
+    }
+
+    wrap.appendChild(grid);
+    el.statsPanel.appendChild(wrap);
   }
 
   // ---------- MQTT ----------
