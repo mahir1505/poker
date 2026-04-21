@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell($procs = Get-Process -Name powershell -ErrorAction SilentlyContinue; Write-Output \"Count: $\\($procs.Count\\)\"; $procs | ForEach-Object { \"$\\($_.Id\\)  $\\($_.StartTime\\)  $\\($_.MainWindowTitle\\)\" })",
+      "PowerShell(Set-Location c:\\\\Projects\\\\vo\\\\poker; Start-Sleep -Seconds 4; $count = git rev-list --count HEAD; Write-Output \"commits: $count\"; Write-Output \"--- log ---\"; git log --oneline -5; Write-Output \"--- status ---\"; git status --short)"
+    ]
+  }
+}

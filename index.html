@@ -1,4 +1,5 @@
 <!doctype html>
+<!-- live at https://mahir1505.github.io/poker/ -->
 <html lang="nl">
 <head>
 <meta charset="utf-8">
@@ -298,9 +299,13 @@
   }
   .t-votes summary {
     cursor: pointer;
-    color: var(--muted);
+    color: var(--fg);
     font-size: 12px;
-    padding: 2px 0;
+    font-weight: 500;
+    padding: 4px 10px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--card);
     list-style: none;
     display: inline-flex;
     align-items: center;
@@ -313,7 +318,8 @@
     font-size: 13px;
     color: var(--accent);
   }
-  .t-votes summary:hover { color: var(--fg); }
+  .t-votes summary:hover { border-color: var(--accent); }
+  .t-votes[open] summary { border-color: var(--accent); }
   .t-vote-list {
     list-style: none;
     margin: 8px 0 0;
@@ -549,6 +555,13 @@
     p.set('scale', state.scale);
     location.hash = p.toString();
   };
+  const shareUrl = () => {
+    const p = new URLSearchParams();
+    p.set('room', state.roomId);
+    p.set('scale', state.scale);
+    const base = location.origin + location.pathname + location.search;
+    return base + '#' + p.toString();
+  };
 
   const setConn = (cls, label) => {
     el.conn.className = 'conn ' + (cls || '');
@@ -581,6 +594,35 @@
 
   const getActiveTicket = () =>
     state.activeTicketId ? state.tickets.find(t => t.id === state.activeTicketId) || null : null;
+
+  const snapshotVotesForRound = () =>
+    Object.entries(state.votes)
+      .filter(([, v]) => v && v.roundId === state.roundId)
+      .map(([id, v]) => ({
+        name: id === state.clientId ? state.name : (state.participants[id]?.name || '?'),
+        card: String(v.card),
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+
+  const hasVotes = (t) => Array.isArray(t?.votes) && t.votes.length > 0;
+
+  // First ticket that still needs voting, searched in list order starting after the active one.
+  // Tickets with an estimate or with stored votes are considered already handled.
+  const nextTicketToVote = () => {
+    const len = state.tickets.length;
+    if (!len) return null;
+    const activeId = state.activeTicketId;
+    const activeIdx = activeId ? state.tickets.findIndex(t => t.id === activeId) : -1;
+    const start = activeIdx >= 0 ? activeIdx + 1 : 0;
+    for (let i = 0; i < len; i++) {
+      const t = state.tickets[(start + i) % len];
+      if (t.id === activeId) continue;
+      if (t.estimate != null) continue;
+      if (hasVotes(t)) continue;
+      return t;
+    }
+    return null;
+  };
 
   const computeModeVote = () => {
     const votes = Object.entries(state.votes)
@@ -731,7 +773,7 @@
         const details = document.createElement('details');
         details.className = 't-votes';
         const summary = document.createElement('summary');
-        summary.textContent = `Stemmen (${t.votes.length})`;
+        summary.textContent = `Toon stemmen (${t.votes.length})`;
         details.appendChild(summary);
         const voteList = document.createElement('ul');
         voteList.className = 't-vote-list';
@@ -766,7 +808,7 @@
 
         if (!isActive) {
           const actBtn = document.createElement('button');
-          actBtn.textContent = t.estimate != null ? 'Opnieuw stemmen' : 'Activeren';
+          actBtn.textContent = (t.estimate != null || hasVotes(t)) ? 'Opnieuw stemmen' : 'Activeren';
           actBtn.addEventListener('click', () => activateTicket(t.id));
           actions.appendChild(actBtn);
         } else if (state.revealed) {
@@ -818,7 +860,16 @@
       el.modHint.classList.remove('hidden');
     }
     el.revealBtn.disabled = state.revealed || !anyVoted;
-    el.newRoundBtn.disabled = !state.revealed;
+
+    const next = nextTicketToVote();
+    if (next) {
+      el.newRoundBtn.textContent = `Volgende ticket: ${next.title}`;
+      el.newRoundBtn.title = next.title;
+    } else {
+      el.newRoundBtn.textContent = 'Ticket toevoegen';
+      el.newRoundBtn.title = 'Nieuw ticket toevoegen';
+    }
+    el.newRoundBtn.disabled = !state.revealed && next != null;
   }
 
   function renderStats() {
@@ -967,6 +1018,7 @@
         if (state.revealed) {
           // Everyone publishes their real vote now.
           publishMyVote();
+          scheduleSnapshot();
         }
         render();
       } catch (e) { /* ignore */ }
@@ -1002,6 +1054,7 @@
       else {
         try { state.votes[id] = JSON.parse(payload); } catch (e) {}
       }
+      if (state.revealed) scheduleSnapshot();
       render();
       return;
     }
@@ -1067,12 +1120,29 @@
   }
 
   function doNewRound() {
-    if (!state.client?.connected || !state.revealed) return;
     if (!iAmModerator()) return;
-    advanceRound();
+    const next = nextTicketToVote();
+    if (!next) {
+      openNewTicket();
+      return;
+    }
+    if (!state.client?.connected || !state.revealed) return;
+    activateTicket(next.id);
   }
 
   function advanceRound(ticketId) {
+    // Snapshot the current round's votes onto the active ticket before clearing them,
+    // so a revealed ticket always keeps its vote history even without an explicit "Bewaar".
+    if (state.revealed && state.activeTicketId) {
+      const idx = state.tickets.findIndex(t => t.id === state.activeTicketId);
+      if (idx >= 0) {
+        const votes = snapshotVotesForRound();
+        if (votes.length) {
+          state.tickets = state.tickets.map((t, i) => i === idx ? { ...t, votes } : t);
+          publishTickets();
+        }
+      }
+    }
     const nextRound = state.roundId + 1;
     // Clear old vote retained messages across all known voters (and our own).
     const ids = new Set([...Object.keys(state.votes), ...Object.keys(state.participants), state.clientId]);
@@ -1084,6 +1154,34 @@
     if (tid) payload.ticketId = tid;
     state.client.publish(topic('round'), JSON.stringify(payload), { qos: 0, retain: true });
     return nextRound;
+  }
+
+  // Store current revealed votes onto the active ticket if they differ from what's saved.
+  // Lets us show "Toon stemmen" + "Opnieuw stemmen" on voted tickets without requiring
+  // an explicit "Bewaar" or "Volgende ticket" click.
+  function snapshotActiveVotesIfChanged() {
+    if (!iAmModerator()) return;
+    if (!state.revealed || !state.activeTicketId) return;
+    if (!state.client?.connected) return;
+    const idx = state.tickets.findIndex(t => t.id === state.activeTicketId);
+    if (idx < 0) return;
+    const fresh = snapshotVotesForRound();
+    if (!fresh.length) return;
+    const stored = state.tickets[idx].votes || [];
+    const same = stored.length === fresh.length &&
+      stored.every((v, i) => v.name === fresh[i].name && v.card === fresh[i].card);
+    if (same) return;
+    state.tickets = state.tickets.map((t, i) => i === idx ? { ...t, votes: fresh } : t);
+    publishTickets();
+  }
+
+  let snapshotTimer = null;
+  function scheduleSnapshot() {
+    if (snapshotTimer) clearTimeout(snapshotTimer);
+    snapshotTimer = setTimeout(() => {
+      snapshotTimer = null;
+      snapshotActiveVotesIfChanged();
+    }, 400);
   }
 
   function publishTickets() {
@@ -1176,13 +1274,7 @@
       estimate = String(input).trim();
       if (!estimate) return;
     }
-    const votes = Object.entries(state.votes)
-      .filter(([, v]) => v && v.roundId === state.roundId)
-      .map(([id, v]) => ({
-        name: id === state.clientId ? state.name : (state.participants[id]?.name || '?'),
-        card: String(v.card),
-      }))
-      .sort((a, b) => a.name.localeCompare(b.name));
+    const votes = snapshotVotesForRound();
     state.tickets = state.tickets.map((t, i) => i === idx ? { ...t, estimate: String(estimate), votes } : t);
     publishTickets();
   }
@@ -1291,12 +1383,13 @@
   });
   el.leaveBtn.addEventListener('click', leave);
   el.copyLinkBtn.addEventListener('click', async () => {
+    const url = shareUrl();
     try {
-      await navigator.clipboard.writeText(location.href);
+      await navigator.clipboard.writeText(url);
       const orig = el.copyLinkBtn.textContent;
       el.copyLinkBtn.textContent = 'Gekopieerd!';
       setTimeout(() => { el.copyLinkBtn.textContent = orig; }, 1200);
-    } catch (e) { alert(location.href); }
+    } catch (e) { alert(url); }
   });
   el.brokerSelect.addEventListener('change', () => {
     state.brokerKey = el.brokerSelect.value;
