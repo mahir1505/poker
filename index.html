@@ -1578,13 +1578,14 @@
 
   const hash = parseHash();
   if (hash.room) {
-    // Show landing but prefill join code and focus name.
     el.joinCodeInput.value = hash.room;
     if (hash.scale && SCALES[hash.scale]) {
       // hint only; the host's `meta` retained message is authoritative.
       state.scale = hash.scale;
     }
-    el.nameInput.focus();
+    // If we already know the user's name, rejoin immediately on refresh.
+    if (state.name) joinRoom(hash.room);
+    else el.nameInput.focus();
   } else {
     el.nameInput.focus();
   }
