@@ -325,7 +325,7 @@
     font-weight: 600; font-size: 13.5px;
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
-  .participant .sub { font-size: 11px; color: var(--muted); display: flex; align-items: center; gap: 4px; }
+  .participant .sub { font-size: 11px; color: var(--muted); display: flex; align-items: center; gap: 4px; flex-wrap: wrap; row-gap: 4px; min-width: 0; }
   .participant .me { font-size: 10px; color: var(--muted); font-weight: 500; margin-left: 4px; padding: 1px 6px; border-radius: 8px; background: color-mix(in srgb, var(--muted) 14%, transparent); }
   .participant .vote-indicator {
     position: relative;
@@ -504,10 +504,13 @@
     background: var(--card);
     border: 1px solid var(--border);
     color: var(--muted);
-    margin-left: 6px;
+    margin-left: 0;
     cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
   }
   .mod-toggle:hover { border-color: var(--accent); color: var(--fg); }
+  .mod-toggle.kick-btn:hover { border-color: var(--danger); color: var(--danger); }
   .ticket-list {
     list-style: none; margin: 0; padding: 0;
     display: grid; gap: 10px;
@@ -891,30 +894,15 @@
           <option value="other">Andere</option>
         </select>
       </div>
-    </div>
-
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 18px;" id="landingCols">
-      <div class="panel" style="box-shadow: none; margin: 0;">
-        <h2>Nieuwe kamer</h2>
-        <label for="scaleInput">Kaartschaal</label>
-        <select id="scaleInput">
-          <option value="fib">Fibonacci (0, 1, 2, 3, 5, 8, 13, 20, 40, 100)</option>
-          <option value="tshirt">T-shirt (XS, S, M, L, XL, XXL)</option>
-        </select>
-        <div class="actions">
-          <button id="createBtn" class="primary">Kamer aanmaken</button>
-        </div>
-      </div>
-
-      <div class="panel" style="box-shadow: none; margin: 0;">
-        <h2>Deelnemen</h2>
+      <div>
         <label for="joinCodeInput">Kamercode</label>
-        <input id="joinCodeInput" placeholder="bv. k7f2m3a9xq01" autocomplete="off">
-        <div class="actions">
-          <button id="joinBtn" class="primary">Deelnemen</button>
-        </div>
+        <input id="joinCodeInput" maxlength="40" placeholder="bv. sprint-42" autocomplete="off">
       </div>
     </div>
+    <div class="actions" style="margin-top: 16px;">
+      <button id="joinBtn" class="primary">Kamer binnengaan</button>
+    </div>
+    <p class="hint" style="margin-top: 10px;">Typ een bestaande code om mee te doen, of bedenk een nieuwe naam om een kamer aan te maken.</p>
   </section>
 
   <!-- Room screen -->
@@ -1034,6 +1022,7 @@
     lastTicketIds: new Set(), // detect ticket removals for exit animation
     lastVotedIds: new Set(),  // detect new voters for ripple animation
     participantsRendered: false, // skip ripple on very first render
+    kicked: false,         // set once we've been kicked so we only react once
   };
 
   const prefersReducedMotion = () =>
@@ -1155,9 +1144,7 @@
     room:          $('room'),
     nameInput:     $('nameInput'),
     roleInput:     $('roleInput'),
-    scaleInput:    $('scaleInput'),
     joinCodeInput: $('joinCodeInput'),
-    createBtn:     $('createBtn'),
     joinBtn:       $('joinBtn'),
     conn:          $('conn'),
     roomTag:       $('roomTag'),
@@ -1190,17 +1177,13 @@
   };
 
   // ---------- Helpers ----------
-  const randomRoomId = () =>
-    Array.from(crypto.getRandomValues(new Uint8Array(8)))
-         .map(b => (b % 36).toString(36))
-         .join('');
-
   const topic = (suffix) => `${TOPIC_ROOT}/${state.roomId}/${suffix}`;
 
   const parseHash = () => {
     const h = location.hash.replace(/^#/, '');
     const p = new URLSearchParams(h);
-    return { room: p.get('room'), scale: p.get('scale') };
+    const room = p.get('room');
+    return { room: room ? room.toLowerCase() : room, scale: p.get('scale') };
   };
   const writeHash = () => {
     const p = new URLSearchParams();
@@ -1481,7 +1464,7 @@
           m.textContent = 'Moderator';
           sub.appendChild(m);
         }
-        // Promote/demote button — visible only to moderators, never for the effective host or self.
+        // Promote/demote and kick buttons — visible only to moderators, never for the effective host or self.
         if (iAmModerator() && id !== eh && id !== state.clientId) {
           const isMod = state.moderators.includes(id);
           const toggle = document.createElement('button');
@@ -1490,6 +1473,13 @@
           toggle.title = isMod ? 'Moderator-rechten intrekken' : 'Geef moderator-rechten';
           toggle.addEventListener('click', () => toggleModerator(id));
           sub.appendChild(toggle);
+
+          const kickBtn = document.createElement('button');
+          kickBtn.className = 'mod-toggle kick-btn';
+          kickBtn.textContent = 'Kick';
+          kickBtn.title = 'Deelnemer uit de kamer verwijderen';
+          kickBtn.addEventListener('click', () => kickParticipant(id));
+          sub.appendChild(kickBtn);
         }
         nameCol.appendChild(sub);
         li.appendChild(nameCol);
@@ -2008,6 +1998,12 @@
       return;
     }
 
+    if (rest.startsWith('kicks/')) {
+      const id = rest.slice('kicks/'.length);
+      if (payload && id === state.clientId) handleKicked();
+      return;
+    }
+
     if (rest === 'moderators') {
       if (!payload) {
         state.moderators = [];
@@ -2173,6 +2169,43 @@
     render();
   }
 
+  function kickParticipant(id) {
+    if (!iAmModerator() || !state.client?.connected) return;
+    if (!id || id === effectiveHost() || id === state.clientId) return;
+    const name = state.participants[id]?.name || 'deze deelnemer';
+    if (!window.confirm('Deelnemer "' + name + '" uit de kamer verwijderen?')) return;
+    // Demote first so the moderator list stays tidy.
+    if (state.moderators.includes(id)) {
+      state.moderators = state.moderators.filter(x => x !== id);
+      publishModerators();
+    }
+    // Signal the target to leave, and clear their retained presence/status/vote.
+    state.client.publish(topic('kicks/' + id), '1', { qos: 0, retain: true });
+    state.client.publish(topic('presence/' + id), '', { qos: 0, retain: true });
+    state.client.publish(topic('status/'   + id), '', { qos: 0, retain: true });
+    state.client.publish(topic('vote/'     + id), '', { qos: 0, retain: true });
+    // Clear the kick marker shortly after so it doesn't linger as retained clutter.
+    setTimeout(() => {
+      if (state.client?.connected) {
+        state.client.publish(topic('kicks/' + id), '', { qos: 0, retain: true });
+      }
+    }, 5000);
+  }
+
+  function handleKicked() {
+    if (state.kicked) return;
+    state.kicked = true;
+    try {
+      state.client?.publish(topic('presence/' + state.clientId), '', { qos: 0, retain: true });
+      state.client?.publish(topic('status/'   + state.clientId), '', { qos: 0, retain: true });
+      state.client?.publish(topic('vote/'     + state.clientId), '', { qos: 0, retain: true });
+      state.client?.end(true);
+    } catch (e) { /* ignore */ }
+    alert('Je bent uit de kamer verwijderd door een moderator.');
+    location.hash = '';
+    location.reload();
+  }
+
   function openNewTicket() {
     if (!iAmModerator()) return;
     el.ticketTitle.value = '';
@@ -2256,15 +2289,16 @@
     location.reload();
   }
 
-  function createRoom() {
+  function joinRoom(roomId) {
     const name = el.nameInput.value.trim();
     if (!name) { el.nameInput.focus(); return; }
+    const code = (roomId || '').trim().toLowerCase();
+    if (!code) { el.joinCodeInput.focus(); return; }
     state.name = name; localStorage.setItem('pp.name', name);
     state.role = normalizeRole(el.roleInput.value);
     localStorage.setItem('pp.role', state.role);
-    state.scale = el.scaleInput.value;
-    state.roomId = randomRoomId();
-    state.host = state.clientId;
+    state.scale = 'fib';
+    state.roomId = code;
     state.joinedAt = Date.now();
     state.roundId = 1;
     state.revealed = false;
@@ -2272,45 +2306,29 @@
     writeHash();
     render();
     connect();
-    // Publish meta once connected.
-    const once = () => {
-      if (!state.client?.connected) return setTimeout(once, 50);
-      state.client.publish(
-        topic('meta'),
-        JSON.stringify({ scale: state.scale, host: state.clientId, createdAt: Date.now() }),
-        { qos: 0, retain: true }
-      );
-      state.client.publish(
-        topic('round'),
-        JSON.stringify({ roundId: 1, revealed: false }),
-        { qos: 0, retain: true }
-      );
-      // Seed moderators list (host-only). Extra moderators get added via UI toggle.
-      state.client.publish(
-        topic('moderators'),
-        JSON.stringify([]),
-        { qos: 0, retain: true }
-      );
-      // Start with an empty backlog. Clear any legacy single-ticket retained message.
-      state.client.publish(topic('tickets'), JSON.stringify([]), { qos: 0, retain: true });
-      state.client.publish(topic('ticket'), '', { qos: 0, retain: true });
+    // If no retained meta arrives shortly after subscribing, the room is empty — seed it ourselves.
+    const seed = () => {
+      if (!state.client?.connected) return setTimeout(seed, 50);
+      setTimeout(() => {
+        if (state.host) return; // retained meta from an existing room already claimed host
+        state.host = state.clientId;
+        state.client.publish(
+          topic('meta'),
+          JSON.stringify({ scale: state.scale, host: state.clientId, createdAt: Date.now() }),
+          { qos: 0, retain: true }
+        );
+        state.client.publish(
+          topic('round'),
+          JSON.stringify({ roundId: 1, revealed: false }),
+          { qos: 0, retain: true }
+        );
+        state.client.publish(topic('moderators'), JSON.stringify([]), { qos: 0, retain: true });
+        state.client.publish(topic('tickets'), JSON.stringify([]), { qos: 0, retain: true });
+        state.client.publish(topic('ticket'), '', { qos: 0, retain: true });
+        render();
+      }, 800);
     };
-    once();
-  }
-
-  function joinRoom(roomId) {
-    const name = el.nameInput.value.trim();
-    if (!name) { el.nameInput.focus(); return; }
-    state.name = name; localStorage.setItem('pp.name', name);
-    state.role = normalizeRole(el.roleInput.value);
-    localStorage.setItem('pp.role', state.role);
-    state.roomId = roomId.trim();
-    if (!state.roomId) return;
-    state.joinedAt = Date.now();
-    state.participants[state.clientId] = { name: state.name, role: state.role, joinedAt: state.joinedAt };
-    writeHash();
-    render();
-    connect();
+    seed();
   }
 
   // ---------- Bindings ----------
@@ -2349,9 +2367,9 @@
     if (card != null) { e.preventDefault(); selectCard(card); }
   });
 
-  el.createBtn.addEventListener('click', createRoom);
   el.joinBtn.addEventListener('click', () => joinRoom(el.joinCodeInput.value));
   el.joinCodeInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') joinRoom(el.joinCodeInput.value); });
+  el.nameInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') joinRoom(el.joinCodeInput.value); });
   el.nameInput.addEventListener('input', () => { state.name = el.nameInput.value; });
   el.revealBtn.addEventListener('click', doReveal);
   el.newRoundBtn.addEventListener('click', doNewRound);
