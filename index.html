@@ -10,83 +10,228 @@
 <title>Planning Poker</title>
 <style>
   :root {
-    --bg: #f5f6f8;
-    --fg: #1c2024;
-    --muted: #6b7280;
+    --bg: #f4f6fb;
+    --bg-grad-1: #eef2ff;
+    --bg-grad-2: #fef3f8;
+    --fg: #0f1420;
+    --muted: #64707f;
     --card: #ffffff;
-    --border: #e3e5ea;
-    --accent: #3366ff;
+    --surface-1: #f8fafc;
+    --surface-2: #ffffff;
+    --border: #e3e7ef;
+    --border-strong: #ccd3e0;
+    --accent: #4f46ff;
+    --accent-2: #8b5cf6;
     --accent-fg: #ffffff;
-    --danger: #c0392b;
-    --ok: #1aa260;
-    --warn: #e0a800;
-    --shadow: 0 1px 2px rgba(0,0,0,.04), 0 4px 12px rgba(0,0,0,.04);
+    --glow: rgba(79, 70, 255, 0.35);
+    --danger: #dc2626;
+    --ok: #16a34a;
+    --warn: #d97706;
+    --gold: #f5a623;
+    --shadow-1: 0 1px 2px rgba(15,20,32,.04);
+    --shadow-2: 0 1px 2px rgba(15,20,32,.04), 0 8px 24px rgba(15,20,32,.06);
+    --shadow-3: 0 4px 12px rgba(15,20,32,.08), 0 24px 48px rgba(15,20,32,.12);
+    --r-sm: 6px;
+    --r-md: 10px;
+    --r-lg: 14px;
+    --r-xl: 20px;
+    --t-fast: 120ms;
+    --t-med: 260ms;
+    --t-slow: 480ms;
+    --ease-out: cubic-bezier(.2,.8,.2,1);
+    --ease-spring: cubic-bezier(.34,1.56,.64,1);
+    --header-bg: rgba(255,255,255,.78);
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --bg: #14161a;
-      --fg: #e6e8eb;
-      --muted: #8a9099;
-      --card: #1d2025;
-      --border: #2a2f37;
-      --accent: #4c7dff;
+      --bg: #0b0e14;
+      --bg-grad-1: #121828;
+      --bg-grad-2: #1a1426;
+      --fg: #e8ecf5;
+      --muted: #8a94a6;
+      --card: #151a24;
+      --surface-1: #1a2030;
+      --surface-2: #1e2536;
+      --border: #262e40;
+      --border-strong: #3a4258;
+      --accent: #6d78ff;
+      --accent-2: #a78bfa;
       --accent-fg: #ffffff;
-      --shadow: 0 1px 2px rgba(0,0,0,.25), 0 4px 14px rgba(0,0,0,.3);
+      --glow: rgba(109, 120, 255, 0.45);
+      --ok: #22c55e;
+      --warn: #f59e0b;
+      --gold: #fbbf24;
+      --shadow-1: 0 1px 2px rgba(0,0,0,.4);
+      --shadow-2: 0 1px 2px rgba(0,0,0,.4), 0 10px 30px rgba(0,0,0,.35);
+      --shadow-3: 0 4px 16px rgba(0,0,0,.5), 0 28px 60px rgba(0,0,0,.55);
+      --header-bg: rgba(15,19,29,.72);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: .001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: .001ms !important;
+      scroll-behavior: auto !important;
     }
   }
   * { box-sizing: border-box; }
   html, body { height: 100%; }
   body {
     margin: 0;
-    font: 14px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
     color: var(--fg);
-    background: var(--bg);
+    background:
+      radial-gradient(1200px 600px at 85% -10%, var(--bg-grad-2), transparent 60%),
+      radial-gradient(900px 500px at 0% 10%, var(--bg-grad-1), transparent 55%),
+      var(--bg);
+    background-attachment: fixed;
+    -webkit-font-smoothing: antialiased;
+  }
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+  button:focus-visible, .card-btn:focus-visible {
+    box-shadow: 0 0 0 3px var(--glow);
+    outline: none;
   }
   header {
     position: sticky; top: 0; z-index: 10;
     display: flex; align-items: center; gap: 12px;
-    padding: 10px 20px;
-    background: var(--card);
+    padding: 12px 20px;
+    background: var(--header-bg);
+    backdrop-filter: saturate(160%) blur(14px);
+    -webkit-backdrop-filter: saturate(160%) blur(14px);
     border-bottom: 1px solid var(--border);
   }
-  header h1 { font-size: 16px; margin: 0; font-weight: 600; }
+  header h1 {
+    font-size: 16px; margin: 0; font-weight: 700;
+    letter-spacing: -.01em;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    -webkit-background-clip: text; background-clip: text;
+    color: transparent;
+    display: inline-flex; align-items: center; gap: 8px;
+  }
+  header h1::before {
+    content: ""; width: 18px; height: 24px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    border-radius: 3px;
+    box-shadow: inset 0 0 0 2px rgba(255,255,255,.25), 0 2px 6px var(--glow);
+    transform: rotate(-6deg);
+    display: inline-block;
+    flex-shrink: 0;
+  }
   header .spacer { flex: 1; }
+  .active-ticket-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    max-width: 280px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--accent) 10%, transparent);
+    border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+    color: var(--accent);
+    font-size: 12px; font-weight: 500;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .active-ticket-chip::before {
+    content: "";
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--accent);
+    flex-shrink: 0;
+    animation: pulse-dot 1.6s ease-in-out infinite;
+  }
   .conn {
     display: inline-flex; align-items: center; gap: 6px;
     font-size: 12px; color: var(--muted);
+    padding: 4px 10px; border-radius: 999px;
+    background: var(--surface-1);
+    border: 1px solid var(--border);
   }
   .conn .dot {
+    position: relative;
     width: 9px; height: 9px; border-radius: 50%;
     background: var(--muted);
+    transition: background var(--t-fast) var(--ease-out);
   }
-  .conn.ok .dot { background: var(--ok); }
-  .conn.err .dot { background: var(--danger); }
-  select, input, button {
-    font: inherit; color: inherit;
-    background: var(--card);
+  .conn .dot::after {
+    content: ""; position: absolute; inset: -3px;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: 0;
+  }
+  .conn.ok .dot { background: var(--ok); color: var(--ok); }
+  .conn.err .dot { background: var(--danger); color: var(--danger); }
+  .conn.connecting .dot { background: var(--warn); color: var(--warn); }
+  .conn.connecting .dot::after,
+  .conn.ok .dot::after { animation: pulse-ring 1.6s ease-out infinite; }
+  .sound-toggle {
+    width: 34px; height: 34px;
+    display: inline-flex; align-items: center; justify-content: center;
+    padding: 0;
+    border-radius: 50%;
+    background: var(--surface-1);
     border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 7px 10px;
+    cursor: pointer;
+    color: var(--muted);
+    transition: color var(--t-fast), border-color var(--t-fast), background var(--t-fast), transform var(--t-fast);
+  }
+  .sound-toggle:hover { border-color: var(--accent); color: var(--fg); transform: translateY(-1px); }
+  .sound-toggle.on { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 45%, transparent); background: color-mix(in srgb, var(--accent) 8%, var(--surface-1)); }
+  .sound-toggle svg { width: 16px; height: 16px; display: block; }
+  select, input, textarea, button {
+    font: inherit; color: inherit;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--r-sm);
+    padding: 8px 11px;
+    transition: border-color var(--t-fast) var(--ease-out), box-shadow var(--t-fast) var(--ease-out), background var(--t-fast) var(--ease-out);
+  }
+  select:hover, input:hover, textarea:hover { border-color: var(--border-strong); }
+  select:focus, input:focus, textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--glow);
   }
   button {
     cursor: pointer;
-    transition: background 120ms ease, border-color 120ms ease, transform 60ms;
+    transition: background var(--t-fast) var(--ease-out),
+                border-color var(--t-fast) var(--ease-out),
+                color var(--t-fast) var(--ease-out),
+                transform 80ms var(--ease-out),
+                box-shadow var(--t-fast) var(--ease-out);
   }
-  button:hover:not(:disabled) { border-color: var(--accent); }
-  button:active:not(:disabled) { transform: translateY(1px); }
+  button:hover:not(:disabled) { border-color: var(--accent); transform: translateY(-1px); }
+  button:active:not(:disabled) { transform: translateY(0); }
   button:disabled { opacity: 0.5; cursor: not-allowed; }
-  button.primary { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
-  button.primary:hover:not(:disabled) { filter: brightness(1.08); }
-  main { max-width: 960px; margin: 0 auto; padding: 24px 20px 60px; }
+  button.primary {
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    color: var(--accent-fg);
+    border-color: transparent;
+    box-shadow: 0 2px 8px var(--glow);
+    font-weight: 600;
+  }
+  button.primary:hover:not(:disabled) {
+    filter: brightness(1.06);
+    box-shadow: 0 6px 18px var(--glow);
+  }
+  main { max-width: 980px; margin: 0 auto; padding: 28px 20px 60px; }
   .panel {
+    position: relative;
     background: var(--card);
     border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 20px;
-    box-shadow: var(--shadow);
+    border-radius: var(--r-lg);
+    padding: 22px;
+    box-shadow: var(--shadow-2);
+    transition: border-color var(--t-med) var(--ease-out), box-shadow var(--t-med) var(--ease-out);
   }
   .panel + .panel { margin-top: 16px; }
-  label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+  .panel.all-voted {
+    border-color: color-mix(in srgb, var(--ok) 55%, transparent);
+    box-shadow: var(--shadow-2), 0 0 0 3px color-mix(in srgb, var(--ok) 15%, transparent);
+  }
+  label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px; font-weight: 500; }
   .row { display: flex; gap: 10px; align-items: end; flex-wrap: wrap; }
   .row > * { flex: 1 1 160px; }
   .row input, .row select { width: 100%; }
@@ -94,86 +239,233 @@
   .warn {
     background: color-mix(in srgb, var(--warn) 14%, transparent);
     border: 1px solid color-mix(in srgb, var(--warn) 40%, transparent);
-    border-radius: 8px;
+    border-radius: var(--r-md);
     padding: 10px 12px;
     font-size: 12.5px;
     margin-bottom: 16px;
   }
-  h2 { font-size: 15px; margin: 0 0 12px; font-weight: 600; }
+  h2 { font-size: 15px; margin: 0 0 12px; font-weight: 600; letter-spacing: -.005em; }
+
+  /* ---------- Landing hero ---------- */
+  #landing { overflow: hidden; }
+  .hero {
+    position: relative;
+    text-align: center;
+    padding: 30px 10px 22px;
+    margin: -22px -22px 12px;
+    border-radius: var(--r-lg) var(--r-lg) 0 0;
+    overflow: hidden;
+    isolation: isolate;
+  }
+  .hero::before {
+    content: "";
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(600px 220px at 30% 50%, color-mix(in srgb, var(--accent) 18%, transparent), transparent 70%),
+      radial-gradient(500px 200px at 70% 60%, color-mix(in srgb, var(--accent-2) 16%, transparent), transparent 70%);
+    z-index: -1;
+  }
+  .hero-title {
+    font-size: 34px; font-weight: 800; letter-spacing: -.02em;
+    margin: 0 0 6px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    -webkit-background-clip: text; background-clip: text;
+    color: transparent;
+    line-height: 1.1;
+  }
+  .hero-tagline {
+    color: var(--muted); font-size: 14px; margin: 0;
+  }
+  .float-cards {
+    position: absolute; inset: 0; pointer-events: none; overflow: hidden;
+    z-index: -1;
+  }
+  .float-card {
+    position: absolute;
+    width: 46px; height: 66px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    color: var(--accent-fg);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; font-weight: 700;
+    opacity: .22;
+    box-shadow: 0 8px 24px var(--glow);
+    animation: float-drift 9s ease-in-out infinite;
+  }
+  .float-card:nth-child(1) { top: 12%;  left: 6%;  transform: rotate(-14deg); animation-delay: 0s; }
+  .float-card:nth-child(2) { top: 22%;  right: 8%; transform: rotate(12deg);  animation-delay: -2s; }
+  .float-card:nth-child(3) { bottom: 8%; left: 16%; transform: rotate(-8deg);  animation-delay: -4s; }
+  .float-card:nth-child(4) { bottom: 14%; right: 14%; transform: rotate(18deg); animation-delay: -6s; }
   .participants {
     list-style: none; margin: 0; padding: 0;
-    display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 8px;
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px;
   }
   .participant {
     display: flex; align-items: center; gap: 10px;
     padding: 10px 12px;
-    background: var(--bg);
+    background: var(--surface-1);
     border: 1px solid var(--border);
-    border-radius: 8px;
+    border-radius: var(--r-md);
+    transition: border-color var(--t-med) var(--ease-out), transform var(--t-med) var(--ease-out), background var(--t-med) var(--ease-out);
+    animation: slide-in-fade .32s var(--ease-out) both;
   }
-  .participant .name { flex: 1; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .participant .me { font-size: 11px; color: var(--muted); font-weight: 400; margin-left: 4px; }
-  .participant .vote-indicator {
+  .participant.new-vote { animation: vote-bump .45s var(--ease-spring); }
+  .participant .avatar {
+    flex-shrink: 0;
+    width: 32px; height: 32px; border-radius: 50%;
     display: inline-flex; align-items: center; justify-content: center;
-    width: 36px; height: 44px;
-    border-radius: 6px;
+    color: #fff; font-weight: 700; font-size: 12px;
+    letter-spacing: .02em;
+    background: linear-gradient(135deg, var(--av-1, #888), var(--av-2, #555));
+    box-shadow: inset 0 -2px 3px rgba(0,0,0,.15), 0 2px 6px rgba(0,0,0,.08);
+    text-shadow: 0 1px 1px rgba(0,0,0,.15);
+  }
+  .participant .name-wrap { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  .participant .name {
+    font-weight: 600; font-size: 13.5px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .participant .sub { font-size: 11px; color: var(--muted); display: flex; align-items: center; gap: 4px; }
+  .participant .me { font-size: 10px; color: var(--muted); font-weight: 500; margin-left: 4px; padding: 1px 6px; border-radius: 8px; background: color-mix(in srgb, var(--muted) 14%, transparent); }
+  .participant .vote-indicator {
+    position: relative;
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 38px; height: 52px;
+    border-radius: 7px;
     background: var(--card);
-    border: 1.5px dashed var(--border);
+    border: 1.5px dashed var(--border-strong);
     color: var(--muted);
     font-size: 14px;
+    transition: all var(--t-med) var(--ease-out);
+    flex-shrink: 0;
   }
   .participant.voted .vote-indicator {
     border-style: solid;
     border-color: var(--accent);
     background: color-mix(in srgb, var(--accent) 10%, var(--card));
     color: var(--accent);
+    animation: vote-pulse .6s var(--ease-out);
+  }
+  .participant.voted .vote-indicator::after {
+    content: ""; position: absolute; inset: -3px;
+    border-radius: 10px;
+    border: 2px solid var(--accent);
+    opacity: 0;
+    animation: shockwave .7s var(--ease-out);
+    pointer-events: none;
   }
   .participant.revealed .vote-indicator {
-    border-color: var(--accent);
-    background: var(--accent);
+    border-color: transparent;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
     color: var(--accent-fg);
-    font-weight: 600;
-    font-size: 15px;
+    font-weight: 700;
+    font-size: 16px;
+    box-shadow: 0 6px 16px var(--glow);
+  }
+  /* Flip animation plays only while the participants panel carries .reveal-anim */
+  .participant.revealed .vote-indicator { transform-style: preserve-3d; }
+  .reveal-anim .participant.revealed .vote-indicator {
+    animation: card-flip .6s var(--ease-out) both;
+    animation-delay: var(--flip-delay, 0ms);
   }
   .cards {
-    display: flex; flex-wrap: wrap; gap: 10px;
-    margin-top: 4px;
+    display: flex; flex-wrap: wrap; gap: 12px;
+    margin-top: 8px;
+    perspective: 1200px;
+    transition: opacity var(--t-med) var(--ease-out), filter var(--t-med) var(--ease-out);
   }
+  .cards.disabled { opacity: .45; filter: grayscale(.4); }
   .card-btn {
-    min-width: 56px; height: 80px;
-    font-size: 18px; font-weight: 600;
-    border-radius: 10px;
-    background: var(--card);
+    position: relative;
+    min-width: 64px; height: 92px;
+    font-size: 20px; font-weight: 700;
+    border-radius: var(--r-md);
+    background: var(--surface-2);
     border: 2px solid var(--border);
-    transition: transform 100ms ease, border-color 120ms ease, background 120ms ease;
+    color: var(--fg);
+    cursor: pointer;
+    transition: transform var(--t-med) var(--ease-spring),
+                border-color var(--t-fast) var(--ease-out),
+                background var(--t-fast) var(--ease-out),
+                color var(--t-fast) var(--ease-out),
+                box-shadow var(--t-med) var(--ease-out);
+    transform-style: preserve-3d;
+    will-change: transform;
   }
-  .card-btn:hover:not(:disabled) { border-color: var(--accent); transform: translateY(-2px); }
-  .card-btn.selected {
-    background: var(--accent);
-    color: var(--accent-fg);
+  .card-btn::before {
+    content: "";
+    position: absolute; inset: 4px;
+    border-radius: calc(var(--r-md) - 2px);
+    background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 6%, transparent), transparent 60%);
+    opacity: 0; transition: opacity var(--t-med) var(--ease-out);
+    pointer-events: none;
+  }
+  .card-btn:hover:not(:disabled) {
     border-color: var(--accent);
-    transform: translateY(-2px);
+    transform: translateY(-6px) rotateX(6deg);
+    box-shadow: 0 16px 28px rgba(15,20,32,.12), 0 0 0 3px var(--glow);
   }
+  .card-btn:hover:not(:disabled)::before { opacity: 1; }
+  .card-btn:active:not(:disabled) { transform: translateY(-2px) scale(.97); }
+  .card-btn.selected {
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    color: var(--accent-fg);
+    border-color: transparent;
+    transform: translateY(-10px) rotateX(8deg);
+    box-shadow: 0 20px 36px var(--glow), 0 0 0 4px color-mix(in srgb, var(--accent) 25%, transparent);
+  }
+  .card-btn.selected::after {
+    content: ""; position: absolute; inset: -2px;
+    border-radius: calc(var(--r-md) + 2px);
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    filter: blur(14px); opacity: .45;
+    z-index: -1;
+  }
+  .card-btn .kbd-hint {
+    position: absolute; top: 4px; right: 6px;
+    font-size: 9px; font-weight: 600;
+    color: var(--muted);
+    opacity: 0; transition: opacity var(--t-fast);
+    letter-spacing: .04em;
+  }
+  .card-btn:hover .kbd-hint { opacity: .75; }
+  .card-btn.selected .kbd-hint { color: var(--accent-fg); opacity: .6; }
   .actions { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
   .stats {
-    display: grid; gap: 8px; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
     margin-top: 8px;
   }
   .stat {
-    background: var(--bg);
+    background: var(--surface-1);
     border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 10px 12px;
+    border-radius: var(--r-md);
+    padding: 12px 14px;
+    animation: fade-slide-up .4s var(--ease-out) both;
+    animation-delay: var(--stat-delay, 0ms);
+    transition: border-color var(--t-med) var(--ease-out), box-shadow var(--t-med) var(--ease-out), background var(--t-med) var(--ease-out);
   }
-  .stat .k { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
-  .stat .v { font-size: 20px; font-weight: 600; margin-top: 2px; }
+  .stat .k { font-size: 10.5px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; font-weight: 600; }
+  .stat .v { font-size: 22px; font-weight: 700; margin-top: 2px; letter-spacing: -.01em; }
+  .stat.consensus-yes {
+    border-color: color-mix(in srgb, var(--gold) 55%, transparent);
+    background: linear-gradient(135deg, color-mix(in srgb, var(--gold) 14%, var(--surface-1)), var(--surface-1));
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--gold) 18%, transparent);
+    animation: fade-slide-up .4s var(--ease-out) both, consensus-glow 2.4s ease-in-out 2;
+  }
+  .stat.consensus-yes .v {
+    background: linear-gradient(135deg, var(--gold), #e08a00);
+    -webkit-background-clip: text; background-clip: text;
+    color: transparent;
+  }
   .room-code {
     font-family: ui-monospace, "SF Mono", Consolas, monospace;
-    background: var(--bg);
+    background: var(--surface-1);
     border: 1px solid var(--border);
-    padding: 3px 7px;
-    border-radius: 5px;
+    padding: 4px 9px;
+    border-radius: var(--r-sm);
     font-size: 13px;
+    font-weight: 600;
+    letter-spacing: .02em;
   }
   .hidden { display: none !important; }
   .tag {
@@ -218,20 +510,34 @@
   .mod-toggle:hover { border-color: var(--accent); color: var(--fg); }
   .ticket-list {
     list-style: none; margin: 0; padding: 0;
-    display: grid; gap: 8px;
+    display: grid; gap: 10px;
   }
   .ticket-item {
+    position: relative;
     display: flex; align-items: flex-start; gap: 12px;
-    background: var(--bg);
+    background: var(--surface-1);
     border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 10px 12px;
+    border-radius: var(--r-md);
+    padding: 12px 14px;
+    transition: border-color var(--t-med) var(--ease-out), background var(--t-med) var(--ease-out), transform var(--t-med) var(--ease-out), box-shadow var(--t-med) var(--ease-out);
+    animation: ticket-enter .32s var(--ease-out) both;
   }
   .ticket-item.active {
-    border-color: var(--accent);
-    background: color-mix(in srgb, var(--accent) 8%, var(--card));
+    border-color: transparent;
+    background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 10%, var(--card)), var(--card));
+    box-shadow: 0 0 0 2px var(--accent), 0 8px 24px var(--glow);
   }
-  .ticket-item.done { opacity: 0.85; }
+  .ticket-item.active::before {
+    content: ""; position: absolute; inset: -1px;
+    border-radius: calc(var(--r-md) + 1px);
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    opacity: .12;
+    pointer-events: none; z-index: 0;
+    animation: pulse-soft 3s ease-in-out infinite;
+  }
+  .ticket-item > * { position: relative; z-index: 1; }
+  .ticket-item.done { opacity: 0.75; }
+  .ticket-item.removing { animation: ticket-remove .28s var(--ease-out) both; }
   .ticket-item .t-body { flex: 1; min-width: 0; }
   .ticket-item .t-title {
     font-size: 14px;
@@ -246,6 +552,15 @@
     white-space: pre-wrap;
     word-break: break-word;
   }
+  .ticket-item .t-link {
+    display: inline-block;
+    margin: 4px 0 0;
+    font-size: 12px;
+    color: var(--accent);
+    text-decoration: none;
+    word-break: break-all;
+  }
+  .ticket-item .t-link:hover { text-decoration: underline; }
   .ticket-item .t-actions {
     display: flex; flex-wrap: wrap; gap: 6px;
     align-items: center;
@@ -257,12 +572,14 @@
   }
   .estimate-badge {
     display: inline-flex; align-items: center; justify-content: center;
-    min-width: 36px; height: 36px; padding: 0 8px;
-    border-radius: 8px;
-    background: var(--accent);
+    min-width: 40px; height: 40px; padding: 0 10px;
+    border-radius: var(--r-md);
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
     color: var(--accent-fg);
-    font-weight: 700;
-    font-size: 14px;
+    font-weight: 800;
+    font-size: 15px;
+    box-shadow: 0 4px 12px var(--glow);
+    animation: pop-in .5s var(--ease-spring) both;
   }
   .active-pill {
     display: inline-block;
@@ -300,15 +617,61 @@
     letter-spacing: 0;
     text-transform: none;
   }
-  .ticket-form { display: grid; gap: 8px; margin-top: 10px; }
-  .ticket-form textarea {
+  .ticket-form {
+    display: grid; gap: 12px;
+    margin-top: 14px;
+    padding: 18px 18px 16px;
+    position: relative;
+    background:
+      radial-gradient(400px 160px at 100% 0%, color-mix(in srgb, var(--accent-2) 10%, transparent), transparent 60%),
+      linear-gradient(135deg, color-mix(in srgb, var(--accent) 5%, var(--surface-1)), var(--surface-1));
+    border: 1px solid color-mix(in srgb, var(--accent) 28%, var(--border));
+    border-radius: var(--r-md);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.04);
+    animation: slide-in-fade .3s var(--ease-out);
+  }
+  .ticket-form::before {
+    content: "Nieuw ticket";
+    position: absolute;
+    top: -9px; left: 14px;
+    padding: 2px 10px;
+    font-size: 10.5px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .08em;
+    color: var(--accent-fg);
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    border-radius: 999px;
+    box-shadow: 0 2px 8px var(--glow);
+  }
+  .ticket-form > div { display: grid; gap: 4px; }
+  .ticket-form input, .ticket-form textarea {
     font: inherit; color: inherit;
     background: var(--card);
     border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 7px 10px;
+    border-radius: var(--r-sm);
+    padding: 10px 12px;
+    font-size: 14px;
+    width: 100%;
+    transition: border-color var(--t-fast) var(--ease-out), box-shadow var(--t-fast) var(--ease-out);
+  }
+  .ticket-form input:focus, .ticket-form textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--glow);
+  }
+  .ticket-form textarea {
     resize: vertical;
-    min-height: 56px;
+    min-height: 84px;
+    line-height: 1.5;
+  }
+  .ticket-form label {
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--muted);
+    letter-spacing: .02em;
+    margin-bottom: 0;
+  }
+  .ticket-form .actions {
+    margin-top: 4px;
   }
   .ticket-head {
     display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
@@ -372,6 +735,108 @@
     color: var(--accent);
     flex-shrink: 0;
   }
+
+  /* ---------- Confetti ---------- */
+  .confetti-layer {
+    position: fixed; inset: 0;
+    pointer-events: none;
+    z-index: 9999;
+    overflow: hidden;
+  }
+  .confetti-piece {
+    position: absolute;
+    top: -10px;
+    width: 10px; height: 14px;
+    background: hsl(var(--hue, 50), 90%, 60%);
+    transform: rotate(var(--rot, 0deg));
+    animation: confetti-fall var(--dur, 2.4s) var(--ease-out) forwards;
+    animation-delay: var(--delay, 0ms);
+    border-radius: 2px;
+  }
+  .confetti-piece.circle { border-radius: 50%; width: 10px; height: 10px; }
+  .confetti-piece.strip { width: 4px; height: 16px; }
+
+  /* ---------- Keyframes ---------- */
+  @keyframes pulse-ring {
+    0%   { transform: scale(.7); opacity: .55; }
+    80%  { transform: scale(2.2); opacity: 0; }
+    100% { transform: scale(2.2); opacity: 0; }
+  }
+  @keyframes pulse-dot {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50%      { transform: scale(1.35); opacity: .7; }
+  }
+  @keyframes pulse-soft {
+    0%, 100% { opacity: .08; }
+    50%      { opacity: .18; }
+  }
+  @keyframes float-drift {
+    0%, 100% { transform: translateY(0) rotate(var(--r, 0deg)); }
+    50%      { transform: translateY(-14px) rotate(calc(var(--r, 0deg) + 3deg)); }
+  }
+  @keyframes slide-in-fade {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fade-slide-up {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes vote-pulse {
+    0%   { transform: scale(1); }
+    50%  { transform: scale(1.12); }
+    100% { transform: scale(1); }
+  }
+  @keyframes vote-bump {
+    0%   { transform: translateY(0); }
+    30%  { transform: translateY(-4px) scale(1.01); }
+    60%  { transform: translateY(1px) scale(.995); }
+    100% { transform: translateY(0) scale(1); }
+  }
+  @keyframes shockwave {
+    0%   { transform: scale(.8); opacity: .7; }
+    100% { transform: scale(1.9); opacity: 0; }
+  }
+  @keyframes card-flip {
+    0%   { transform: rotateY(-180deg) scale(.9); opacity: 0; }
+    60%  { transform: rotateY(-20deg) scale(1.04); opacity: 1; }
+    100% { transform: rotateY(0) scale(1); opacity: 1; }
+  }
+  @keyframes pop-in {
+    0%   { transform: scale(0); opacity: 0; }
+    70%  { transform: scale(1.15); opacity: 1; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  @keyframes ticket-enter {
+    from { opacity: 0; transform: translateX(12px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+  @keyframes ticket-remove {
+    from { opacity: 1; transform: translateX(0); max-height: 200px; }
+    to   { opacity: 0; transform: translateX(24px); max-height: 0; margin: 0; padding-top: 0; padding-bottom: 0; border-width: 0; }
+  }
+  @keyframes confetti-fall {
+    0%   { transform: translate3d(var(--x, 0), -20px, 0) rotate(var(--rot, 0deg)); opacity: 1; }
+    70%  { opacity: 1; }
+    100% { transform: translate3d(calc(var(--x, 0) + var(--drift, 0px)), 110vh, 0) rotate(calc(var(--rot, 0deg) + var(--spin, 540deg))); opacity: .6; }
+  }
+  @keyframes consensus-glow {
+    0%, 100% { box-shadow: 0 0 0 3px color-mix(in srgb, var(--gold) 18%, transparent); }
+    50%      { box-shadow: 0 0 0 6px color-mix(in srgb, var(--gold) 35%, transparent), 0 0 40px color-mix(in srgb, var(--gold) 30%, transparent); }
+  }
+
+  /* ---------- Mobile ---------- */
+  @media (max-width: 640px) {
+    main { padding: 18px 14px 60px; }
+    .panel { padding: 16px; }
+    .hero-title { font-size: 26px; }
+    .card-btn { min-width: 58px; height: 86px; font-size: 19px; }
+    .cards { gap: 8px; }
+    .participants { grid-template-columns: 1fr 1fr; gap: 8px; }
+    .float-card { transform: scale(.7); }
+    header { padding: 10px 14px; gap: 8px; }
+    header h1 { font-size: 14px; }
+  }
 </style>
 </head>
 <body>
@@ -379,12 +844,17 @@
 <header>
   <h1>Planning Poker</h1>
   <span id="roomTag" class="tag hidden"></span>
+  <span id="activeTicketChip" class="active-ticket-chip hidden"></span>
   <div class="spacer"></div>
   <label for="brokerSelect" style="margin: 0 6px 0 0; font-size: 12px;">Broker</label>
   <select id="brokerSelect" title="Publieke MQTT broker">
     <option value="hivemq">HiveMQ</option>
     <option value="emqx">EMQX</option>
   </select>
+  <button id="soundToggle" class="sound-toggle" type="button" aria-pressed="false" title="Geluidseffecten aan/uit">
+    <svg id="soundIconOff" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
+    <svg id="soundIconOn" class="hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+  </button>
   <span id="conn" class="conn"><span class="dot"></span><span class="label">offline</span></span>
 </header>
 
@@ -392,6 +862,17 @@
 
   <!-- Landing screen -->
   <section id="landing" class="panel">
+    <div class="hero">
+      <div class="float-cards" aria-hidden="true">
+        <div class="float-card">8</div>
+        <div class="float-card">3</div>
+        <div class="float-card">13</div>
+        <div class="float-card">?</div>
+      </div>
+      <h2 class="hero-title">Planning Poker</h2>
+      <p class="hero-tagline">Stem samen. Onthul dramatisch. Bereik consensus.</p>
+    </div>
+
     <div class="warn">
       Dit gebruikt een <strong>publieke</strong> MQTT broker. Gebruik geen vertrouwelijke namen of gegevens — iedereen die jouw kamercode kent kan meeluisteren.
     </div>
@@ -501,6 +982,17 @@
   'use strict';
 
   const TOPIC_ROOT = 'vo-planpoker-4f9k';
+  const JIRA_BASE = 'https://mvgond.atlassian.net/browse/';
+  const JIRA_KEY_RE = /\b([A-Z][A-Z0-9]+-\d+)\b/;
+  const extractJiraKey = (text) => {
+    if (!text) return null;
+    const m = String(text).match(JIRA_KEY_RE);
+    return m ? m[1] : null;
+  };
+  const jiraUrlForTitle = (title) => {
+    const key = extractJiraKey(title);
+    return key ? JIRA_BASE + key : null;
+  };
   const BROKERS = {
     hivemq: { url: 'wss://broker.hivemq.com:8884/mqtt', label: 'HiveMQ' },
     emqx:   { url: 'wss://broker.emqx.io:8084/mqtt',    label: 'EMQX' },
@@ -523,6 +1015,7 @@
     brokerKey: localStorage.getItem('pp.broker') || 'hivemq',
     name: localStorage.getItem('pp.name') || '',
     role: normalizeRole(localStorage.getItem('pp.role') || 'dev'),
+    soundEnabled: true,
     roomId: null,
     scale: 'fib',
     host: null,
@@ -537,6 +1030,122 @@
     tickets: [],           // [{ id, title, description, estimate }]
     activeTicketId: null,  // id of the ticket currently being voted on, or null
     client: null,          // mqtt client
+    lastRevealed: false,   // detect reveal transitions for animations
+    lastTicketIds: new Set(), // detect ticket removals for exit animation
+    lastVotedIds: new Set(),  // detect new voters for ripple animation
+    participantsRendered: false, // skip ripple on very first render
+  };
+
+  const prefersReducedMotion = () =>
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // ---------- Sound (Web Audio, procedural) ----------
+  const sound = (() => {
+    let ctx = null;
+    const ensure = () => {
+      if (ctx) return ctx;
+      try {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return null;
+        ctx = new AC();
+      } catch (e) { return null; }
+      return ctx;
+    };
+    const tone = (freq, durMs, { type = 'sine', gain = 0.08, sweepTo = null, delay = 0 } = {}) => {
+      if (!state.soundEnabled) return;
+      const c = ensure(); if (!c) return;
+      if (c.state === 'suspended') c.resume().catch(() => {});
+      const t0 = c.currentTime + delay;
+      const osc = c.createOscillator();
+      const g = c.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, t0);
+      if (sweepTo != null) osc.frequency.linearRampToValueAtTime(sweepTo, t0 + durMs / 1000);
+      g.gain.setValueAtTime(0.0001, t0);
+      g.gain.exponentialRampToValueAtTime(gain, t0 + 0.012);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + durMs / 1000);
+      osc.connect(g).connect(c.destination);
+      osc.start(t0);
+      osc.stop(t0 + durMs / 1000 + 0.02);
+    };
+    return {
+      tick:    () => tone(880, 40, { type: 'triangle', gain: 0.05 }),
+      reveal:  () => tone(320, 420, { type: 'sawtooth', gain: 0.06, sweepTo: 860 }),
+      vote:    () => tone(620, 50, { type: 'sine', gain: 0.035 }),
+      consensus: () => {
+        // C5-E5-G5 arpeggio
+        tone(523.25, 160, { type: 'triangle', gain: 0.06, delay: 0 });
+        tone(659.25, 160, { type: 'triangle', gain: 0.06, delay: 0.12 });
+        tone(783.99, 320, { type: 'triangle', gain: 0.07, delay: 0.24 });
+      },
+    };
+  })();
+
+  // ---------- Avatar helpers ----------
+  const hashString = (s) => {
+    let h = 0; for (let i = 0; i < s.length; i++) { h = ((h << 5) - h + s.charCodeAt(i)) | 0; }
+    return Math.abs(h);
+  };
+  const avatarColors = (name) => {
+    const h = hashString(name || '?') % 360;
+    return {
+      a: `hsl(${h}, 72%, 58%)`,
+      b: `hsl(${(h + 42) % 360}, 68%, 44%)`,
+    };
+  };
+  const initialsFor = (name) => {
+    const parts = String(name || '?').trim().split(/\s+/).filter(Boolean);
+    if (!parts.length) return '?';
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  };
+
+  // ---------- Count-up animation ----------
+  const animateCountUp = (el, to, { durMs = 700, decimals = 0 } = {}) => {
+    if (prefersReducedMotion()) { el.textContent = to.toFixed(decimals).replace(/\.00?$/, ''); return; }
+    const start = performance.now();
+    const ease = (t) => 1 - Math.pow(1 - t, 3);
+    const tick = (now) => {
+      const p = Math.min(1, (now - start) / durMs);
+      const v = to * ease(p);
+      el.textContent = decimals ? v.toFixed(decimals).replace(/\.00?$/, '') : Math.round(v).toString();
+      if (p < 1) requestAnimationFrame(tick);
+      else el.textContent = decimals ? to.toFixed(decimals).replace(/\.00?$/, '') : Math.round(to).toString();
+    };
+    requestAnimationFrame(tick);
+  };
+
+  // ---------- Confetti (hand-rolled) ----------
+  const launchConfetti = () => {
+    if (prefersReducedMotion()) return;
+    const layer = document.createElement('div');
+    layer.className = 'confetti-layer';
+    const count = Math.min(80, Math.max(40, Math.floor(window.innerWidth / 16)));
+    const w = window.innerWidth;
+    const shapes = ['', 'circle', 'strip'];
+    for (let i = 0; i < count; i++) {
+      const s = document.createElement('span');
+      const cls = shapes[Math.floor(Math.random() * shapes.length)];
+      s.className = 'confetti-piece' + (cls ? ' ' + cls : '');
+      const startX = Math.random() * w;
+      const drift = (Math.random() - 0.5) * 280;
+      const rot = Math.random() * 360;
+      const spin = 360 + Math.random() * 720;
+      const hue = [40, 140, 220, 280, 340][Math.floor(Math.random() * 5)] + Math.floor(Math.random() * 30);
+      const dur = 2200 + Math.random() * 1400;
+      const delay = Math.random() * 250;
+      s.style.left = startX + 'px';
+      s.style.setProperty('--x', '0px');
+      s.style.setProperty('--drift', drift + 'px');
+      s.style.setProperty('--rot', rot + 'deg');
+      s.style.setProperty('--spin', spin + 'deg');
+      s.style.setProperty('--hue', hue);
+      s.style.setProperty('--dur', dur + 'ms');
+      s.style.setProperty('--delay', delay + 'ms');
+      layer.appendChild(s);
+    }
+    document.body.appendChild(layer);
+    setTimeout(() => layer.remove(), 4200);
   };
 
   // ---------- DOM refs ----------
@@ -574,6 +1183,10 @@
     ticketDesc:    $('ticketDesc'),
     ticketSubmitBtn: $('ticketSubmitBtn'),
     ticketCancelBtn: $('ticketCancelBtn'),
+    soundToggle:   $('soundToggle'),
+    soundIconOn:   $('soundIconOn'),
+    soundIconOff:  $('soundIconOff'),
+    activeTicketChip: $('activeTicketChip'),
   };
 
   // ---------- Helpers ----------
@@ -604,7 +1217,9 @@
   };
 
   const setConn = (cls, label) => {
-    el.conn.className = 'conn ' + (cls || '');
+    // Empty class means "connecting/intermediate" — show a warm pulse instead of grey
+    const effective = cls || 'connecting';
+    el.conn.className = 'conn ' + effective;
     el.conn.querySelector('.label').textContent = label;
   };
 
@@ -706,11 +1321,54 @@
     el.roomCodeDisplay.textContent = state.roomId;
     el.scaleLabel.textContent = isFib() ? 'Fibonacci' : 'T-shirt maten';
 
+    // Active ticket chip in header
+    const active = getActiveTicket();
+    if (active) {
+      el.activeTicketChip.textContent = active.title;
+      el.activeTicketChip.classList.remove('hidden');
+    } else {
+      el.activeTicketChip.classList.add('hidden');
+    }
+
     renderParticipants();
     renderTickets();
     renderCards();
     renderActions();
     renderStats();
+
+    // Reveal transition hook — fires once per reveal moment
+    if (state.revealed && !state.lastRevealed) {
+      state.lastRevealed = true;
+      onRevealTransition();
+    } else if (!state.revealed && state.lastRevealed) {
+      state.lastRevealed = false;
+    }
+  }
+
+  function onRevealTransition() {
+    sound.reveal();
+    // Enable flip animation for the current render cycle only.
+    // Subsequent re-renders during/after reveal won't re-flip.
+    const panel = el.participants.closest('.panel');
+    if (panel) {
+      panel.classList.add('reveal-anim');
+      const voteCount = Object.values(state.votes).filter(v => v && v.roundId === state.roundId).length;
+      const totalMs = 650 + voteCount * 90;
+      setTimeout(() => panel.classList.remove('reveal-anim'), totalMs);
+    }
+    // Check consensus after the flip animation has finished
+    const votes = Object.entries(state.votes)
+      .filter(([, v]) => v && v.roundId === state.roundId)
+      .map(([, v]) => v.card);
+    const consensus = votes.length > 0 && votes.every(v => v === votes[0]);
+    if (consensus) {
+      // Wait for the card-flip stagger to mostly finish before the burst
+      const waitMs = Math.min(1200, 300 + votes.length * 90);
+      setTimeout(() => {
+        launchConfetti();
+        sound.consensus();
+      }, waitMs);
+    }
   }
 
   function renderParticipants() {
@@ -720,6 +1378,28 @@
 
     el.participantCount.textContent = ids.length;
     el.participants.innerHTML = '';
+
+    // Detect new voters for ripple-only-on-transition animation
+    const currentVoted = new Set();
+    for (const id of ids) {
+      const status = state.statuses[id];
+      if (status && status.roundId === state.roundId && status.hasVoted) currentVoted.add(id);
+    }
+    const newlyVoted = state.participantsRendered
+      ? new Set([...currentVoted].filter(id => !state.lastVotedIds.has(id)))
+      : new Set();
+    state.lastVotedIds = currentVoted;
+    state.participantsRendered = true;
+
+    // "All voted" state — every participant in room has voted, but not yet revealed
+    const allVoted = !state.revealed && ids.length > 0 && ids.every(id => currentVoted.has(id));
+    const participantsPanel = el.participants.closest('.panel');
+    if (participantsPanel) participantsPanel.classList.toggle('all-voted', allVoted);
+
+    // Stable order for flip stagger: sort by vote-time-proxy (clientId) for now
+    const revealedOrder = Object.entries(state.votes)
+      .filter(([, v]) => v && v.roundId === state.roundId)
+      .map(([id]) => id);
 
     const byRole = { dev: [], tester: [], other: [] };
     for (const id of ids) byRole[participantRole(id)].push(id);
@@ -759,6 +1439,20 @@
 
         const li = document.createElement('li');
         li.className = 'participant' + (hasVoted && !state.revealed ? ' voted' : '') + (revealedVote != null ? ' revealed' : '');
+        if (newlyVoted.has(id) && !state.revealed) li.classList.add('new-vote');
+
+        // Avatar
+        const avatar = document.createElement('div');
+        avatar.className = 'avatar';
+        const col = avatarColors(name);
+        avatar.style.setProperty('--av-1', col.a);
+        avatar.style.setProperty('--av-2', col.b);
+        avatar.textContent = initialsFor(name);
+        li.appendChild(avatar);
+
+        // Name column
+        const nameCol = document.createElement('div');
+        nameCol.className = 'name-wrap';
 
         const nameEl = document.createElement('div');
         nameEl.className = 'name';
@@ -766,21 +1460,27 @@
         if (id === state.clientId) {
           const me = document.createElement('span');
           me.className = 'me';
-          me.textContent = '(jij)';
+          me.textContent = 'jij';
           nameEl.appendChild(me);
         }
+        nameCol.appendChild(nameEl);
+
+        const sub = document.createElement('div');
+        sub.className = 'sub';
+        const roleTxt = document.createElement('span');
+        roleTxt.textContent = ROLES[participantRole(id)].label;
+        sub.appendChild(roleTxt);
         if (id === state.host && isOriginalHostPresent()) {
           const h = document.createElement('span');
           h.className = 'role-badge host';
           h.textContent = 'Host';
-          nameEl.appendChild(h);
+          sub.appendChild(h);
         } else if (state.moderators.includes(id) || (id === eh && !isOriginalHostPresent())) {
           const m = document.createElement('span');
           m.className = 'role-badge mod';
           m.textContent = 'Moderator';
-          nameEl.appendChild(m);
+          sub.appendChild(m);
         }
-
         // Promote/demote button — visible only to moderators, never for the effective host or self.
         if (iAmModerator() && id !== eh && id !== state.clientId) {
           const isMod = state.moderators.includes(id);
@@ -789,16 +1489,22 @@
           toggle.textContent = isMod ? 'Demote' : 'Maak moderator';
           toggle.title = isMod ? 'Moderator-rechten intrekken' : 'Geef moderator-rechten';
           toggle.addEventListener('click', () => toggleModerator(id));
-          nameEl.appendChild(toggle);
+          sub.appendChild(toggle);
         }
+        nameCol.appendChild(sub);
+        li.appendChild(nameCol);
 
         const ind = document.createElement('div');
         ind.className = 'vote-indicator';
-        if (revealedVote != null) ind.textContent = revealedVote;
+        if (revealedVote != null) {
+          ind.textContent = revealedVote;
+          // Staggered flip delay based on revealed index
+          const idx = revealedOrder.indexOf(id);
+          if (idx >= 0) ind.style.setProperty('--flip-delay', (idx * 90) + 'ms');
+        }
         else if (hasVoted) ind.textContent = '\u2713';
         else ind.textContent = '\u23F3';
 
-        li.appendChild(nameEl);
         li.appendChild(ind);
         ul.appendChild(li);
       }
@@ -820,6 +1526,30 @@
 
     el.ticketCount.textContent = state.tickets.length;
 
+    // Detect removed tickets for exit animation
+    const currentIds = new Set(state.tickets.map(t => t.id));
+    const removedIds = [...state.lastTicketIds].filter(id => !currentIds.has(id));
+    if (removedIds.length && !prefersReducedMotion()) {
+      // Animate removal on existing DOM nodes before re-rendering
+      const nodes = el.ticketList.querySelectorAll('.ticket-item');
+      let held = false;
+      nodes.forEach(n => {
+        if (removedIds.includes(n.dataset.id)) {
+          n.classList.add('removing');
+          held = true;
+        }
+      });
+      if (held) {
+        // Delay the rerender until exit animation finishes
+        setTimeout(() => {
+          state.lastTicketIds = currentIds;
+          renderTickets();
+        }, 280);
+        return;
+      }
+    }
+    state.lastTicketIds = currentIds;
+
     el.ticketList.innerHTML = '';
     if (!state.tickets.length) {
       const empty = document.createElement('li');
@@ -836,6 +1566,7 @@
       const isDone = t.estimate != null && !isActive;
       const li = document.createElement('li');
       li.className = 'ticket-item' + (isActive ? ' active' : '') + (isDone ? ' done' : '');
+      li.dataset.id = t.id;
 
       const body = document.createElement('div');
       body.className = 't-body';
@@ -849,6 +1580,16 @@
         title.appendChild(pill);
       }
       body.appendChild(title);
+      const jiraUrl = jiraUrlForTitle(t.title);
+      if (jiraUrl) {
+        const link = document.createElement('a');
+        link.className = 't-link';
+        link.href = jiraUrl;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        link.textContent = jiraUrl;
+        body.appendChild(link);
+      }
       if (t.description) {
         const desc = document.createElement('p');
         desc.className = 't-desc';
@@ -935,20 +1676,45 @@
   function renderCards() {
     el.cards.innerHTML = '';
     const deck = SCALES[state.scale];
-    for (const card of deck) {
+    const noTickets = state.tickets.length === 0;
+    const mod = iAmModerator();
+    deck.forEach((card, idx) => {
       const btn = document.createElement('button');
-      btn.className = 'card-btn' + (state.myCard === card ? ' selected' : '');
-      btn.textContent = card;
-      btn.disabled = state.revealed;
+      const isSelected = !noTickets && state.myCard === card;
+      btn.className = 'card-btn' + (isSelected ? ' selected' : '');
+      btn.type = 'button';
+      btn.dataset.card = card;
+      const value = document.createElement('span');
+      value.textContent = card;
+      btn.appendChild(value);
+      const hint = document.createElement('span');
+      hint.className = 'kbd-hint';
+      let shortcut = '';
+      if (card === '?') shortcut = '?';
+      else if (card === '\u2615') shortcut = 'C';
+      else if (idx < 9) shortcut = String(idx + 1);
+      else if (idx === 9) shortcut = '0';
+      if (shortcut) hint.textContent = shortcut;
+      btn.appendChild(hint);
+      btn.title = shortcut ? `Toets: ${shortcut}` : '';
+      btn.disabled = state.revealed || noTickets;
       btn.addEventListener('click', () => selectCard(card));
       el.cards.appendChild(btn);
+    });
+    el.cards.classList.toggle('disabled', noTickets && !state.revealed);
+    if (noTickets && !state.revealed) {
+      el.cardsTitle.textContent = mod
+        ? 'Voeg eerst een ticket toe om te stemmen'
+        : 'Wacht op een ticket om te stemmen';
+    } else {
+      el.cardsTitle.textContent = state.revealed ? 'Kaarten onthuld' : 'Kies je kaart';
     }
-    el.cardsTitle.textContent = state.revealed ? 'Kaarten onthuld' : 'Kies je kaart';
   }
 
   function renderActions() {
     const anyVoted = Object.values(state.statuses).some(s => s && s.roundId === state.roundId && s.hasVoted);
     const mod = iAmModerator();
+    const noTickets = state.tickets.length === 0;
     if (mod) {
       el.revealBtn.classList.remove('hidden');
       el.newRoundBtn.classList.remove('hidden');
@@ -957,8 +1723,11 @@
       el.revealBtn.classList.add('hidden');
       el.newRoundBtn.classList.add('hidden');
       el.modHint.classList.remove('hidden');
+      el.modHint.textContent = noTickets && !state.revealed
+        ? 'Wacht tot een moderator een ticket heeft toegevoegd.'
+        : 'Alleen een moderator kan onthullen of een nieuwe ronde starten.';
     }
-    el.revealBtn.disabled = state.revealed || !anyVoted;
+    el.revealBtn.disabled = state.revealed || !anyVoted || noTickets;
 
     const next = nextTicketToVote();
     if (next) {
@@ -983,35 +1752,46 @@
       .filter(([, v]) => v && v.roundId === state.roundId);
     const votes = roundVotes.map(([, v]) => v.card);
 
-    const addStat = (k, v) => {
+    let statIndex = 0;
+    const addStat = (k, v, opts = {}) => {
       const w = document.createElement('div');
-      w.className = 'stat';
+      w.className = 'stat' + (opts.className ? ' ' + opts.className : '');
+      w.style.setProperty('--stat-delay', (statIndex * 70) + 'ms');
+      statIndex++;
       const kEl = document.createElement('div'); kEl.className = 'k'; kEl.textContent = k;
-      const vEl = document.createElement('div'); vEl.className = 'v'; vEl.textContent = v;
+      const vEl = document.createElement('div'); vEl.className = 'v';
+      if (opts.animateTo != null) {
+        vEl.textContent = '0';
+        // start count-up after the stagger delay so numbers animate in sync with stat entry
+        setTimeout(() => animateCountUp(vEl, opts.animateTo, { decimals: opts.decimals || 0 }), (statIndex - 1) * 70 + 120);
+      } else {
+        vEl.textContent = v;
+      }
       w.appendChild(kEl); w.appendChild(vEl);
       el.stats.appendChild(w);
+      return w;
     };
 
-    addStat('Stemmen', votes.length);
+    addStat('Stemmen', null, { animateTo: votes.length });
 
     // Mode (most frequent)
     const counts = {};
     for (const c of votes) counts[c] = (counts[c] || 0) + 1;
     const maxCount = Math.max(0, ...Object.values(counts));
     const modes = Object.entries(counts).filter(([, n]) => n === maxCount).map(([c]) => c);
-    addStat('Meest gekozen', modes.length && maxCount > 0 ? modes.join(', ') : '—');
+    addStat('Meest gekozen', modes.length && maxCount > 0 ? modes.join(', ') : '\u2014');
 
     if (isFib()) {
       const numeric = votes.map(v => parseFloat(v)).filter(n => Number.isFinite(n));
       if (numeric.length) {
         const avg = numeric.reduce((a, b) => a + b, 0) / numeric.length;
-        addStat('Gemiddelde', avg.toFixed(2).replace(/\.00$/, ''));
+        addStat('Gemiddelde', null, { animateTo: avg, decimals: 2 });
         addStat('Min / Max', Math.min(...numeric) + ' / ' + Math.max(...numeric));
       }
     }
 
     const consensus = votes.length > 0 && votes.every(v => v === votes[0]);
-    addStat('Consensus', consensus ? 'Ja (' + votes[0] + ')' : 'Nee');
+    addStat('Consensus', consensus ? 'Ja (' + votes[0] + ')' : 'Nee', consensus ? { className: 'consensus-yes' } : {});
 
     renderRoleBreakdown(roundVotes);
   }
@@ -1272,7 +2052,9 @@
   // ---------- Actions ----------
   function selectCard(card) {
     if (state.revealed) return;
+    if (state.tickets.length === 0) return;
     state.myCard = (state.myCard === card) ? null : card;
+    if (state.myCard != null) sound.tick();
     publishStatus(state.myCard != null);
     render();
   }
@@ -1532,6 +2314,41 @@
   }
 
   // ---------- Bindings ----------
+  function syncSoundToggle() {
+    el.soundToggle.classList.toggle('on', state.soundEnabled);
+    el.soundToggle.setAttribute('aria-pressed', state.soundEnabled ? 'true' : 'false');
+    el.soundToggle.title = state.soundEnabled ? 'Geluid uit zetten' : 'Geluid aan zetten';
+    el.soundIconOn.classList.toggle('hidden', !state.soundEnabled);
+    el.soundIconOff.classList.toggle('hidden', state.soundEnabled);
+  }
+  el.soundToggle.addEventListener('click', () => {
+    state.soundEnabled = !state.soundEnabled;
+    syncSoundToggle();
+    if (state.soundEnabled) sound.tick();
+  });
+  syncSoundToggle();
+
+  // Keyboard shortcuts for cards (when room visible and not typing in input)
+  document.addEventListener('keydown', (e) => {
+    if (!state.roomId || state.revealed) return;
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    const tag = document.activeElement?.tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+    const deck = SCALES[state.scale];
+    let card = null;
+    if (e.key >= '1' && e.key <= '9') {
+      const idx = parseInt(e.key, 10) - 1;
+      if (idx < deck.length) card = deck[idx];
+    } else if (e.key === '0') {
+      if (deck.length >= 10) card = deck[9];
+    } else if (e.key === '?') {
+      card = deck.includes('?') ? '?' : null;
+    } else if (e.key.toLowerCase() === 'c') {
+      card = deck.includes('\u2615') ? '\u2615' : null;
+    }
+    if (card != null) { e.preventDefault(); selectCard(card); }
+  });
+
   el.createBtn.addEventListener('click', createRoom);
   el.joinBtn.addEventListener('click', () => joinRoom(el.joinCodeInput.value));
   el.joinCodeInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') joinRoom(el.joinCodeInput.value); });
