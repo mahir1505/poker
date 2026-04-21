@@ -643,11 +643,16 @@
   const snapshotVotesForRound = () =>
     Object.entries(state.votes)
       .filter(([, v]) => v && v.roundId === state.roundId)
-      .map(([id, v]) => ({
-        name: id === state.clientId ? state.name : (state.participants[id]?.name || '?'),
-        role: participantRole(id),
-        card: String(v.card),
-      }))
+      .map(([id, v]) => {
+        const name = id === state.clientId
+          ? state.name
+          : (v.name || state.participants[id]?.name || '');
+        const role = normalizeRole(
+          id === state.clientId ? state.role : (v.role || state.participants[id]?.role)
+        );
+        return { name, role, card: String(v.card) };
+      })
+      .filter(v => v.name)
       .sort((a, b) => {
         const ro = ROLES[a.role].order - ROLES[b.role].order;
         if (ro !== 0) return ro;
@@ -1017,7 +1022,12 @@
     if (!roundVotes.length) return;
 
     const byRole = { dev: [], tester: [], other: [] };
-    for (const [id, v] of roundVotes) byRole[participantRole(id)].push(String(v.card));
+    for (const [id, v] of roundVotes) {
+      const role = id === state.clientId
+        ? state.role
+        : normalizeRole(v.role || state.participants[id]?.role);
+      byRole[role].push(String(v.card));
+    }
     const activeRoles = ROLE_KEYS.filter(k => byRole[k].length > 0);
     if (activeRoles.length < 2) return; // only show when there's something to compare
 
@@ -1134,7 +1144,7 @@
     if (state.myCard == null) return;
     state.client.publish(
       topic('vote/' + state.clientId),
-      JSON.stringify({ roundId: state.roundId, card: state.myCard }),
+      JSON.stringify({ roundId: state.roundId, card: state.myCard, name: state.name, role: state.role }),
       { qos: 0, retain: true }
     );
   }
