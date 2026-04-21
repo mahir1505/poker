@@ -1,0 +1,1336 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>Planning Poker</title>
+<style>
+  :root {
+    --bg: #f5f6f8;
+    --fg: #1c2024;
+    --muted: #6b7280;
+    --card: #ffffff;
+    --border: #e3e5ea;
+    --accent: #3366ff;
+    --accent-fg: #ffffff;
+    --danger: #c0392b;
+    --ok: #1aa260;
+    --warn: #e0a800;
+    --shadow: 0 1px 2px rgba(0,0,0,.04), 0 4px 12px rgba(0,0,0,.04);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #14161a;
+      --fg: #e6e8eb;
+      --muted: #8a9099;
+      --card: #1d2025;
+      --border: #2a2f37;
+      --accent: #4c7dff;
+      --accent-fg: #ffffff;
+      --shadow: 0 1px 2px rgba(0,0,0,.25), 0 4px 14px rgba(0,0,0,.3);
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    font: 14px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: var(--fg);
+    background: var(--bg);
+  }
+  header {
+    position: sticky; top: 0; z-index: 10;
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 20px;
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+  }
+  header h1 { font-size: 16px; margin: 0; font-weight: 600; }
+  header .spacer { flex: 1; }
+  .conn {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 12px; color: var(--muted);
+  }
+  .conn .dot {
+    width: 9px; height: 9px; border-radius: 50%;
+    background: var(--muted);
+  }
+  .conn.ok .dot { background: var(--ok); }
+  .conn.err .dot { background: var(--danger); }
+  select, input, button {
+    font: inherit; color: inherit;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 7px 10px;
+  }
+  button {
+    cursor: pointer;
+    transition: background 120ms ease, border-color 120ms ease, transform 60ms;
+  }
+  button:hover:not(:disabled) { border-color: var(--accent); }
+  button:active:not(:disabled) { transform: translateY(1px); }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  button.primary { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
+  button.primary:hover:not(:disabled) { filter: brightness(1.08); }
+  main { max-width: 960px; margin: 0 auto; padding: 24px 20px 60px; }
+  .panel {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: var(--shadow);
+  }
+  .panel + .panel { margin-top: 16px; }
+  label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+  .row { display: flex; gap: 10px; align-items: end; flex-wrap: wrap; }
+  .row > * { flex: 1 1 160px; }
+  .row input, .row select { width: 100%; }
+  .hint { color: var(--muted); font-size: 12px; }
+  .warn {
+    background: color-mix(in srgb, var(--warn) 14%, transparent);
+    border: 1px solid color-mix(in srgb, var(--warn) 40%, transparent);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 12.5px;
+    margin-bottom: 16px;
+  }
+  h2 { font-size: 15px; margin: 0 0 12px; font-weight: 600; }
+  .participants {
+    list-style: none; margin: 0; padding: 0;
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 8px;
+  }
+  .participant {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+  }
+  .participant .name { flex: 1; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .participant .me { font-size: 11px; color: var(--muted); font-weight: 400; margin-left: 4px; }
+  .participant .vote-indicator {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 36px; height: 44px;
+    border-radius: 6px;
+    background: var(--card);
+    border: 1.5px dashed var(--border);
+    color: var(--muted);
+    font-size: 14px;
+  }
+  .participant.voted .vote-indicator {
+    border-style: solid;
+    border-color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 10%, var(--card));
+    color: var(--accent);
+  }
+  .participant.revealed .vote-indicator {
+    border-color: var(--accent);
+    background: var(--accent);
+    color: var(--accent-fg);
+    font-weight: 600;
+    font-size: 15px;
+  }
+  .cards {
+    display: flex; flex-wrap: wrap; gap: 10px;
+    margin-top: 4px;
+  }
+  .card-btn {
+    min-width: 56px; height: 80px;
+    font-size: 18px; font-weight: 600;
+    border-radius: 10px;
+    background: var(--card);
+    border: 2px solid var(--border);
+    transition: transform 100ms ease, border-color 120ms ease, background 120ms ease;
+  }
+  .card-btn:hover:not(:disabled) { border-color: var(--accent); transform: translateY(-2px); }
+  .card-btn.selected {
+    background: var(--accent);
+    color: var(--accent-fg);
+    border-color: var(--accent);
+    transform: translateY(-2px);
+  }
+  .actions { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+  .stats {
+    display: grid; gap: 8px; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    margin-top: 8px;
+  }
+  .stat {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+  }
+  .stat .k { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+  .stat .v { font-size: 20px; font-weight: 600; margin-top: 2px; }
+  .room-code {
+    font-family: ui-monospace, "SF Mono", Consolas, monospace;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    padding: 3px 7px;
+    border-radius: 5px;
+    font-size: 13px;
+  }
+  .hidden { display: none !important; }
+  .tag {
+    display: inline-block;
+    padding: 1px 7px;
+    border-radius: 10px;
+    font-size: 11px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--muted);
+  }
+  .role-badge {
+    display: inline-block;
+    padding: 1px 6px;
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: .02em;
+    margin-left: 6px;
+    border: 1px solid transparent;
+  }
+  .role-badge.host {
+    background: color-mix(in srgb, var(--accent) 16%, transparent);
+    border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+    color: var(--accent);
+  }
+  .role-badge.mod {
+    background: color-mix(in srgb, var(--ok) 16%, transparent);
+    border-color: color-mix(in srgb, var(--ok) 40%, transparent);
+    color: var(--ok);
+  }
+  .mod-toggle {
+    padding: 2px 8px;
+    font-size: 11px;
+    border-radius: 6px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    margin-left: 6px;
+    cursor: pointer;
+  }
+  .mod-toggle:hover { border-color: var(--accent); color: var(--fg); }
+  .ticket-list {
+    list-style: none; margin: 0; padding: 0;
+    display: grid; gap: 8px;
+  }
+  .ticket-item {
+    display: flex; align-items: flex-start; gap: 12px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+  }
+  .ticket-item.active {
+    border-color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 8%, var(--card));
+  }
+  .ticket-item.done { opacity: 0.85; }
+  .ticket-item .t-body { flex: 1; min-width: 0; }
+  .ticket-item .t-title {
+    font-size: 14px;
+    font-weight: 600;
+    margin: 0;
+    word-break: break-word;
+  }
+  .ticket-item .t-desc {
+    margin: 4px 0 0;
+    color: var(--muted);
+    font-size: 12.5px;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .ticket-item .t-actions {
+    display: flex; flex-wrap: wrap; gap: 6px;
+    align-items: center;
+  }
+  .ticket-item .t-actions button {
+    padding: 4px 10px;
+    font-size: 12px;
+    border-radius: 6px;
+  }
+  .estimate-badge {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 36px; height: 36px; padding: 0 8px;
+    border-radius: 8px;
+    background: var(--accent);
+    color: var(--accent-fg);
+    font-weight: 700;
+    font-size: 14px;
+  }
+  .active-pill {
+    display: inline-block;
+    padding: 1px 7px;
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: 600;
+    background: color-mix(in srgb, var(--accent) 18%, transparent);
+    border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+    color: var(--accent);
+    margin-left: 6px;
+    vertical-align: middle;
+  }
+  .ticket-empty { color: var(--muted); font-style: italic; padding: 4px 0; }
+  .ticket-form { display: grid; gap: 8px; margin-top: 10px; }
+  .ticket-form textarea {
+    font: inherit; color: inherit;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 7px 10px;
+    resize: vertical;
+    min-height: 56px;
+  }
+  .ticket-head {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
+  }
+  .ticket-head h2 { margin: 0; }
+  .mod-hint {
+    color: var(--muted); font-size: 12px; font-style: italic;
+  }
+  .t-votes {
+    margin-top: 8px;
+  }
+  .t-votes summary {
+    cursor: pointer;
+    color: var(--muted);
+    font-size: 12px;
+    padding: 2px 0;
+    list-style: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    user-select: none;
+  }
+  .t-votes summary::-webkit-details-marker { display: none; }
+  .t-votes summary::before {
+    content: '\24D8';
+    font-size: 13px;
+    color: var(--accent);
+  }
+  .t-votes summary:hover { color: var(--fg); }
+  .t-vote-list {
+    list-style: none;
+    margin: 8px 0 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 6px;
+  }
+  .t-vote-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 12px;
+  }
+  .t-vote-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .t-vote-card {
+    font-weight: 600;
+    color: var(--accent);
+    flex-shrink: 0;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Planning Poker</h1>
+  <span id="roomTag" class="tag hidden"></span>
+  <div class="spacer"></div>
+  <label for="brokerSelect" style="margin: 0 6px 0 0; font-size: 12px;">Broker</label>
+  <select id="brokerSelect" title="Publieke MQTT broker">
+    <option value="hivemq">HiveMQ</option>
+    <option value="emqx">EMQX</option>
+  </select>
+  <span id="conn" class="conn"><span class="dot"></span><span class="label">offline</span></span>
+</header>
+
+<main>
+
+  <!-- Landing screen -->
+  <section id="landing" class="panel">
+    <div class="warn">
+      Dit gebruikt een <strong>publieke</strong> MQTT broker. Gebruik geen vertrouwelijke namen of gegevens — iedereen die jouw kamercode kent kan meeluisteren.
+    </div>
+
+    <h2>Kom binnen</h2>
+    <div class="row">
+      <div>
+        <label for="nameInput">Jouw naam</label>
+        <input id="nameInput" maxlength="32" placeholder="bv. Alice" autocomplete="off">
+      </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 18px;" id="landingCols">
+      <div class="panel" style="box-shadow: none; margin: 0;">
+        <h2>Nieuwe kamer</h2>
+        <label for="scaleInput">Kaartschaal</label>
+        <select id="scaleInput">
+          <option value="fib">Fibonacci (0, 1, 2, 3, 5, 8, 13, 20, 40, 100)</option>
+          <option value="tshirt">T-shirt (XS, S, M, L, XL, XXL)</option>
+        </select>
+        <div class="actions">
+          <button id="createBtn" class="primary">Kamer aanmaken</button>
+        </div>
+      </div>
+
+      <div class="panel" style="box-shadow: none; margin: 0;">
+        <h2>Deelnemen</h2>
+        <label for="joinCodeInput">Kamercode</label>
+        <input id="joinCodeInput" placeholder="bv. k7f2m3a9xq01" autocomplete="off">
+        <div class="actions">
+          <button id="joinBtn" class="primary">Deelnemen</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Room screen -->
+  <section id="room" class="hidden">
+    <div class="panel">
+      <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+        <h2 style="margin: 0;">Kamer</h2>
+        <span class="room-code" id="roomCodeDisplay"></span>
+        <button id="copyLinkBtn" title="Kopieer link">Link kopiëren</button>
+        <span class="hint" id="scaleLabel"></span>
+        <div class="spacer" style="flex: 1;"></div>
+        <button id="leaveBtn">Verlaten</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Deelnemers (<span id="participantCount">0</span>)</h2>
+      <ul id="participants" class="participants"></ul>
+    </div>
+
+    <div class="panel">
+      <div class="ticket-head">
+        <h2>Tickets <span class="tag" id="ticketCount">0</span></h2>
+        <div class="spacer" style="flex: 1;"></div>
+        <button id="newTicketBtn" class="primary hidden">Ticket toevoegen</button>
+      </div>
+      <ul id="ticketList" class="ticket-list"></ul>
+      <div id="ticketForm" class="ticket-form hidden">
+        <div>
+          <label for="ticketTitle">Titel</label>
+          <input id="ticketTitle" maxlength="120" placeholder="bv. VO-1234 — login flow" autocomplete="off">
+        </div>
+        <div>
+          <label for="ticketDesc">Beschrijving (optioneel)</label>
+          <textarea id="ticketDesc" maxlength="1000" placeholder="Korte toelichting, acceptatiecriteria, links…"></textarea>
+        </div>
+        <div class="actions">
+          <button id="ticketSubmitBtn" class="primary">Toevoegen</button>
+          <button id="ticketCancelBtn">Annuleren</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2 id="cardsTitle">Kies je kaart</h2>
+      <div id="cards" class="cards"></div>
+      <div class="actions">
+        <button id="revealBtn" class="primary hidden" disabled>Reveal</button>
+        <button id="newRoundBtn" class="hidden" disabled>Nieuwe ronde</button>
+        <span id="modHint" class="mod-hint hidden">Alleen een moderator kan onthullen of een nieuwe ronde starten.</span>
+      </div>
+    </div>
+
+    <div class="panel hidden" id="statsPanel">
+      <h2>Resultaat</h2>
+      <div class="stats" id="stats"></div>
+    </div>
+  </section>
+
+</main>
+
+<script src="https://unpkg.com/mqtt@5.3.4/dist/mqtt.min.js"></script>
+<script>
+(() => {
+  'use strict';
+
+  const TOPIC_ROOT = 'vo-planpoker-4f9k';
+  const BROKERS = {
+    hivemq: { url: 'wss://broker.hivemq.com:8884/mqtt', label: 'HiveMQ' },
+    emqx:   { url: 'wss://broker.emqx.io:8084/mqtt',    label: 'EMQX' },
+  };
+  const SCALES = {
+    fib:    ['0', '1', '2', '3', '5', '8', '13', '20', '40', '100', '?', '\u2615'],
+    tshirt: ['XS', 'S', 'M', 'L', 'XL', 'XXL', '?', '\u2615'],
+  };
+
+  // ---------- State ----------
+  const state = {
+    clientId: 'pp-' + crypto.randomUUID().slice(0, 12),
+    brokerKey: localStorage.getItem('pp.broker') || 'hivemq',
+    name: localStorage.getItem('pp.name') || '',
+    roomId: null,
+    scale: 'fib',
+    host: null,
+    joinedAt: null,
+    roundId: 1,
+    revealed: false,
+    myCard: null,          // locally-held card value before reveal
+    participants: {},      // clientId -> { name }
+    statuses: {},          // clientId -> { roundId, hasVoted }
+    votes: {},             // clientId -> { roundId, card }
+    moderators: [],        // extra moderator clientIds (host is always moderator)
+    tickets: [],           // [{ id, title, description, estimate }]
+    activeTicketId: null,  // id of the ticket currently being voted on, or null
+    client: null,          // mqtt client
+  };
+
+  // ---------- DOM refs ----------
+  const $ = (id) => document.getElementById(id);
+  const el = {
+    landing:       $('landing'),
+    room:          $('room'),
+    nameInput:     $('nameInput'),
+    scaleInput:    $('scaleInput'),
+    joinCodeInput: $('joinCodeInput'),
+    createBtn:     $('createBtn'),
+    joinBtn:       $('joinBtn'),
+    conn:          $('conn'),
+    roomTag:       $('roomTag'),
+    roomCodeDisplay: $('roomCodeDisplay'),
+    copyLinkBtn:   $('copyLinkBtn'),
+    scaleLabel:    $('scaleLabel'),
+    leaveBtn:      $('leaveBtn'),
+    participants:  $('participants'),
+    participantCount: $('participantCount'),
+    cards:         $('cards'),
+    cardsTitle:    $('cardsTitle'),
+    revealBtn:     $('revealBtn'),
+    newRoundBtn:   $('newRoundBtn'),
+    modHint:       $('modHint'),
+    statsPanel:    $('statsPanel'),
+    stats:         $('stats'),
+    brokerSelect:  $('brokerSelect'),
+    newTicketBtn:  $('newTicketBtn'),
+    ticketList:    $('ticketList'),
+    ticketCount:   $('ticketCount'),
+    ticketForm:    $('ticketForm'),
+    ticketTitle:   $('ticketTitle'),
+    ticketDesc:    $('ticketDesc'),
+    ticketSubmitBtn: $('ticketSubmitBtn'),
+    ticketCancelBtn: $('ticketCancelBtn'),
+  };
+
+  // ---------- Helpers ----------
+  const randomRoomId = () =>
+    Array.from(crypto.getRandomValues(new Uint8Array(8)))
+         .map(b => (b % 36).toString(36))
+         .join('');
+
+  const topic = (suffix) => `${TOPIC_ROOT}/${state.roomId}/${suffix}`;
+
+  const parseHash = () => {
+    const h = location.hash.replace(/^#/, '');
+    const p = new URLSearchParams(h);
+    return { room: p.get('room'), scale: p.get('scale') };
+  };
+  const writeHash = () => {
+    const p = new URLSearchParams();
+    p.set('room', state.roomId);
+    p.set('scale', state.scale);
+    location.hash = p.toString();
+  };
+
+  const setConn = (cls, label) => {
+    el.conn.className = 'conn ' + (cls || '');
+    el.conn.querySelector('.label').textContent = label;
+  };
+
+  const isFib = () => state.scale === 'fib';
+
+  // Returns the clientId that currently holds host-level rights.
+  // Falls back to the earliest-joined present participant if the original host is absent,
+  // so a room always has at least one moderator.
+  const effectiveHost = () => {
+    if (state.host && state.participants[state.host]) return state.host;
+    const entries = Object.entries(state.participants)
+      .filter(([, p]) => p && typeof p.joinedAt === 'number');
+    if (!entries.length) return state.host;
+    entries.sort((a, b) => a[1].joinedAt - b[1].joinedAt || a[0].localeCompare(b[0]));
+    return entries[0][0];
+  };
+  const isOriginalHostPresent = () => !!(state.host && state.participants[state.host]);
+  const isModerator = (id) => {
+    if (!id) return false;
+    return id === effectiveHost() || state.moderators.includes(id);
+  };
+  const iAmModerator = () => isModerator(state.clientId);
+
+  const randomTicketId = () =>
+    't-' + Array.from(crypto.getRandomValues(new Uint8Array(6)))
+            .map(b => (b % 36).toString(36)).join('');
+
+  const getActiveTicket = () =>
+    state.activeTicketId ? state.tickets.find(t => t.id === state.activeTicketId) || null : null;
+
+  const computeModeVote = () => {
+    const votes = Object.entries(state.votes)
+      .filter(([, v]) => v && v.roundId === state.roundId)
+      .map(([, v]) => v.card);
+    if (!votes.length) return null;
+    const counts = {};
+    for (const c of votes) counts[c] = (counts[c] || 0) + 1;
+    const max = Math.max(...Object.values(counts));
+    const modes = Object.entries(counts).filter(([, n]) => n === max).map(([c]) => c);
+    return modes.length === 1 ? modes[0] : null; // only auto-save if unambiguous
+  };
+
+  // ---------- Render ----------
+  function render() {
+    if (!state.roomId) {
+      el.landing.classList.remove('hidden');
+      el.room.classList.add('hidden');
+      el.roomTag.classList.add('hidden');
+      return;
+    }
+    el.landing.classList.add('hidden');
+    el.room.classList.remove('hidden');
+    el.roomTag.classList.remove('hidden');
+    el.roomTag.textContent = state.roomId;
+    el.roomCodeDisplay.textContent = state.roomId;
+    el.scaleLabel.textContent = isFib() ? 'Fibonacci' : 'T-shirt maten';
+
+    renderParticipants();
+    renderTickets();
+    renderCards();
+    renderActions();
+    renderStats();
+  }
+
+  function renderParticipants() {
+    const ids = Object.keys(state.participants);
+    // Ensure self appears even before our own presence loops back.
+    if (!ids.includes(state.clientId) && state.name) ids.push(state.clientId);
+
+    el.participantCount.textContent = ids.length;
+    el.participants.innerHTML = '';
+    ids.sort((a, b) => (state.participants[a]?.name || '').localeCompare(state.participants[b]?.name || ''));
+
+    for (const id of ids) {
+      const name = id === state.clientId ? state.name : (state.participants[id]?.name || '?');
+      const status = state.statuses[id];
+      const hasVoted = status && status.roundId === state.roundId && status.hasVoted;
+      const vote = state.votes[id];
+      const revealedVote = state.revealed && vote && vote.roundId === state.roundId ? vote.card : null;
+
+      const li = document.createElement('li');
+      li.className = 'participant' + (hasVoted && !state.revealed ? ' voted' : '') + (revealedVote != null ? ' revealed' : '');
+
+      const nameEl = document.createElement('div');
+      nameEl.className = 'name';
+      nameEl.textContent = name;
+      if (id === state.clientId) {
+        const me = document.createElement('span');
+        me.className = 'me';
+        me.textContent = '(jij)';
+        nameEl.appendChild(me);
+      }
+      const eh = effectiveHost();
+      if (id === state.host && isOriginalHostPresent()) {
+        const h = document.createElement('span');
+        h.className = 'role-badge host';
+        h.textContent = 'Host';
+        nameEl.appendChild(h);
+      } else if (state.moderators.includes(id) || (id === eh && !isOriginalHostPresent())) {
+        const m = document.createElement('span');
+        m.className = 'role-badge mod';
+        m.textContent = 'Moderator';
+        nameEl.appendChild(m);
+      }
+
+      // Promote/demote button — visible only to moderators, never for the effective host or self.
+      if (iAmModerator() && id !== eh && id !== state.clientId) {
+        const isMod = state.moderators.includes(id);
+        const toggle = document.createElement('button');
+        toggle.className = 'mod-toggle';
+        toggle.textContent = isMod ? 'Demote' : 'Maak moderator';
+        toggle.title = isMod ? 'Moderator-rechten intrekken' : 'Geef moderator-rechten';
+        toggle.addEventListener('click', () => toggleModerator(id));
+        nameEl.appendChild(toggle);
+      }
+
+      const ind = document.createElement('div');
+      ind.className = 'vote-indicator';
+      if (revealedVote != null) ind.textContent = revealedVote;
+      else if (hasVoted) ind.textContent = '\u2713';
+      else ind.textContent = '\u23F3';
+
+      li.appendChild(nameEl);
+      li.appendChild(ind);
+      el.participants.appendChild(li);
+    }
+  }
+
+  function renderTickets() {
+    const mod = iAmModerator();
+    // Non-moderators should never see the form open.
+    if (!mod && !el.ticketForm.classList.contains('hidden')) {
+      el.ticketForm.classList.add('hidden');
+    }
+    const formOpen = !el.ticketForm.classList.contains('hidden');
+    if (mod && !formOpen) el.newTicketBtn.classList.remove('hidden');
+    else el.newTicketBtn.classList.add('hidden');
+
+    el.ticketCount.textContent = state.tickets.length;
+
+    el.ticketList.innerHTML = '';
+    if (!state.tickets.length) {
+      const empty = document.createElement('li');
+      empty.className = 'ticket-empty';
+      empty.textContent = mod
+        ? 'Nog geen tickets. Voeg er een toe om te beginnen.'
+        : 'Nog geen tickets.';
+      el.ticketList.appendChild(empty);
+      return;
+    }
+
+    for (const t of state.tickets) {
+      const isActive = t.id === state.activeTicketId;
+      const isDone = t.estimate != null && !isActive;
+      const li = document.createElement('li');
+      li.className = 'ticket-item' + (isActive ? ' active' : '') + (isDone ? ' done' : '');
+
+      const body = document.createElement('div');
+      body.className = 't-body';
+      const title = document.createElement('p');
+      title.className = 't-title';
+      title.textContent = t.title;
+      if (isActive) {
+        const pill = document.createElement('span');
+        pill.className = 'active-pill';
+        pill.textContent = state.revealed ? 'onthuld' : 'stemmen…';
+        title.appendChild(pill);
+      }
+      body.appendChild(title);
+      if (t.description) {
+        const desc = document.createElement('p');
+        desc.className = 't-desc';
+        desc.textContent = t.description;
+        body.appendChild(desc);
+      }
+      if (Array.isArray(t.votes) && t.votes.length) {
+        const details = document.createElement('details');
+        details.className = 't-votes';
+        const summary = document.createElement('summary');
+        summary.textContent = `Stemmen (${t.votes.length})`;
+        details.appendChild(summary);
+        const voteList = document.createElement('ul');
+        voteList.className = 't-vote-list';
+        for (const v of t.votes) {
+          const vi = document.createElement('li');
+          const n = document.createElement('span');
+          n.className = 't-vote-name';
+          n.textContent = v.name;
+          const c = document.createElement('span');
+          c.className = 't-vote-card';
+          c.textContent = v.card;
+          vi.appendChild(n);
+          vi.appendChild(c);
+          voteList.appendChild(vi);
+        }
+        details.appendChild(voteList);
+        body.appendChild(details);
+      }
+      li.appendChild(body);
+
+      if (t.estimate != null) {
+        const badge = document.createElement('div');
+        badge.className = 'estimate-badge';
+        badge.title = 'Schatting';
+        badge.textContent = t.estimate;
+        li.appendChild(badge);
+      }
+
+      if (mod) {
+        const actions = document.createElement('div');
+        actions.className = 't-actions';
+
+        if (!isActive) {
+          const actBtn = document.createElement('button');
+          actBtn.textContent = t.estimate != null ? 'Opnieuw stemmen' : 'Activeren';
+          actBtn.addEventListener('click', () => activateTicket(t.id));
+          actions.appendChild(actBtn);
+        } else if (state.revealed) {
+          const saveBtn = document.createElement('button');
+          saveBtn.className = 'primary';
+          const auto = computeModeVote();
+          saveBtn.textContent = auto != null ? `Bewaar ${auto}` : 'Bewaar schatting…';
+          saveBtn.addEventListener('click', () => saveEstimate(t.id, auto));
+          actions.appendChild(saveBtn);
+        }
+
+        const delBtn = document.createElement('button');
+        delBtn.textContent = 'Verwijder';
+        delBtn.title = 'Ticket verwijderen';
+        delBtn.addEventListener('click', () => deleteTicket(t.id));
+        actions.appendChild(delBtn);
+
+        li.appendChild(actions);
+      }
+
+      el.ticketList.appendChild(li);
+    }
+  }
+
+  function renderCards() {
+    el.cards.innerHTML = '';
+    const deck = SCALES[state.scale];
+    for (const card of deck) {
+      const btn = document.createElement('button');
+      btn.className = 'card-btn' + (state.myCard === card ? ' selected' : '');
+      btn.textContent = card;
+      btn.disabled = state.revealed;
+      btn.addEventListener('click', () => selectCard(card));
+      el.cards.appendChild(btn);
+    }
+    el.cardsTitle.textContent = state.revealed ? 'Kaarten onthuld' : 'Kies je kaart';
+  }
+
+  function renderActions() {
+    const anyVoted = Object.values(state.statuses).some(s => s && s.roundId === state.roundId && s.hasVoted);
+    const mod = iAmModerator();
+    if (mod) {
+      el.revealBtn.classList.remove('hidden');
+      el.newRoundBtn.classList.remove('hidden');
+      el.modHint.classList.add('hidden');
+    } else {
+      el.revealBtn.classList.add('hidden');
+      el.newRoundBtn.classList.add('hidden');
+      el.modHint.classList.remove('hidden');
+    }
+    el.revealBtn.disabled = state.revealed || !anyVoted;
+    el.newRoundBtn.disabled = !state.revealed;
+  }
+
+  function renderStats() {
+    if (!state.revealed) {
+      el.statsPanel.classList.add('hidden');
+      return;
+    }
+    el.statsPanel.classList.remove('hidden');
+    el.stats.innerHTML = '';
+
+    const votes = Object.entries(state.votes)
+      .filter(([, v]) => v && v.roundId === state.roundId)
+      .map(([, v]) => v.card);
+
+    const addStat = (k, v) => {
+      const w = document.createElement('div');
+      w.className = 'stat';
+      const kEl = document.createElement('div'); kEl.className = 'k'; kEl.textContent = k;
+      const vEl = document.createElement('div'); vEl.className = 'v'; vEl.textContent = v;
+      w.appendChild(kEl); w.appendChild(vEl);
+      el.stats.appendChild(w);
+    };
+
+    addStat('Stemmen', votes.length);
+
+    // Mode (most frequent)
+    const counts = {};
+    for (const c of votes) counts[c] = (counts[c] || 0) + 1;
+    const maxCount = Math.max(0, ...Object.values(counts));
+    const modes = Object.entries(counts).filter(([, n]) => n === maxCount).map(([c]) => c);
+    addStat('Meest gekozen', modes.length && maxCount > 0 ? modes.join(', ') : '—');
+
+    if (isFib()) {
+      const numeric = votes.map(v => parseFloat(v)).filter(n => Number.isFinite(n));
+      if (numeric.length) {
+        const avg = numeric.reduce((a, b) => a + b, 0) / numeric.length;
+        addStat('Gemiddelde', avg.toFixed(2).replace(/\.00$/, ''));
+        addStat('Min / Max', Math.min(...numeric) + ' / ' + Math.max(...numeric));
+      }
+    }
+
+    const consensus = votes.length > 0 && votes.every(v => v === votes[0]);
+    addStat('Consensus', consensus ? 'Ja (' + votes[0] + ')' : 'Nee');
+  }
+
+  // ---------- MQTT ----------
+  function connect() {
+    const broker = BROKERS[state.brokerKey];
+    setConn('', 'verbinden met ' + broker.label + '…');
+
+    const willTopic = topic('presence/' + state.clientId);
+    const client = mqtt.connect(broker.url, {
+      clientId: state.clientId,
+      clean: true,
+      keepalive: 30,
+      reconnectPeriod: 2500,
+      connectTimeout: 10000,
+      will: { topic: willTopic, payload: '', qos: 0, retain: true },
+    });
+    state.client = client;
+
+    client.on('connect', () => {
+      setConn('ok', 'verbonden met ' + broker.label);
+      client.subscribe(`${TOPIC_ROOT}/${state.roomId}/#`, { qos: 0 }, (err) => {
+        if (err) {
+          console.error('subscribe failed', err);
+          setConn('err', 'subscribe mislukt');
+          return;
+        }
+        announceSelf();
+      });
+    });
+
+    client.on('reconnect', () => setConn('', 'herverbinden…'));
+    client.on('close',     () => setConn('err', 'losgekoppeld'));
+    client.on('error',     (e) => { console.error(e); setConn('err', 'fout: ' + (e.message || e)); });
+
+    client.on('message', (t, payloadBuf) => {
+      const payload = payloadBuf.toString();
+      handleMessage(t, payload);
+    });
+  }
+
+  function announceSelf() {
+    // If we created the room we publish meta. If joining, we only publish meta if none exists yet
+    // (we can't know — safe fallback: only creator writes meta, done in createRoom()).
+    state.client.publish(
+      topic('presence/' + state.clientId),
+      JSON.stringify({ name: state.name, joinedAt: state.joinedAt }),
+      { qos: 0, retain: true }
+    );
+    // Publish current vote status (clean).
+    publishStatus(false);
+  }
+
+  function publishStatus(hasVoted) {
+    if (!state.client || !state.client.connected) return;
+    state.client.publish(
+      topic('status/' + state.clientId),
+      JSON.stringify({ roundId: state.roundId, hasVoted }),
+      { qos: 0, retain: true }
+    );
+  }
+
+  function publishMyVote() {
+    if (!state.client || !state.client.connected) return;
+    if (state.myCard == null) return;
+    state.client.publish(
+      topic('vote/' + state.clientId),
+      JSON.stringify({ roundId: state.roundId, card: state.myCard }),
+      { qos: 0, retain: true }
+    );
+  }
+
+  function handleMessage(t, payload) {
+    const prefix = `${TOPIC_ROOT}/${state.roomId}/`;
+    if (!t.startsWith(prefix)) return;
+    const rest = t.slice(prefix.length);
+
+    if (rest === 'meta') {
+      if (!payload) return;
+      try {
+        const meta = JSON.parse(payload);
+        if (meta.scale && SCALES[meta.scale]) state.scale = meta.scale;
+        if (meta.host) state.host = meta.host;
+        writeHash();
+        render();
+      } catch (e) { /* ignore */ }
+      return;
+    }
+
+    if (rest === 'round') {
+      if (!payload) return;
+      try {
+        const r = JSON.parse(payload);
+        const roundChanged = r.roundId !== state.roundId;
+        state.roundId = r.roundId;
+        state.revealed = !!r.revealed;
+        state.activeTicketId = (typeof r.ticketId === 'string') ? r.ticketId : null;
+
+        if (roundChanged) {
+          // Reset local state for a fresh round.
+          state.myCard = null;
+          publishStatus(false);
+        }
+        if (state.revealed) {
+          // Everyone publishes their real vote now.
+          publishMyVote();
+        }
+        render();
+      } catch (e) { /* ignore */ }
+      return;
+    }
+
+    if (rest.startsWith('presence/')) {
+      const id = rest.slice('presence/'.length);
+      if (!payload) {
+        delete state.participants[id];
+        delete state.statuses[id];
+        delete state.votes[id];
+      } else {
+        try { state.participants[id] = JSON.parse(payload); } catch (e) {}
+      }
+      render();
+      return;
+    }
+
+    if (rest.startsWith('status/')) {
+      const id = rest.slice('status/'.length);
+      if (!payload) delete state.statuses[id];
+      else {
+        try { state.statuses[id] = JSON.parse(payload); } catch (e) {}
+      }
+      render();
+      return;
+    }
+
+    if (rest.startsWith('vote/')) {
+      const id = rest.slice('vote/'.length);
+      if (!payload) delete state.votes[id];
+      else {
+        try { state.votes[id] = JSON.parse(payload); } catch (e) {}
+      }
+      render();
+      return;
+    }
+
+    if (rest === 'moderators') {
+      if (!payload) {
+        state.moderators = [];
+      } else {
+        try {
+          const parsed = JSON.parse(payload);
+          state.moderators = Array.isArray(parsed) ? parsed.filter(x => typeof x === 'string') : [];
+        } catch (e) { state.moderators = []; }
+      }
+      render();
+      return;
+    }
+
+    if (rest === 'tickets') {
+      if (!payload) {
+        state.tickets = [];
+      } else {
+        try {
+          const parsed = JSON.parse(payload);
+          state.tickets = Array.isArray(parsed)
+            ? parsed
+                .filter(t => t && typeof t.id === 'string' && typeof t.title === 'string')
+                .map(t => ({
+                  id: t.id,
+                  title: t.title,
+                  description: typeof t.description === 'string' ? t.description : '',
+                  estimate: (t.estimate == null ? null : String(t.estimate)),
+                  votes: Array.isArray(t.votes)
+                    ? t.votes
+                        .filter(v => v && typeof v.name === 'string' && typeof v.card === 'string')
+                        .map(v => ({ name: v.name, card: v.card }))
+                    : null,
+                }))
+            : [];
+        } catch (e) { state.tickets = []; }
+      }
+      render();
+      return;
+    }
+  }
+
+  // ---------- Actions ----------
+  function selectCard(card) {
+    if (state.revealed) return;
+    state.myCard = (state.myCard === card) ? null : card;
+    publishStatus(state.myCard != null);
+    render();
+  }
+
+  function doReveal() {
+    if (!state.client?.connected || state.revealed) return;
+    if (!iAmModerator()) return;
+    state.client.publish(
+      topic('round'),
+      JSON.stringify({ roundId: state.roundId, revealed: true }),
+      { qos: 0, retain: true }
+    );
+    // Our own handler will pick this up and publish our vote.
+  }
+
+  function doNewRound() {
+    if (!state.client?.connected || !state.revealed) return;
+    if (!iAmModerator()) return;
+    advanceRound();
+  }
+
+  function advanceRound(ticketId) {
+    const nextRound = state.roundId + 1;
+    // Clear old vote retained messages across all known voters (and our own).
+    const ids = new Set([...Object.keys(state.votes), ...Object.keys(state.participants), state.clientId]);
+    for (const id of ids) {
+      state.client.publish(topic('vote/' + id), '', { qos: 0, retain: true });
+    }
+    const payload = { roundId: nextRound, revealed: false };
+    const tid = ticketId === undefined ? state.activeTicketId : ticketId;
+    if (tid) payload.ticketId = tid;
+    state.client.publish(topic('round'), JSON.stringify(payload), { qos: 0, retain: true });
+    return nextRound;
+  }
+
+  function publishTickets() {
+    if (!state.client?.connected) return;
+    state.client.publish(
+      topic('tickets'),
+      JSON.stringify(state.tickets),
+      { qos: 0, retain: true }
+    );
+  }
+
+  function publishModerators() {
+    if (!state.client?.connected) return;
+    state.client.publish(
+      topic('moderators'),
+      JSON.stringify(state.moderators),
+      { qos: 0, retain: true }
+    );
+  }
+
+  function toggleModerator(id) {
+    if (!iAmModerator()) return;
+    if (!id || id === effectiveHost() || id === state.clientId) return;
+    const has = state.moderators.includes(id);
+    state.moderators = has
+      ? state.moderators.filter(x => x !== id)
+      : [...state.moderators, id];
+    publishModerators();
+    render();
+  }
+
+  function openNewTicket() {
+    if (!iAmModerator()) return;
+    el.ticketTitle.value = '';
+    el.ticketDesc.value = '';
+    el.ticketForm.classList.remove('hidden');
+    el.newTicketBtn.classList.add('hidden');
+    el.ticketTitle.focus();
+  }
+
+  function closeNewTicket() {
+    el.ticketForm.classList.add('hidden');
+    if (iAmModerator()) el.newTicketBtn.classList.remove('hidden');
+  }
+
+  function submitTicket() {
+    if (!iAmModerator() || !state.client?.connected) return;
+    const title = el.ticketTitle.value.trim();
+    if (!title) { el.ticketTitle.focus(); return; }
+    const description = el.ticketDesc.value.trim();
+    const ticket = { id: randomTicketId(), title, description, estimate: null };
+    const shouldAutoActivate = !state.activeTicketId;
+    state.tickets = [...state.tickets, ticket];
+    publishTickets();
+    // If nothing is currently active, start voting on the new ticket right away.
+    if (shouldAutoActivate) {
+      const anyVoteActivity =
+        Object.values(state.statuses).some(s => s && s.roundId === state.roundId && s.hasVoted) ||
+        state.revealed;
+      if (anyVoteActivity) advanceRound(ticket.id);
+      else {
+        // No votes yet on the current round — just bind the current round to this ticket.
+        state.client.publish(
+          topic('round'),
+          JSON.stringify({ roundId: state.roundId, revealed: false, ticketId: ticket.id }),
+          { qos: 0, retain: true }
+        );
+      }
+    }
+    closeNewTicket();
+  }
+
+  function activateTicket(ticketId) {
+    if (!iAmModerator() || !state.client?.connected) return;
+    if (!state.tickets.some(t => t.id === ticketId)) return;
+    if (ticketId === state.activeTicketId && !state.revealed) return;
+    advanceRound(ticketId);
+  }
+
+  function saveEstimate(ticketId, value) {
+    if (!iAmModerator() || !state.client?.connected) return;
+    const idx = state.tickets.findIndex(t => t.id === ticketId);
+    if (idx < 0) return;
+    let estimate = value;
+    if (estimate == null) {
+      // Ambiguous mode — let the moderator pick a value manually.
+      const suggested = computeModeVote() || '';
+      const input = window.prompt('Schatting voor "' + state.tickets[idx].title + '":', suggested);
+      if (input == null) return;
+      estimate = String(input).trim();
+      if (!estimate) return;
+    }
+    const votes = Object.entries(state.votes)
+      .filter(([, v]) => v && v.roundId === state.roundId)
+      .map(([id, v]) => ({
+        name: id === state.clientId ? state.name : (state.participants[id]?.name || '?'),
+        card: String(v.card),
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+    state.tickets = state.tickets.map((t, i) => i === idx ? { ...t, estimate: String(estimate), votes } : t);
+    publishTickets();
+  }
+
+  function deleteTicket(ticketId) {
+    if (!iAmModerator() || !state.client?.connected) return;
+    const t = state.tickets.find(x => x.id === ticketId);
+    if (!t) return;
+    if (!window.confirm('Ticket "' + t.title + '" verwijderen?')) return;
+    state.tickets = state.tickets.filter(x => x.id !== ticketId);
+    publishTickets();
+    // If we just deleted the active ticket, clear the active reference on the next round state.
+    if (ticketId === state.activeTicketId) {
+      state.client.publish(
+        topic('round'),
+        JSON.stringify({ roundId: state.roundId, revealed: state.revealed }),
+        { qos: 0, retain: true }
+      );
+    }
+  }
+
+  function leave() {
+    if (state.client) {
+      try {
+        // If we were an extra moderator, remove ourselves from the list so it stays tidy.
+        if (state.moderators.includes(state.clientId)) {
+          state.moderators = state.moderators.filter(x => x !== state.clientId);
+          publishModerators();
+        }
+        state.client.publish(topic('presence/' + state.clientId), '', { qos: 0, retain: true });
+        state.client.publish(topic('status/'   + state.clientId), '', { qos: 0, retain: true });
+        state.client.publish(topic('vote/'     + state.clientId), '', { qos: 0, retain: true });
+        state.client.end(false, {}, () => {});
+      } catch (e) { /* ignore */ }
+    }
+    location.hash = '';
+    location.reload();
+  }
+
+  function createRoom() {
+    const name = el.nameInput.value.trim();
+    if (!name) { el.nameInput.focus(); return; }
+    state.name = name; localStorage.setItem('pp.name', name);
+    state.scale = el.scaleInput.value;
+    state.roomId = randomRoomId();
+    state.host = state.clientId;
+    state.joinedAt = Date.now();
+    state.roundId = 1;
+    state.revealed = false;
+    state.participants[state.clientId] = { name: state.name, joinedAt: state.joinedAt };
+    writeHash();
+    render();
+    connect();
+    // Publish meta once connected.
+    const once = () => {
+      if (!state.client?.connected) return setTimeout(once, 50);
+      state.client.publish(
+        topic('meta'),
+        JSON.stringify({ scale: state.scale, host: state.clientId, createdAt: Date.now() }),
+        { qos: 0, retain: true }
+      );
+      state.client.publish(
+        topic('round'),
+        JSON.stringify({ roundId: 1, revealed: false }),
+        { qos: 0, retain: true }
+      );
+      // Seed moderators list (host-only). Extra moderators get added via UI toggle.
+      state.client.publish(
+        topic('moderators'),
+        JSON.stringify([]),
+        { qos: 0, retain: true }
+      );
+      // Start with an empty backlog. Clear any legacy single-ticket retained message.
+      state.client.publish(topic('tickets'), JSON.stringify([]), { qos: 0, retain: true });
+      state.client.publish(topic('ticket'), '', { qos: 0, retain: true });
+    };
+    once();
+  }
+
+  function joinRoom(roomId) {
+    const name = el.nameInput.value.trim();
+    if (!name) { el.nameInput.focus(); return; }
+    state.name = name; localStorage.setItem('pp.name', name);
+    state.roomId = roomId.trim();
+    if (!state.roomId) return;
+    state.joinedAt = Date.now();
+    state.participants[state.clientId] = { name: state.name, joinedAt: state.joinedAt };
+    writeHash();
+    render();
+    connect();
+  }
+
+  // ---------- Bindings ----------
+  el.createBtn.addEventListener('click', createRoom);
+  el.joinBtn.addEventListener('click', () => joinRoom(el.joinCodeInput.value));
+  el.joinCodeInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') joinRoom(el.joinCodeInput.value); });
+  el.nameInput.addEventListener('input', () => { state.name = el.nameInput.value; });
+  el.revealBtn.addEventListener('click', doReveal);
+  el.newRoundBtn.addEventListener('click', doNewRound);
+  el.newTicketBtn.addEventListener('click', openNewTicket);
+  el.ticketSubmitBtn.addEventListener('click', submitTicket);
+  el.ticketCancelBtn.addEventListener('click', closeNewTicket);
+  el.ticketTitle.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); submitTicket(); }
+    if (e.key === 'Escape') closeNewTicket();
+  });
+  el.leaveBtn.addEventListener('click', leave);
+  el.copyLinkBtn.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(location.href);
+      const orig = el.copyLinkBtn.textContent;
+      el.copyLinkBtn.textContent = 'Gekopieerd!';
+      setTimeout(() => { el.copyLinkBtn.textContent = orig; }, 1200);
+    } catch (e) { alert(location.href); }
+  });
+  el.brokerSelect.addEventListener('change', () => {
+    state.brokerKey = el.brokerSelect.value;
+    localStorage.setItem('pp.broker', state.brokerKey);
+    if (state.roomId && state.client) {
+      try { state.client.end(true); } catch (e) {}
+      connect();
+    }
+  });
+  window.addEventListener('beforeunload', () => {
+    if (state.client?.connected) {
+      try {
+        state.client.publish(topic('presence/' + state.clientId), '', { qos: 0, retain: true });
+      } catch (e) { /* ignore */ }
+    }
+  });
+
+  // ---------- Init ----------
+  el.nameInput.value = state.name;
+  el.brokerSelect.value = state.brokerKey;
+
+  const hash = parseHash();
+  if (hash.room) {
+    // Show landing but prefill join code and focus name.
+    el.joinCodeInput.value = hash.room;
+    if (hash.scale && SCALES[hash.scale]) {
+      // hint only; the host's `meta` retained message is authoritative.
+      state.scale = hash.scale;
+    }
+    el.nameInput.focus();
+  } else {
+    el.nameInput.focus();
+  }
+})();
+</script>
+</body>
+</html>
