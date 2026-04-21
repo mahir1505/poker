@@ -277,6 +277,29 @@
     vertical-align: middle;
   }
   .ticket-empty { color: var(--muted); font-style: italic; padding: 4px 0; }
+  .role-group { margin-bottom: 14px; }
+  .role-group:last-child { margin-bottom: 0; }
+  .role-group-title {
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    font-weight: 600;
+    margin: 0 0 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .role-group-title .role-count {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 0 6px;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0;
+    text-transform: none;
+  }
   .ticket-form { display: grid; gap: 8px; margin-top: 10px; }
   .ticket-form textarea {
     font: inherit; color: inherit;
@@ -379,6 +402,14 @@
         <label for="nameInput">Jouw naam</label>
         <input id="nameInput" maxlength="32" placeholder="bv. Alice" autocomplete="off">
       </div>
+      <div>
+        <label for="roleInput">Jouw rol</label>
+        <select id="roleInput">
+          <option value="dev">Ontwikkelaar</option>
+          <option value="tester">Tester</option>
+          <option value="other">Andere</option>
+        </select>
+      </div>
     </div>
 
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 18px;" id="landingCols">
@@ -420,7 +451,7 @@
 
     <div class="panel">
       <h2>Deelnemers (<span id="participantCount">0</span>)</h2>
-      <ul id="participants" class="participants"></ul>
+      <div id="participants"></div>
     </div>
 
     <div class="panel">
@@ -478,12 +509,20 @@
     fib:    ['0', '1', '2', '3', '5', '8', '13', '20', '40', '100', '?', '\u2615'],
     tshirt: ['XS', 'S', 'M', 'L', 'XL', 'XXL', '?', '\u2615'],
   };
+  const ROLES = {
+    dev:    { label: 'Ontwikkelaar', plural: 'Ontwikkelaars', order: 0 },
+    tester: { label: 'Tester',       plural: 'Testers',       order: 1 },
+    other:  { label: 'Andere',       plural: 'Andere',        order: 2 },
+  };
+  const ROLE_KEYS = ['dev', 'tester', 'other'];
+  const normalizeRole = (r) => (ROLES[r] ? r : 'other');
 
   // ---------- State ----------
   const state = {
     clientId: 'pp-' + crypto.randomUUID().slice(0, 12),
     brokerKey: localStorage.getItem('pp.broker') || 'hivemq',
     name: localStorage.getItem('pp.name') || '',
+    role: normalizeRole(localStorage.getItem('pp.role') || 'dev'),
     roomId: null,
     scale: 'fib',
     host: null,
@@ -506,6 +545,7 @@
     landing:       $('landing'),
     room:          $('room'),
     nameInput:     $('nameInput'),
+    roleInput:     $('roleInput'),
     scaleInput:    $('scaleInput'),
     joinCodeInput: $('joinCodeInput'),
     createBtn:     $('createBtn'),
@@ -595,14 +635,24 @@
   const getActiveTicket = () =>
     state.activeTicketId ? state.tickets.find(t => t.id === state.activeTicketId) || null : null;
 
+  const participantRole = (id) => {
+    if (id === state.clientId) return state.role;
+    return normalizeRole(state.participants[id]?.role);
+  };
+
   const snapshotVotesForRound = () =>
     Object.entries(state.votes)
       .filter(([, v]) => v && v.roundId === state.roundId)
       .map(([id, v]) => ({
         name: id === state.clientId ? state.name : (state.participants[id]?.name || '?'),
+        role: participantRole(id),
         card: String(v.card),
       }))
-      .sort((a, b) => a.name.localeCompare(b.name));
+      .sort((a, b) => {
+        const ro = ROLES[a.role].order - ROLES[b.role].order;
+        if (ro !== 0) return ro;
+        return a.name.localeCompare(b.name);
+      });
 
   const hasVotes = (t) => Array.isArray(t?.votes) && t.votes.length > 0;
 
@@ -665,60 +715,91 @@
 
     el.participantCount.textContent = ids.length;
     el.participants.innerHTML = '';
-    ids.sort((a, b) => (state.participants[a]?.name || '').localeCompare(state.participants[b]?.name || ''));
 
-    for (const id of ids) {
-      const name = id === state.clientId ? state.name : (state.participants[id]?.name || '?');
-      const status = state.statuses[id];
-      const hasVoted = status && status.roundId === state.roundId && status.hasVoted;
-      const vote = state.votes[id];
-      const revealedVote = state.revealed && vote && vote.roundId === state.roundId ? vote.card : null;
+    const byRole = { dev: [], tester: [], other: [] };
+    for (const id of ids) byRole[participantRole(id)].push(id);
+    for (const key of ROLE_KEYS) {
+      byRole[key].sort((a, b) =>
+        (state.participants[a]?.name || (a === state.clientId ? state.name : '')).localeCompare(
+          state.participants[b]?.name || (b === state.clientId ? state.name : '')
+        )
+      );
+    }
 
-      const li = document.createElement('li');
-      li.className = 'participant' + (hasVoted && !state.revealed ? ' voted' : '') + (revealedVote != null ? ' revealed' : '');
+    const eh = effectiveHost();
+    for (const key of ROLE_KEYS) {
+      const group = byRole[key];
+      if (!group.length) continue;
 
-      const nameEl = document.createElement('div');
-      nameEl.className = 'name';
-      nameEl.textContent = name;
-      if (id === state.clientId) {
-        const me = document.createElement('span');
-        me.className = 'me';
-        me.textContent = '(jij)';
-        nameEl.appendChild(me);
+      const wrap = document.createElement('div');
+      wrap.className = 'role-group';
+      const title = document.createElement('p');
+      title.className = 'role-group-title';
+      title.textContent = ROLES[key].plural;
+      const count = document.createElement('span');
+      count.className = 'role-count';
+      count.textContent = group.length;
+      title.appendChild(count);
+      wrap.appendChild(title);
+
+      const ul = document.createElement('ul');
+      ul.className = 'participants';
+
+      for (const id of group) {
+        const name = id === state.clientId ? state.name : (state.participants[id]?.name || '?');
+        const status = state.statuses[id];
+        const hasVoted = status && status.roundId === state.roundId && status.hasVoted;
+        const vote = state.votes[id];
+        const revealedVote = state.revealed && vote && vote.roundId === state.roundId ? vote.card : null;
+
+        const li = document.createElement('li');
+        li.className = 'participant' + (hasVoted && !state.revealed ? ' voted' : '') + (revealedVote != null ? ' revealed' : '');
+
+        const nameEl = document.createElement('div');
+        nameEl.className = 'name';
+        nameEl.textContent = name;
+        if (id === state.clientId) {
+          const me = document.createElement('span');
+          me.className = 'me';
+          me.textContent = '(jij)';
+          nameEl.appendChild(me);
+        }
+        if (id === state.host && isOriginalHostPresent()) {
+          const h = document.createElement('span');
+          h.className = 'role-badge host';
+          h.textContent = 'Host';
+          nameEl.appendChild(h);
+        } else if (state.moderators.includes(id) || (id === eh && !isOriginalHostPresent())) {
+          const m = document.createElement('span');
+          m.className = 'role-badge mod';
+          m.textContent = 'Moderator';
+          nameEl.appendChild(m);
+        }
+
+        // Promote/demote button — visible only to moderators, never for the effective host or self.
+        if (iAmModerator() && id !== eh && id !== state.clientId) {
+          const isMod = state.moderators.includes(id);
+          const toggle = document.createElement('button');
+          toggle.className = 'mod-toggle';
+          toggle.textContent = isMod ? 'Demote' : 'Maak moderator';
+          toggle.title = isMod ? 'Moderator-rechten intrekken' : 'Geef moderator-rechten';
+          toggle.addEventListener('click', () => toggleModerator(id));
+          nameEl.appendChild(toggle);
+        }
+
+        const ind = document.createElement('div');
+        ind.className = 'vote-indicator';
+        if (revealedVote != null) ind.textContent = revealedVote;
+        else if (hasVoted) ind.textContent = '\u2713';
+        else ind.textContent = '\u23F3';
+
+        li.appendChild(nameEl);
+        li.appendChild(ind);
+        ul.appendChild(li);
       }
-      const eh = effectiveHost();
-      if (id === state.host && isOriginalHostPresent()) {
-        const h = document.createElement('span');
-        h.className = 'role-badge host';
-        h.textContent = 'Host';
-        nameEl.appendChild(h);
-      } else if (state.moderators.includes(id) || (id === eh && !isOriginalHostPresent())) {
-        const m = document.createElement('span');
-        m.className = 'role-badge mod';
-        m.textContent = 'Moderator';
-        nameEl.appendChild(m);
-      }
 
-      // Promote/demote button — visible only to moderators, never for the effective host or self.
-      if (iAmModerator() && id !== eh && id !== state.clientId) {
-        const isMod = state.moderators.includes(id);
-        const toggle = document.createElement('button');
-        toggle.className = 'mod-toggle';
-        toggle.textContent = isMod ? 'Demote' : 'Maak moderator';
-        toggle.title = isMod ? 'Moderator-rechten intrekken' : 'Geef moderator-rechten';
-        toggle.addEventListener('click', () => toggleModerator(id));
-        nameEl.appendChild(toggle);
-      }
-
-      const ind = document.createElement('div');
-      ind.className = 'vote-indicator';
-      if (revealedVote != null) ind.textContent = revealedVote;
-      else if (hasVoted) ind.textContent = '\u2713';
-      else ind.textContent = '\u23F3';
-
-      li.appendChild(nameEl);
-      li.appendChild(ind);
-      el.participants.appendChild(li);
+      wrap.appendChild(ul);
+      el.participants.appendChild(wrap);
     }
   }
 
@@ -775,21 +856,36 @@
         const summary = document.createElement('summary');
         summary.textContent = `Toon stemmen (${t.votes.length})`;
         details.appendChild(summary);
-        const voteList = document.createElement('ul');
-        voteList.className = 't-vote-list';
-        for (const v of t.votes) {
-          const vi = document.createElement('li');
-          const n = document.createElement('span');
-          n.className = 't-vote-name';
-          n.textContent = v.name;
-          const c = document.createElement('span');
-          c.className = 't-vote-card';
-          c.textContent = v.card;
-          vi.appendChild(n);
-          vi.appendChild(c);
-          voteList.appendChild(vi);
+        const byRole = { dev: [], tester: [], other: [] };
+        for (const v of t.votes) byRole[normalizeRole(v.role)].push(v);
+        for (const key of ROLE_KEYS) {
+          const group = byRole[key];
+          if (!group.length) continue;
+          const heading = document.createElement('p');
+          heading.className = 'role-group-title';
+          heading.style.marginTop = '8px';
+          heading.textContent = ROLES[key].plural;
+          const cnt = document.createElement('span');
+          cnt.className = 'role-count';
+          cnt.textContent = group.length;
+          heading.appendChild(cnt);
+          details.appendChild(heading);
+          const voteList = document.createElement('ul');
+          voteList.className = 't-vote-list';
+          for (const v of group) {
+            const vi = document.createElement('li');
+            const n = document.createElement('span');
+            n.className = 't-vote-name';
+            n.textContent = v.name;
+            const c = document.createElement('span');
+            c.className = 't-vote-card';
+            c.textContent = v.card;
+            vi.appendChild(n);
+            vi.appendChild(c);
+            voteList.appendChild(vi);
+          }
+          details.appendChild(voteList);
         }
-        details.appendChild(voteList);
         body.appendChild(details);
       }
       li.appendChild(body);
@@ -812,12 +908,10 @@
           actBtn.addEventListener('click', () => activateTicket(t.id));
           actions.appendChild(actBtn);
         } else if (state.revealed) {
-          const saveBtn = document.createElement('button');
-          saveBtn.className = 'primary';
-          const auto = computeModeVote();
-          saveBtn.textContent = auto != null ? `Bewaar ${auto}` : 'Bewaar schatting…';
-          saveBtn.addEventListener('click', () => saveEstimate(t.id, auto));
-          actions.appendChild(saveBtn);
+          const redoBtn = document.createElement('button');
+          redoBtn.textContent = 'Opnieuw stemmen';
+          redoBtn.addEventListener('click', () => activateTicket(t.id));
+          actions.appendChild(redoBtn);
         }
 
         const delBtn = document.createElement('button');
@@ -958,7 +1052,7 @@
     // (we can't know — safe fallback: only creator writes meta, done in createRoom()).
     state.client.publish(
       topic('presence/' + state.clientId),
-      JSON.stringify({ name: state.name, joinedAt: state.joinedAt }),
+      JSON.stringify({ name: state.name, role: state.role, joinedAt: state.joinedAt }),
       { qos: 0, retain: true }
     );
     // Publish current vote status (clean).
@@ -1032,7 +1126,11 @@
         delete state.statuses[id];
         delete state.votes[id];
       } else {
-        try { state.participants[id] = JSON.parse(payload); } catch (e) {}
+        try {
+          const parsed = JSON.parse(payload);
+          parsed.role = normalizeRole(parsed.role);
+          state.participants[id] = parsed;
+        } catch (e) {}
       }
       render();
       return;
@@ -1089,7 +1187,7 @@
                   votes: Array.isArray(t.votes)
                     ? t.votes
                         .filter(v => v && typeof v.name === 'string' && typeof v.card === 'string')
-                        .map(v => ({ name: v.name, card: v.card }))
+                        .map(v => ({ name: v.name, role: normalizeRole(v.role), card: v.card }))
                     : null,
                 }))
             : [];
@@ -1111,11 +1209,16 @@
   function doReveal() {
     if (!state.client?.connected || state.revealed) return;
     if (!iAmModerator()) return;
-    state.client.publish(
-      topic('round'),
-      JSON.stringify({ roundId: state.roundId, revealed: true }),
-      { qos: 0, retain: true }
-    );
+    // If nobody activated a ticket, tie the current votes to the first unvoted one
+    // so the result doesn't hang in the air and the ticket is properly marked as voted.
+    let ticketId = state.activeTicketId;
+    if (!ticketId) {
+      const candidate = nextTicketToVote();
+      if (candidate) ticketId = candidate.id;
+    }
+    const payload = { roundId: state.roundId, revealed: true };
+    if (ticketId) payload.ticketId = ticketId;
+    state.client.publish(topic('round'), JSON.stringify(payload), { qos: 0, retain: true });
     // Our own handler will pick this up and publish our vote.
   }
 
@@ -1156,9 +1259,8 @@
     return nextRound;
   }
 
-  // Store current revealed votes onto the active ticket if they differ from what's saved.
-  // Lets us show "Toon stemmen" + "Opnieuw stemmen" on voted tickets without requiring
-  // an explicit "Bewaar" or "Volgende ticket" click.
+  // Store current revealed votes — and an auto-computed estimate — onto the active ticket
+  // whenever they differ from what's saved. No explicit "Bewaar" click needed.
   function snapshotActiveVotesIfChanged() {
     if (!iAmModerator()) return;
     if (!state.revealed || !state.activeTicketId) return;
@@ -1168,10 +1270,15 @@
     const fresh = snapshotVotesForRound();
     if (!fresh.length) return;
     const stored = state.tickets[idx].votes || [];
-    const same = stored.length === fresh.length &&
+    const votesSame = stored.length === fresh.length &&
       stored.every((v, i) => v.name === fresh[i].name && v.card === fresh[i].card);
-    if (same) return;
-    state.tickets = state.tickets.map((t, i) => i === idx ? { ...t, votes: fresh } : t);
+    const auto = computeModeVote();
+    const nextEstimate = auto != null ? String(auto) : null;
+    const estimateSame = (state.tickets[idx].estimate ?? null) === nextEstimate;
+    if (votesSame && estimateSame) return;
+    state.tickets = state.tickets.map((t, i) =>
+      i === idx ? { ...t, votes: fresh, estimate: nextEstimate } : t
+    );
     publishTickets();
   }
 
@@ -1261,24 +1368,6 @@
     advanceRound(ticketId);
   }
 
-  function saveEstimate(ticketId, value) {
-    if (!iAmModerator() || !state.client?.connected) return;
-    const idx = state.tickets.findIndex(t => t.id === ticketId);
-    if (idx < 0) return;
-    let estimate = value;
-    if (estimate == null) {
-      // Ambiguous mode — let the moderator pick a value manually.
-      const suggested = computeModeVote() || '';
-      const input = window.prompt('Schatting voor "' + state.tickets[idx].title + '":', suggested);
-      if (input == null) return;
-      estimate = String(input).trim();
-      if (!estimate) return;
-    }
-    const votes = snapshotVotesForRound();
-    state.tickets = state.tickets.map((t, i) => i === idx ? { ...t, estimate: String(estimate), votes } : t);
-    publishTickets();
-  }
-
   function deleteTicket(ticketId) {
     if (!iAmModerator() || !state.client?.connected) return;
     const t = state.tickets.find(x => x.id === ticketId);
@@ -1318,13 +1407,15 @@
     const name = el.nameInput.value.trim();
     if (!name) { el.nameInput.focus(); return; }
     state.name = name; localStorage.setItem('pp.name', name);
+    state.role = normalizeRole(el.roleInput.value);
+    localStorage.setItem('pp.role', state.role);
     state.scale = el.scaleInput.value;
     state.roomId = randomRoomId();
     state.host = state.clientId;
     state.joinedAt = Date.now();
     state.roundId = 1;
     state.revealed = false;
-    state.participants[state.clientId] = { name: state.name, joinedAt: state.joinedAt };
+    state.participants[state.clientId] = { name: state.name, role: state.role, joinedAt: state.joinedAt };
     writeHash();
     render();
     connect();
@@ -1358,10 +1449,12 @@
     const name = el.nameInput.value.trim();
     if (!name) { el.nameInput.focus(); return; }
     state.name = name; localStorage.setItem('pp.name', name);
+    state.role = normalizeRole(el.roleInput.value);
+    localStorage.setItem('pp.role', state.role);
     state.roomId = roomId.trim();
     if (!state.roomId) return;
     state.joinedAt = Date.now();
-    state.participants[state.clientId] = { name: state.name, joinedAt: state.joinedAt };
+    state.participants[state.clientId] = { name: state.name, role: state.role, joinedAt: state.joinedAt };
     writeHash();
     render();
     connect();
@@ -1409,6 +1502,7 @@
 
   // ---------- Init ----------
   el.nameInput.value = state.name;
+  el.roleInput.value = state.role;
   el.brokerSelect.value = state.brokerKey;
 
   const hash = parseHash();
