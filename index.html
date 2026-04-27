@@ -629,6 +629,13 @@
     letter-spacing: .02em;
   }
   .hidden { display: none !important; }
+  .loading-spinner {
+    width: 36px; height: 36px; margin: 18px auto;
+    border: 3px solid var(--border); border-top-color: var(--accent);
+    border-radius: 50%; animation: pp-spin 900ms linear infinite;
+  }
+  @keyframes pp-spin { to { transform: rotate(360deg); } }
+  #loading.error .loading-spinner { display: none; }
   .tag {
     display: inline-block;
     padding: 1px 7px;
@@ -1077,6 +1084,19 @@
     <p class="hint" style="margin-top: 10px;">Typ een bestaande code om mee te doen, of bedenk een nieuwe naam om een kamer aan te maken.</p>
   </section>
 
+  <!-- Loading screen -->
+  <section id="loading" class="panel hidden" aria-live="polite">
+    <div class="hero" style="padding: 24px 0;">
+      <h2 class="hero-title" id="loadingTitle">Kamer laden...</h2>
+      <p class="hero-tagline" id="loadingMsg">Verbinden met broker en kamerstatus ophalen...</p>
+      <div class="loading-spinner" aria-hidden="true"></div>
+    </div>
+    <div class="actions" style="margin-top: 16px; justify-content: center;">
+      <button id="loadingCancelBtn">Annuleren</button>
+      <button id="loadingRetryBtn" class="primary hidden">Opnieuw proberen</button>
+    </div>
+  </section>
+
   <!-- Room screen -->
   <section id="room" class="hidden">
     <div class="panel">
@@ -1312,6 +1332,9 @@
     sessionId: null,                   // current active session id
     activeSessionStartedAt: null,      // epoch ms when current session started
     sessions: {},                      // { sessionId: SessionRecord } â€” closed sessions only
+    loading: false,                    // true while waiting for retained meta after join
+    loadingError: null,                // 'connect' | 'subscribe' | 'timeout' | null
+    _readyResolved: false,             // one-shot guard for markReady()
   };
   window.__pp = state; // debug: inspect state in DevTools console
 
@@ -1431,6 +1454,11 @@
   const $ = (id) => document.getElementById(id);
   const el = {
     landing:       $('landing'),
+    loading:       $('loading'),
+    loadingTitle:  $('loadingTitle'),
+    loadingMsg:    $('loadingMsg'),
+    loadingCancelBtn: $('loadingCancelBtn'),
+    loadingRetryBtn:  $('loadingRetryBtn'),
     room:          $('room'),
     nameInput:     $('nameInput'),
     roleInput:     $('roleInput'),
@@ -1527,6 +1555,38 @@
     return id === effectiveHost() || state.moderators.includes(id);
   };
   const iAmModerator = () => isModerator(state.clientId);
+
+  // ---------- Loading state ----------
+  // markReady is the single resolver that ends the loading phase. It fires when retained
+  // `meta` arrives (happy path) or when seed() times out (new-room path), whichever first.
+  // Idempotent via _readyResolved so the two paths racing is safe. Only after this fires
+  // do we publish our own presence â€” other clients then see us with a fully-loaded view.
+  function markReady(reason) {
+    if (state._readyResolved) return;
+    state._readyResolved = true;
+    state.loading = false;
+    state.loadingError = null;
+    if (reason !== 'cancel' && state.client?.connected) {
+      announceSelf();
+    }
+    render();
+  }
+
+  function updateLoadingPanel() {
+    const err = state.loadingError;
+    el.loading.classList.toggle('error', !!err);
+    el.loadingRetryBtn.classList.toggle('hidden', !err);
+    if (err === 'connect') {
+      el.loadingTitle.textContent = 'Verbinding mislukt';
+      el.loadingMsg.textContent = 'Kon geen verbinding maken met de broker.';
+    } else if (err === 'subscribe') {
+      el.loadingTitle.textContent = 'Abonneren mislukt';
+      el.loadingMsg.textContent = 'Verbonden, maar abonneren op de kamer-topics is mislukt.';
+    } else {
+      el.loadingTitle.textContent = 'Kamer ' + (state.roomId || '') + ' laden...';
+      el.loadingMsg.textContent = 'Verbinden met broker en kamerstatus ophalen...';
+    }
+  }
 
   // Auto-heal: if the retained host disappears mid-session and we're the earliest-joined
   // present participant, claim host by republishing `meta`. Critical safeguard: we only
@@ -1684,11 +1744,21 @@
   function render() {
     if (!state.roomId) {
       el.landing.classList.remove('hidden');
+      el.loading.classList.add('hidden');
       el.room.classList.add('hidden');
       el.roomTag.classList.add('hidden');
       return;
     }
+    if (state.loading) {
+      el.landing.classList.add('hidden');
+      el.loading.classList.remove('hidden');
+      el.room.classList.add('hidden');
+      el.roomTag.classList.add('hidden');
+      updateLoadingPanel();
+      return;
+    }
     el.landing.classList.add('hidden');
+    el.loading.classList.add('hidden');
     el.room.classList.remove('hidden');
     el.roomTag.classList.remove('hidden');
     el.roomTag.textContent = state.roomId;
@@ -2502,9 +2572,13 @@
         if (err) {
           console.error('subscribe failed', err);
           setConn('err', 'subscribe mislukt');
+          if (state.loading) { state.loadingError = 'subscribe'; render(); }
           return;
         }
-        announceSelf();
+        // During the initial loading phase, defer announceSelf until markReady() fires
+        // (on retained meta arrival or seed timeout). On reconnect mid-session, republish
+        // our presence immediately so other clients re-see us.
+        if (!state.loading) announceSelf();
         // Let retained stats shards settle in before this client starts acting as writer.
         setTimeout(() => {
           state.statsReady = true;
@@ -2518,7 +2592,11 @@
 
     client.on('reconnect', () => { state.statsReady = false; setConn('', 'herverbindenâ€¦'); });
     client.on('close',     () => { state.statsReady = false; setConn('err', 'losgekoppeld'); });
-    client.on('error',     (e) => { console.error(e); setConn('err', 'fout: ' + (e.message || e)); });
+    client.on('error',     (e) => {
+      console.error(e);
+      setConn('err', 'fout: ' + (e.message || e));
+      if (state.loading) { state.loadingError = 'connect'; render(); }
+    });
 
     client.on('message', (t, payloadBuf) => {
       const payload = payloadBuf.toString();
@@ -2789,6 +2867,7 @@
         render();
         statsWriteRoomMeta();
         scheduleHostClaim();
+        if (state.loading) markReady('meta');
       } catch (e) { /* ignore */ }
       return;
     }
@@ -3490,6 +3569,9 @@
     state.roundId = 1;
     state.revealed = false;
     state.participants[state.clientId] = { name: state.name, role: state.role, joinedAt: state.joinedAt };
+    state.loading = true;
+    state.loadingError = null;
+    state._readyResolved = false;
     writeHash();
     render();
     connect();
@@ -3499,9 +3581,15 @@
     // the other topics' missing-retained state is already the empty default, and
     // republishing them here would clobber an existing room whose meta merely arrived late.
     const seed = () => {
+      if (!state.roomId) return; // user cancelled or left during loading â€” abort
       if (!state.client?.connected) return setTimeout(seed, 50);
       setTimeout(() => {
-        if (state.host) return; // retained meta from an existing room already claimed host
+        if (!state.roomId || !state.client?.connected) return; // cancelled during the 3s wait
+        if (state.host) {
+          // Retained meta arrived (or markReady('meta') already fired). End loading either way.
+          if (state.loading) markReady('meta-late');
+          return;
+        }
         state.host = state.clientId;
         state.client.publish(
           topic('meta'),
@@ -3519,7 +3607,7 @@
           state.activeSessionStartedAt = Date.now();
           publishActiveSession();
         }
-        render();
+        markReady('seed');
       }, 3000);
     };
     seed();
@@ -3613,6 +3701,29 @@
   el.joinBtn.addEventListener('click', () => joinRoom(el.joinCodeInput.value));
   el.joinCodeInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') joinRoom(el.joinCodeInput.value); });
   el.nameInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') joinRoom(el.joinCodeInput.value); });
+
+  el.loadingCancelBtn.addEventListener('click', () => {
+    try { state.client?.end(true); } catch (e) { /* ignore */ }
+    state.client = null;
+    state.roomId = null;
+    state.host = null;
+    state.loading = false;
+    state.loadingError = null;
+    state._readyResolved = false;
+    delete state.participants[state.clientId];
+    location.hash = '';
+    render();
+  });
+  el.loadingRetryBtn.addEventListener('click', () => {
+    const roomId = state.roomId;
+    if (!roomId) return;
+    try { state.client?.end(true); } catch (e) { /* ignore */ }
+    state.client = null;
+    state.loadingError = null;
+    state._readyResolved = false;
+    // Re-run the full join flow so seed's poll/timer is re-armed cleanly.
+    joinRoom(roomId);
+  });
   el.nameInput.addEventListener('input', () => { state.name = el.nameInput.value; });
   el.revealBtn.addEventListener('click', doReveal);
   el.revealBtnTop.addEventListener('click', doReveal);
