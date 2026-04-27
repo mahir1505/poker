@@ -542,6 +542,82 @@
     -webkit-background-clip: text; background-clip: text;
     color: transparent;
   }
+  .room-stats-section { margin-top: 16px; }
+  .room-stats-heading {
+    margin: 0 0 8px;
+    font-size: 12px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    font-weight: 600;
+  }
+  .user-stats-list {
+    display: grid; gap: 8px;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  }
+  .user-stat {
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: var(--r-md);
+    padding: 10px 12px;
+    display: grid; gap: 6px;
+  }
+  .user-stat .u-head {
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    font-weight: 600;
+  }
+  .user-stat .u-role {
+    font-size: 10.5px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    padding: 1px 6px;
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--muted) 14%, transparent);
+  }
+  .user-stat .u-pill-present {
+    font-size: 10px;
+    color: var(--accent);
+    padding: 1px 6px;
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--accent) 14%, transparent);
+    border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+  }
+  .user-stat .u-metrics {
+    display: grid; gap: 4px 14px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    font-size: 12.5px;
+    color: var(--muted);
+  }
+  .user-stat .u-metrics span strong {
+    color: var(--fg);
+    font-weight: 600;
+    margin-left: 4px;
+  }
+  .ticket-stats-list {
+    display: grid; gap: 6px;
+  }
+  .ticket-stat-row {
+    display: grid; grid-template-columns: 1fr auto auto; gap: 10px;
+    align-items: center;
+    padding: 8px 10px;
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: var(--r-md);
+    font-size: 13px;
+  }
+  .ticket-stat-row .t-name { font-weight: 600; word-break: break-word; }
+  .ticket-stat-row .t-meta { color: var(--muted); font-size: 12px; }
+  .ticket-stat-row .t-est {
+    min-width: 36px; text-align: center; font-weight: 700;
+    padding: 2px 8px; border-radius: 8px;
+    background: color-mix(in srgb, var(--accent) 14%, transparent);
+    color: var(--accent);
+  }
+  .ticket-stat-row .t-est.pending {
+    background: color-mix(in srgb, var(--muted) 14%, transparent);
+    color: var(--muted);
+  }
   .room-code {
     font-family: ui-monospace, "SF Mono", Consolas, monospace;
     background: var(--surface-1);
@@ -625,6 +701,10 @@
   }
   .ticket-item > * { position: relative; z-index: 1; }
   .ticket-item.done { opacity: 0.75; }
+  .ticket-item.editing {
+    border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
+    background: color-mix(in srgb, var(--accent) 6%, var(--surface-1));
+  }
   .ticket-item.removing { animation: ticket-remove .28s var(--ease-out) both; }
   .ticket-item .t-body { flex: 1; min-width: 0; }
   .ticket-item .t-title {
@@ -730,6 +810,7 @@
     border-radius: 999px;
     box-shadow: 0 2px 8px var(--glow);
   }
+  .ticket-form.editing::before { content: "Ticket bewerken"; }
   .ticket-form > div { display: grid; gap: 4px; }
   .ticket-form input, .ticket-form textarea {
     font: inherit; color: inherit;
@@ -913,118 +994,6 @@
     50%      { box-shadow: 0 0 0 6px color-mix(in srgb, var(--gold) 35%, transparent), 0 0 40px color-mix(in srgb, var(--gold) 30%, transparent); }
   }
 
-  /* ---------- Stats view ---------- */
-  .stats-hero {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-    gap: 12px;
-  }
-  .hero-card {
-    padding: 18px 16px;
-    border-radius: var(--r-lg);
-    background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 10%, var(--surface-1)), var(--surface-1));
-    border: 1px solid color-mix(in srgb, var(--accent) 22%, var(--border));
-    text-align: center;
-    box-shadow: var(--shadow-1);
-  }
-  .hero-card .hero-k { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; font-weight: 600; }
-  .hero-card .hero-v {
-    font-size: 32px; font-weight: 800; letter-spacing: -.02em;
-    margin-top: 4px;
-    background: linear-gradient(135deg, var(--accent), var(--accent-2));
-    -webkit-background-clip: text; background-clip: text;
-    color: transparent;
-  }
-  .stats-table-wrap { overflow-x: auto; }
-  .stats-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 13px;
-  }
-  .stats-table th, .stats-table td {
-    padding: 8px 10px;
-    border-bottom: 1px solid var(--border);
-    text-align: left;
-    vertical-align: middle;
-  }
-  .stats-table thead th {
-    font-size: 11px; text-transform: uppercase; letter-spacing: .06em;
-    color: var(--muted); font-weight: 600;
-    background: var(--surface-1);
-    position: sticky; top: 0;
-  }
-  .stats-table tbody tr:hover { background: var(--surface-1); }
-  .stats-table .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
-  .stats-table a { color: var(--accent); text-decoration: none; }
-  .stats-table a:hover { text-decoration: underline; }
-  .user-cell { display: flex; align-items: center; gap: 8px; min-width: 0; }
-  .user-cell .mini-avatar {
-    flex-shrink: 0;
-    width: 26px; height: 26px; border-radius: 50%;
-    display: inline-flex; align-items: center; justify-content: center;
-    color: #fff; font-weight: 700; font-size: 11px;
-    background: linear-gradient(135deg, var(--av-1, #888), var(--av-2, #555));
-    box-shadow: inset 0 -2px 3px rgba(0,0,0,.15);
-    text-shadow: 0 1px 1px rgba(0,0,0,.15);
-  }
-  .user-cell .user-name {
-    font-weight: 600;
-    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-  }
-  .hist-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 18px;
-  }
-  .hist-heading {
-    font-size: 12px; text-transform: uppercase; letter-spacing: .06em;
-    color: var(--muted); font-weight: 600; margin: 0 0 8px;
-  }
-  .histogram { display: grid; gap: 4px; }
-  .hist-row {
-    display: grid;
-    grid-template-columns: 48px 1fr 36px;
-    gap: 8px; align-items: center;
-    font-size: 12px;
-  }
-  .hist-label { color: var(--muted); font-weight: 600; text-align: right; font-variant-numeric: tabular-nums; }
-  .hist-bar-wrap {
-    height: 14px;
-    background: var(--surface-1);
-    border-radius: 7px;
-    overflow: hidden;
-    border: 1px solid var(--border);
-  }
-  .hist-bar {
-    height: 100%;
-    width: var(--pct, 0%);
-    background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 70%, transparent), var(--accent));
-    border-radius: 7px 0 0 7px;
-    transition: width var(--t-med) var(--ease-out);
-  }
-  .hist-val { font-variant-numeric: tabular-nums; text-align: right; color: var(--fg); font-weight: 600; }
-  .activity-bars {
-    display: flex;
-    align-items: flex-end;
-    gap: 2px;
-    height: 80px;
-    padding: 4px 0;
-  }
-  .activity-col {
-    flex: 1;
-    min-width: 4px;
-    height: var(--pct, 0%);
-    background: linear-gradient(180deg, var(--accent), var(--accent-2));
-    border-radius: 2px 2px 0 0;
-    min-height: 2px;
-    transition: height var(--t-med) var(--ease-out);
-    cursor: default;
-  }
-  .activity-col.empty {
-    background: var(--border);
-    height: 2px;
-  }
-
   /* ---------- Mobile ---------- */
   @media (max-width: 640px) {
     main { padding: 18px 14px 60px; }
@@ -1080,7 +1049,7 @@
     </div>
 
     <div class="warn">
-      Dit gebruikt een <strong>publieke</strong> MQTT broker. Gebruik geen vertrouwelijke namen of gegevens — iedereen die jouw kamercode kent kan meeluisteren.
+      Dit gebruikt een <strong>publieke</strong> MQTT broker. Gebruik geen vertrouwelijke namen of gegevens â€” iedereen die jouw kamercode kent kan meeluisteren.
     </div>
 
     <h2>Kom binnen</h2>
@@ -1114,15 +1083,18 @@
       <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
         <h2 style="margin: 0;">Kamer</h2>
         <span class="room-code" id="roomCodeDisplay"></span>
-        <button id="copyLinkBtn" title="Kopieer link">Link kopiëren</button>
-        <span class="hint" id="scaleLabel"></span>
+        <button id="copyLinkBtn" title="Kopieer link">Link kopiÃ«ren</button>
         <div class="spacer" style="flex: 1;"></div>
         <button id="leaveBtn">Verlaten</button>
       </div>
     </div>
 
     <div class="panel">
-      <h2>Deelnemers (<span id="participantCount">0</span>)</h2>
+      <div class="ticket-head">
+        <h2>Deelnemers (<span id="participantCount">0</span>)</h2>
+        <div class="spacer" style="flex: 1;"></div>
+        <button id="revealBtnTop" class="primary hidden" disabled>Reveal</button>
+      </div>
       <div id="participants"></div>
     </div>
 
@@ -1130,17 +1102,19 @@
       <div class="ticket-head">
         <h2>Tickets <span class="tag" id="ticketCount">0</span></h2>
         <div class="spacer" style="flex: 1;"></div>
+        <button id="historyBtn" type="button" title="Bekijk afgesloten sessies">Historiek</button>
+        <button id="closeSessionBtn" class="hidden" type="button" title="Huidige sessie afsluiten en archiveren">Sessie afsluiten</button>
         <button id="newTicketBtn" class="primary hidden">Ticket toevoegen</button>
       </div>
       <ul id="ticketList" class="ticket-list"></ul>
       <div id="ticketForm" class="ticket-form hidden">
         <div>
           <label for="ticketTitle">Titel</label>
-          <input id="ticketTitle" maxlength="120" placeholder="bv. VO-1234 — login flow" autocomplete="off">
+          <input id="ticketTitle" maxlength="120" placeholder="bv. VO-1234 â€” login flow" autocomplete="off">
         </div>
         <div>
           <label for="ticketDesc">Beschrijving (optioneel)</label>
-          <textarea id="ticketDesc" maxlength="1000" placeholder="Korte toelichting, acceptatiecriteria, links…"></textarea>
+          <textarea id="ticketDesc" maxlength="1000" placeholder="Korte toelichting, acceptatiecriteria, linksâ€¦"></textarea>
         </div>
         <div class="actions">
           <button id="ticketSubmitBtn" class="primary">Toevoegen</button>
@@ -1164,87 +1138,23 @@
       <div class="stats" id="stats"></div>
     </div>
 
-    <div class="panel" style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-      <span class="hint">Benieuwd naar globale statistieken over alle kamers?</span>
-      <div class="spacer" style="flex:1;"></div>
-      <a id="statsRoomLink" class="mod-toggle" href="#stats=1" target="_blank" rel="noopener">📊 Alle stats</a>
-    </div>
-  </section>
-
-  <!-- Stats view -->
-  <section id="statsView" class="hidden">
-    <div class="panel">
-      <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
-        <h2 style="margin:0;">📊 Globale statistieken</h2>
-        <span id="statsStatus" class="hint"></span>
-        <div class="spacer" style="flex:1;"></div>
-        <button id="statsBackBtn">Terug</button>
+    <div class="panel hidden" id="roomStatsPanel">
+      <div class="ticket-head">
+        <h2>Kamer statistieken</h2>
+        <div class="spacer" style="flex: 1;"></div>
+        <button id="roomStatsToggle" type="button">Tonen</button>
       </div>
-      <p class="hint" style="margin-top:8px;">Alle rooms die ooit via deze app zijn gespeeld, gebundeld onder één globale bucket.</p>
-    </div>
-
-    <div class="panel">
-      <div class="stats-hero">
-        <div class="hero-card"><div class="hero-k">Rooms</div><div class="hero-v" id="statsHeroRooms">0</div></div>
-        <div class="hero-card"><div class="hero-k">Rondes</div><div class="hero-v" id="statsHeroRounds">0</div></div>
-        <div class="hero-card"><div class="hero-k">Tickets geschat</div><div class="hero-v" id="statsHeroTickets">0</div></div>
-        <div class="hero-card"><div class="hero-k">Deelnemers</div><div class="hero-v" id="statsHeroUsers">0</div></div>
-      </div>
-      <div class="stats" id="statsSecondary" style="margin-top:14px;"></div>
-    </div>
-
-    <div class="panel">
-      <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:10px;">
-        <h2 style="margin:0;">Top deelnemers</h2>
-        <div class="spacer" style="flex:1;"></div>
-        <label for="statsSort" style="margin:0; font-size:12px;">Sorteer</label>
-        <select id="statsSort">
-          <option value="votesCast">Meeste stemmen</option>
-          <option value="rounds">Meeste rondes</option>
-          <option value="rooms">Meeste rooms</option>
-          <option value="agreement">Hoogste overeenkomst</option>
-          <option value="avgVote">Hoogste gem. stem</option>
-          <option value="speed">Snelst stemmen</option>
-        </select>
-      </div>
-      <div id="statsUsers" class="stats-table-wrap"></div>
-    </div>
-
-    <div class="panel">
-      <h2>Verdelingen</h2>
-      <div class="hist-grid">
-        <div>
-          <h3 class="hist-heading">Alle stemmen</h3>
-          <div id="statsVoteHist" class="histogram"></div>
+      <div id="roomStatsBody" class="hidden">
+        <div class="stats" id="roomStatsMetrics"></div>
+        <div class="room-stats-section" id="roomStatsUsersWrap">
+          <h3 class="room-stats-heading">Deelnemers</h3>
+          <div id="roomStatsUsers" class="user-stats-list"></div>
         </div>
-        <div>
-          <h3 class="hist-heading">Finale estimates</h3>
-          <div id="statsEstHist" class="histogram"></div>
-        </div>
-        <div>
-          <h3 class="hist-heading">Ronde-duur</h3>
-          <div id="statsDurHist" class="histogram"></div>
+        <div class="room-stats-section" id="roomStatsTicketsWrap">
+          <h3 class="room-stats-heading">Tickets</h3>
+          <div id="roomStatsTickets" class="ticket-stats-list"></div>
         </div>
       </div>
-    </div>
-
-    <div class="panel">
-      <h2>Activiteit (laatste 90 dagen)</h2>
-      <div id="statsActivity" class="activity-bars"></div>
-    </div>
-
-    <div class="panel">
-      <h2>Rooms-archief</h2>
-      <div id="statsRooms" class="stats-table-wrap"></div>
-    </div>
-
-    <div class="panel">
-      <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:10px;">
-        <h2 style="margin:0;">Tickets-archief</h2>
-        <div class="spacer" style="flex:1;"></div>
-        <input id="statsTicketFilter" placeholder="Filter op titel of kamercode…" style="max-width:280px;">
-      </div>
-      <div id="statsTickets" class="stats-table-wrap"></div>
     </div>
   </section>
 
@@ -1258,24 +1168,24 @@
 
     <h3>Wat is dit?</h3>
     <p>Planning Poker is een techniek om samen met een team een inschatting te maken van werk. Iedereen kiest tegelijk een kaart, en na het onthullen bespreek je verschillen tot je consensus hebt.</p>
-    <p><strong>Let op:</strong> deze app gebruikt een <strong>publieke</strong> MQTT broker. Gebruik geen vertrouwelijke namen of gegevens — iedereen die jouw kamercode kent kan meeluisteren.</p>
+    <p><strong>Let op:</strong> deze app gebruikt een <strong>publieke</strong> MQTT broker. Gebruik geen vertrouwelijke namen of gegevens â€” iedereen die jouw kamercode kent kan meeluisteren.</p>
 
     <h3>Een kamer starten of joinen</h3>
     <ul>
       <li>Vul je <strong>naam</strong>, <strong>rol</strong> en een <strong>kamercode</strong> in op het startscherm.</li>
       <li>Typ een bestaande code om mee te doen, of bedenk een nieuwe code om een kamer aan te maken. Kamercodes zijn hoofdletter-ongevoelig.</li>
-      <li>Deel de kamer met collega's via <strong>Link kopiëren</strong> — iedereen met de link komt direct binnen.</li>
+      <li>Deel de kamer met collega's via <strong>Link kopiÃ«ren</strong> â€” iedereen met de link komt direct binnen.</li>
     </ul>
 
     <h3>Stemmen</h3>
     <ul>
       <li>Klik op een kaart om te stemmen. Je kunt je stem wijzigen tot de moderator onthult.</li>
       <li><kbd>?</kbd> betekent <em>geen mening</em> of onduidelijk.</li>
-      <li><kbd>☕</kbd> vraagt een pauze aan.</li>
+      <li><kbd>â˜•</kbd> vraagt een pauze aan.</li>
     </ul>
 
     <h3>Toetsenbord-shortcuts</h3>
-    <div class="shortcut-row"><kbd>1</kbd>–<kbd>9</kbd><span>Kies de 1e t/m 9e kaart uit het deck</span></div>
+    <div class="shortcut-row"><kbd>1</kbd>â€“<kbd>9</kbd><span>Kies de 1e t/m 9e kaart uit het deck</span></div>
     <div class="shortcut-row"><kbd>0</kbd><span>Kies de 10e kaart (indien aanwezig)</span></div>
     <div class="shortcut-row"><kbd>?</kbd><span>Stem <em>geen mening</em></span></div>
     <div class="shortcut-row"><kbd>C</kbd><span>Vraag een pauze aan (koffie)</span></div>
@@ -1285,7 +1195,7 @@
     <ul>
       <li>Alleen de <strong>host</strong> of een <strong>moderator</strong> kan kaarten onthullen of een nieuwe ronde starten.</li>
       <li>Na het onthullen zie je het resultaat met een uitsplitsing per rol (Ontwikkelaar, Tester, Andere).</li>
-      <li>Een <strong>gouden gloed</strong> rond het resultaat betekent dat iedereen dezelfde kaart koos — consensus bereikt.</li>
+      <li>Een <strong>gouden gloed</strong> rond het resultaat betekent dat iedereen dezelfde kaart koos â€” consensus bereikt.</li>
     </ul>
 
     <h3>Tickets</h3>
@@ -1305,8 +1215,17 @@
     <h3>Geluid &amp; broker</h3>
     <ul>
       <li>Zet geluidseffecten aan of uit met de knop naast deze handleiding.</li>
-      <li>Heb je verbindingsproblemen? Wissel tussen <strong>HiveMQ</strong> en <strong>EMQX</strong> bovenin — beide zijn publieke MQTT brokers.</li>
+      <li>Heb je verbindingsproblemen? Wissel tussen <strong>HiveMQ</strong> en <strong>EMQX</strong> bovenin â€” beide zijn publieke MQTT brokers.</li>
     </ul>
+  </div>
+</div>
+
+<div id="historyOverlay" class="help-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="historyTitle">
+  <div class="help-modal panel" role="document">
+    <button id="historyClose" class="help-close" type="button" aria-label="Historiek sluiten" title="Sluiten">&times;</button>
+    <h2 id="historyTitle">Sessie historiek</h2>
+    <p class="help-tagline">Eerder afgesloten stemsessies in deze kamer.</p>
+    <div id="historyList"></div>
   </div>
 </div>
 
@@ -1334,10 +1253,7 @@
     hivemq: { url: 'wss://broker.hivemq.com:8884/mqtt', label: 'HiveMQ' },
     emqx:   { url: 'wss://broker.emqx.io:8084/mqtt',    label: 'EMQX' },
   };
-  const SCALES = {
-    fib:    ['0', '1', '2', '3', '5', '8', '13', '20', '40', '100', '?', '\u2615'],
-    tshirt: ['XS', 'S', 'M', 'L', 'XL', 'XXL', '?', '\u2615'],
-  };
+  const DECK = ['0', '1', '2', '3', '5', '8', '13', '20', '40', '100', '?', '\u2615'];
   const ROLES = {
     dev:    { label: 'Ontwikkelaar', plural: 'Ontwikkelaars', order: 0 },
     tester: { label: 'Tester',       plural: 'Testers',       order: 1 },
@@ -1347,14 +1263,21 @@
   const normalizeRole = (r) => (ROLES[r] ? r : 'other');
 
   // ---------- State ----------
+  // Persist clientId per tab so a refresh keeps the same identity — otherwise the user
+  // drops out of the moderators list (and other clientId-keyed retained state) and
+  // rejoins as a stranger. sessionStorage scopes it to this tab to avoid duplicate
+  // MQTT clientId collisions between tabs on the same machine.
+  const persistedClientId = sessionStorage.getItem('pp.clientId');
+  const clientId = persistedClientId || ('pp-' + crypto.randomUUID().slice(0, 12));
+  if (!persistedClientId) sessionStorage.setItem('pp.clientId', clientId);
+
   const state = {
-    clientId: 'pp-' + crypto.randomUUID().slice(0, 12),
+    clientId,
     brokerKey: localStorage.getItem('pp.broker') || 'hivemq',
     name: localStorage.getItem('pp.name') || '',
     role: normalizeRole(localStorage.getItem('pp.role') || 'dev'),
     soundEnabled: true,
     roomId: null,
-    scale: 'fib',
     host: null,
     joinedAt: null,
     roundId: 1,
@@ -1366,22 +1289,31 @@
     moderators: [],        // extra moderator clientIds (host is always moderator)
     tickets: [],           // [{ id, title, description, estimate }]
     activeTicketId: null,  // id of the ticket currently being voted on, or null
+    editingTicketId: null, // id of the ticket currently open in the edit form, or null
     client: null,          // mqtt client
     lastRevealed: false,   // detect reveal transitions for animations
     lastTicketIds: new Set(), // detect ticket removals for exit animation
     lastVotedIds: new Set(),  // detect new voters for ripple animation
     participantsRendered: false, // skip ripple on very first render
     kicked: false,         // set once we've been kicked so we only react once
-    view: 'landing',       // 'landing' | 'room' | 'stats'
     roundStartedAt: {},    // roundId -> epoch ms (when we first saw the round start locally)
     voterFirstVoteAt: {},  // clientId -> { roundId: epoch ms } for time-to-vote
     statsKnownTickets: new Set(),      // ticketId -> firstSeenAt already published
     statsKnownParticipants: new Set(), // clientId -> firstSeenAt already published
-    statsClient: null,     // separate mqtt client for stats view
-    statsShards: null,     // topic -> parsed payload (viewer-only)
-    statsRenderTimer: null,
-    statsSortBy: 'votesCast', // top-users sort key
+    statsRoundAgg: {                   // aggregated across all rounds ever seen in this room
+      totalRounds: 0,
+      consensusRounds: 0,
+      durationSumMs: 0,
+      durationCount: 0,
+      totalVoteCount: 0,
+    },
+    statsRoundAggSeen: new Set(),      // "{roomId}:{roundId}" already counted into statsRoundAgg
+    statsTicketAgg: {},                // ticketId -> { title, firstSeenAt, estimatedAt, finalEstimate, roundsNeeded, consensus }
+    sessionId: null,                   // current active session id
+    activeSessionStartedAt: null,      // epoch ms when current session started
+    sessions: {},                      // { sessionId: SessionRecord } â€” closed sessions only
   };
+  window.__pp = state; // debug: inspect state in DevTools console
 
   const prefersReducedMotion = () =>
     window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -1508,17 +1440,25 @@
     roomTag:       $('roomTag'),
     roomCodeDisplay: $('roomCodeDisplay'),
     copyLinkBtn:   $('copyLinkBtn'),
-    scaleLabel:    $('scaleLabel'),
     leaveBtn:      $('leaveBtn'),
     participants:  $('participants'),
     participantCount: $('participantCount'),
     cards:         $('cards'),
     cardsTitle:    $('cardsTitle'),
     revealBtn:     $('revealBtn'),
+    revealBtnTop:  $('revealBtnTop'),
     newRoundBtn:   $('newRoundBtn'),
     modHint:       $('modHint'),
     statsPanel:    $('statsPanel'),
     stats:         $('stats'),
+    roomStatsPanel:   $('roomStatsPanel'),
+    roomStatsToggle:  $('roomStatsToggle'),
+    roomStatsBody:    $('roomStatsBody'),
+    roomStatsMetrics: $('roomStatsMetrics'),
+    roomStatsUsers:   $('roomStatsUsers'),
+    roomStatsUsersWrap: $('roomStatsUsersWrap'),
+    roomStatsTickets: $('roomStatsTickets'),
+    roomStatsTicketsWrap: $('roomStatsTicketsWrap'),
     brokerSelect:  $('brokerSelect'),
     newTicketBtn:  $('newTicketBtn'),
     ticketList:    $('ticketList'),
@@ -1535,25 +1475,11 @@
     helpToggle:    $('helpToggle'),
     helpOverlay:   $('helpOverlay'),
     helpClose:     $('helpClose'),
-    statsView:        $('statsView'),
-    statsStatus:      $('statsStatus'),
-    statsBackBtn:     $('statsBackBtn'),
-    statsHeroRooms:   $('statsHeroRooms'),
-    statsHeroRounds:  $('statsHeroRounds'),
-    statsHeroTickets: $('statsHeroTickets'),
-    statsHeroUsers:   $('statsHeroUsers'),
-    statsSecondary:   $('statsSecondary'),
-    statsSort:        $('statsSort'),
-    statsUsers:       $('statsUsers'),
-    statsVoteHist:    $('statsVoteHist'),
-    statsEstHist:     $('statsEstHist'),
-    statsDurHist:     $('statsDurHist'),
-    statsActivity:    $('statsActivity'),
-    statsRooms:       $('statsRooms'),
-    statsTicketFilter:$('statsTicketFilter'),
-    statsTickets:     $('statsTickets'),
-    statsRoomLink:    $('statsRoomLink'),
-    openStatsBtn:     $('openStatsBtn'),
+    historyBtn:    $('historyBtn'),
+    historyOverlay: $('historyOverlay'),
+    historyClose:  $('historyClose'),
+    historyList:   $('historyList'),
+    closeSessionBtn: $('closeSessionBtn'),
   };
 
   // ---------- Helpers ----------
@@ -1563,39 +1489,26 @@
     const h = location.hash.replace(/^#/, '');
     const p = new URLSearchParams(h);
     const room = p.get('room');
-    return {
-      room: room ? room.toLowerCase() : room,
-      scale: p.get('scale'),
-      stats: p.get('stats'),
-    };
+    return { room: room ? room.toLowerCase() : room };
   };
   const writeHash = () => {
-    if (state.view === 'stats') { location.hash = 'stats=1'; return; }
     const p = new URLSearchParams();
     p.set('room', state.roomId);
-    p.set('scale', state.scale);
     location.hash = p.toString();
   };
   const shareUrl = () => {
     const p = new URLSearchParams();
     p.set('room', state.roomId);
-    p.set('scale', state.scale);
     const base = location.origin + location.pathname + location.search;
     return base + '#' + p.toString();
   };
-  const statsUrl = () => {
-    const base = location.origin + location.pathname + location.search;
-    return base + '#stats=1';
-  };
 
   const setConn = (cls, label) => {
-    // Empty class means "connecting/intermediate" — show a warm pulse instead of grey
+    // Empty class means "connecting/intermediate" â€” show a warm pulse instead of grey
     const effective = cls || 'connecting';
     el.conn.className = 'conn ' + effective;
     el.conn.querySelector('.label').textContent = label;
   };
-
-  const isFib = () => state.scale === 'fib';
 
   // Returns the clientId that currently holds host-level rights.
   // Falls back to the earliest-joined present participant if the original host is absent,
@@ -1615,9 +1528,64 @@
   };
   const iAmModerator = () => isModerator(state.clientId);
 
+  // Auto-heal: if the retained host disappears mid-session and we're the earliest-joined
+  // present participant, claim host by republishing `meta`. Critical safeguard: we only
+  // claim if we *observed* the host present at least once this session. Otherwise a
+  // slow-loading client whose retained `presence/<host>` hasn't arrived yet would falsely
+  // see the host as "missing" and steal the role. Debounce rides out brief refresh blips.
+  const _observedPresent = new Set();
+  let _claimHostTimer = null;
+  function scheduleHostClaim() {
+    if (_claimHostTimer) clearTimeout(_claimHostTimer);
+    _claimHostTimer = setTimeout(() => {
+      _claimHostTimer = null;
+      if (!state.client?.connected || !state.roomId) return;
+      if (!state.host || !_observedPresent.has(state.host)) return; // never seen them â€” don't claim
+      if (state.participants[state.host]) return; // host is back/still here
+      if (effectiveHost() !== state.clientId) return;
+      state.host = state.clientId;
+      state.client.publish(
+        topic('meta'),
+        JSON.stringify({
+          host: state.clientId,
+          createdAt: state.statsRoomCreatedAt || Date.now(),
+        }),
+        { qos: 0, retain: true }
+      );
+      render();
+    }, 10000);
+  }
+
   const randomTicketId = () =>
     't-' + Array.from(crypto.getRandomValues(new Uint8Array(6)))
             .map(b => (b % 36).toString(36)).join('');
+
+  const randomSessionId = () =>
+    's-' + Array.from(crypto.getRandomValues(new Uint8Array(6)))
+            .map(b => (b % 36).toString(36)).join('');
+
+  // Sums numeric estimates of an array of tickets. Non-numeric ('?', '☕') skipped.
+  const sumStoryPoints = (tickets) => {
+    let total = 0;
+    for (const t of tickets || []) {
+      if (!t || t.estimate == null) continue;
+      const n = parseFloat(t.estimate);
+      if (Number.isFinite(n)) total += n;
+    }
+    return total;
+  };
+  const computeSessionStoryPoints = () => sumStoryPoints(state.tickets);
+  const computeAllTimeStoryPoints = () => {
+    let total = computeSessionStoryPoints();
+    for (const s of Object.values(state.sessions || {})) {
+      if (s && s.totals && Number.isFinite(s.totals.storyPointsSum)) {
+        total += s.totals.storyPointsSum;
+      } else if (s && Array.isArray(s.tickets)) {
+        total += sumStoryPoints(s.tickets);
+      }
+    }
+    return total;
+  };
 
   const getActiveTicket = () =>
     state.activeTicketId ? state.tickets.find(t => t.id === state.activeTicketId) || null : null;
@@ -1679,7 +1647,7 @@
   };
 
   // Pure summary over a list of { name, role, card } votes.
-  const computeRoundSummary = (votes, scale) => {
+  const computeRoundSummary = (votes) => {
     const voteCount = votes.length;
     if (!voteCount) return { voteCount: 0, mode: null, consensus: false, avg: null, min: null, max: null, numericCount: 0 };
     const counts = {};
@@ -1689,14 +1657,12 @@
     const mode = modes.length === 1 ? modes[0] : null;
     const consensus = votes.every(v => v.card === votes[0].card);
     let avg = null, min = null, max = null, numericCount = 0;
-    if (scale === 'fib') {
-      const nums = votes.map(v => parseFloat(v.card)).filter(n => Number.isFinite(n));
-      numericCount = nums.length;
-      if (nums.length) {
-        avg = nums.reduce((a, b) => a + b, 0) / nums.length;
-        min = Math.min(...nums);
-        max = Math.max(...nums);
-      }
+    const nums = votes.map(v => parseFloat(v.card)).filter(n => Number.isFinite(n));
+    numericCount = nums.length;
+    if (nums.length) {
+      avg = nums.reduce((a, b) => a + b, 0) / nums.length;
+      min = Math.min(...nums);
+      max = Math.max(...nums);
     }
     return { voteCount, mode, consensus, avg, min, max, numericCount };
   };
@@ -1716,15 +1682,6 @@
 
   // ---------- Render ----------
   function render() {
-    if (state.view === 'stats') {
-      el.landing.classList.add('hidden');
-      el.room.classList.add('hidden');
-      el.statsView?.classList.remove('hidden');
-      el.roomTag.classList.add('hidden');
-      el.activeTicketChip.classList.add('hidden');
-      return;
-    }
-    el.statsView?.classList.add('hidden');
     if (!state.roomId) {
       el.landing.classList.remove('hidden');
       el.room.classList.add('hidden');
@@ -1736,7 +1693,6 @@
     el.roomTag.classList.remove('hidden');
     el.roomTag.textContent = state.roomId;
     el.roomCodeDisplay.textContent = state.roomId;
-    el.scaleLabel.textContent = isFib() ? 'Fibonacci' : 'T-shirt maten';
 
     // Active ticket chip in header
     const active = getActiveTicket();
@@ -1752,8 +1708,9 @@
     renderCards();
     renderActions();
     renderStats();
+    renderRoomStats();
 
-    // Reveal transition hook — fires once per reveal moment
+    // Reveal transition hook â€” fires once per reveal moment
     if (state.revealed && !state.lastRevealed) {
       state.lastRevealed = true;
       onRevealTransition();
@@ -1808,7 +1765,7 @@
     state.lastVotedIds = currentVoted;
     state.participantsRendered = true;
 
-    // "All voted" state — every participant in room has voted, but not yet revealed
+    // "All voted" state â€” every participant in room has voted, but not yet revealed
     const allVoted = !state.revealed && ids.length > 0 && ids.every(id => currentVoted.has(id));
     const participantsPanel = el.participants.closest('.panel');
     if (participantsPanel) participantsPanel.classList.toggle('all-voted', allVoted);
@@ -1898,7 +1855,7 @@
           m.textContent = 'Moderator';
           sub.appendChild(m);
         }
-        // Promote/demote and kick buttons — visible only to moderators, never for the effective host or self.
+        // Promote/demote and kick buttons â€” visible only to moderators, never for the effective host or self.
         if (iAmModerator() && id !== eh && id !== state.clientId) {
           const isMod = state.moderators.includes(id);
           const toggle = document.createElement('button');
@@ -1988,8 +1945,12 @@
     for (const t of state.tickets) {
       const isActive = t.id === state.activeTicketId;
       const isDone = t.estimate != null && !isActive;
+      const isEditing = t.id === state.editingTicketId;
       const li = document.createElement('li');
-      li.className = 'ticket-item' + (isActive ? ' active' : '') + (isDone ? ' done' : '');
+      li.className = 'ticket-item'
+        + (isActive ? ' active' : '')
+        + (isDone ? ' done' : '')
+        + (isEditing ? ' editing' : '');
       li.dataset.id = t.id;
 
       const body = document.createElement('div');
@@ -2000,7 +1961,7 @@
       if (isActive) {
         const pill = document.createElement('span');
         pill.className = 'active-pill';
-        pill.textContent = state.revealed ? 'onthuld' : 'stemmen…';
+        pill.textContent = state.revealed ? 'onthuld' : 'stemmenâ€¦';
         title.appendChild(pill);
       }
       body.appendChild(title);
@@ -2084,6 +2045,12 @@
           actions.appendChild(redoBtn);
         }
 
+        const editBtn = document.createElement('button');
+        editBtn.textContent = 'Bewerk';
+        editBtn.title = 'Ticket bewerken';
+        editBtn.addEventListener('click', () => openEditTicket(t.id));
+        actions.appendChild(editBtn);
+
         const delBtn = document.createElement('button');
         delBtn.textContent = 'Verwijder';
         delBtn.title = 'Ticket verwijderen';
@@ -2099,10 +2066,9 @@
 
   function renderCards() {
     el.cards.innerHTML = '';
-    const deck = SCALES[state.scale];
     const noTickets = state.tickets.length === 0;
     const mod = iAmModerator();
-    deck.forEach((card, idx) => {
+    DECK.forEach((card, idx) => {
       const btn = document.createElement('button');
       const isSelected = !noTickets && state.myCard === card;
       btn.className = 'card-btn' + (isSelected ? ' selected' : '');
@@ -2141,17 +2107,32 @@
     const noTickets = state.tickets.length === 0;
     if (mod) {
       el.revealBtn.classList.remove('hidden');
+      el.revealBtnTop.classList.remove('hidden');
       el.newRoundBtn.classList.remove('hidden');
       el.modHint.classList.add('hidden');
     } else {
       el.revealBtn.classList.add('hidden');
+      el.revealBtnTop.classList.add('hidden');
       el.newRoundBtn.classList.add('hidden');
       el.modHint.classList.remove('hidden');
       el.modHint.textContent = noTickets && !state.revealed
         ? 'Wacht tot een moderator een ticket heeft toegevoegd.'
         : 'Alleen een moderator kan onthullen of een nieuwe ronde starten.';
     }
-    el.revealBtn.disabled = state.revealed || !anyVoted || noTickets;
+    if (el.closeSessionBtn) {
+      if (mod && !noTickets) el.closeSessionBtn.classList.remove('hidden');
+      else el.closeSessionBtn.classList.add('hidden');
+    }
+    if (el.historyBtn) {
+      const hasHistory = Object.keys(state.sessions || {}).length > 0;
+      el.historyBtn.disabled = !hasHistory;
+      el.historyBtn.title = hasHistory
+        ? 'Bekijk afgesloten sessies'
+        : 'Nog geen afgesloten sessies in deze kamer';
+    }
+    const revealDisabled = state.revealed || !anyVoted || noTickets;
+    el.revealBtn.disabled = revealDisabled;
+    el.revealBtnTop.disabled = revealDisabled;
 
     const next = nextTicketToVote();
     if (next) {
@@ -2205,14 +2186,13 @@
     const modes = Object.entries(counts).filter(([, n]) => n === maxCount).map(([c]) => c);
     addStat('Meest gekozen', modes.length && maxCount > 0 ? modes.join(', ') : '\u2014');
 
-    if (isFib()) {
-      const numeric = votes.map(v => parseFloat(v)).filter(n => Number.isFinite(n));
-      if (numeric.length) {
-        const avg = numeric.reduce((a, b) => a + b, 0) / numeric.length;
-        addStat('Gemiddelde', null, { animateTo: avg, decimals: 2 });
-        addStat('Min / Max', Math.min(...numeric) + ' / ' + Math.max(...numeric));
-      }
+    const numeric = votes.map(v => parseFloat(v)).filter(n => Number.isFinite(n));
+    if (numeric.length) {
+      const avg = numeric.reduce((a, b) => a + b, 0) / numeric.length;
+      addStat('Gemiddelde', null, { animateTo: avg, decimals: 2 });
+      addStat('Min / Max', Math.min(...numeric) + ' / ' + Math.max(...numeric));
     }
+    addStat('Totaal sessie', null, { animateTo: computeSessionStoryPoints(), decimals: 0 });
 
     const consensus = votes.length > 0 && votes.every(v => v === votes[0]);
     addStat('Consensus', consensus ? 'Ja (' + votes[0] + ')' : 'Nee', consensus ? { className: 'consensus-yes' } : {});
@@ -2257,12 +2237,10 @@
       const modeText = modes.join(', ');
 
       let detail = 'meest: ' + modeText;
-      if (isFib()) {
-        const numeric = cards.map(parseFloat).filter(Number.isFinite);
-        if (numeric.length) {
-          const avg = numeric.reduce((a, b) => a + b, 0) / numeric.length;
-          detail += ' · \u00f8 ' + avg.toFixed(2).replace(/\.00$/, '');
-        }
+      const numeric = cards.map(parseFloat).filter(Number.isFinite);
+      if (numeric.length) {
+        const avg = numeric.reduce((a, b) => a + b, 0) / numeric.length;
+        detail += ' Â· \u00f8 ' + avg.toFixed(2).replace(/\.00$/, '');
       }
 
       const w = document.createElement('div');
@@ -2284,10 +2262,225 @@
     el.statsPanel.appendChild(wrap);
   }
 
+  const fmtDurationMs = (ms) => {
+    if (ms == null || !Number.isFinite(ms) || ms < 0) return '\u2014';
+    if (ms < 1000) return Math.round(ms) + ' ms';
+    const s = ms / 1000;
+    if (s < 60) {
+      const rounded = s >= 10 ? s.toFixed(0) : s.toFixed(1).replace(/\.0$/, '');
+      return rounded + ' s';
+    }
+    const m = Math.floor(s / 60);
+    const rs = Math.round(s - m * 60);
+    return m + 'm ' + (rs < 10 ? '0' + rs : rs) + 's';
+  };
+
+  const fmtRelativeTime = (ts) => {
+    if (!ts || !Number.isFinite(ts)) return '\u2014';
+    const diffMs = Date.now() - ts;
+    if (diffMs < 60_000) return 'net nu';
+    const mins = Math.floor(diffMs / 60_000);
+    if (mins < 60) return mins + ' min geleden';
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return hrs + ' uur geleden';
+    const days = Math.floor(hrs / 24);
+    if (days < 14) return days + ' dagen geleden';
+    return new Date(ts).toLocaleDateString();
+  };
+
+  let statsRenderTimer = null;
+  function scheduleStatsRender() {
+    if (statsRenderTimer) return;
+    statsRenderTimer = setTimeout(() => {
+      statsRenderTimer = null;
+      if (state.roomId) renderRoomStats();
+    }, 120);
+  }
+
+  function renderRoomStats() {
+    if (!state.roomId) {
+      el.roomStatsPanel.classList.add('hidden');
+      return;
+    }
+    const agg = state.statsRoundAgg;
+    const participantAgg = state.statsParticipantAgg || {};
+    const ticketAgg = state.statsTicketAgg || {};
+    const participantEntries = Object.entries(participantAgg);
+    const ticketEntries = Object.values(ticketAgg);
+
+    if (!agg.totalRounds && !participantEntries.length && !ticketEntries.length) {
+      el.roomStatsPanel.classList.add('hidden');
+      return;
+    }
+    el.roomStatsPanel.classList.remove('hidden');
+
+    // -------- Top metric cards --------
+    el.roomStatsMetrics.innerHTML = '';
+    const addMetric = (k, v) => {
+      const w = document.createElement('div');
+      w.className = 'stat';
+      const kEl = document.createElement('div'); kEl.className = 'k'; kEl.textContent = k;
+      const vEl = document.createElement('div'); vEl.className = 'v'; vEl.textContent = v;
+      w.appendChild(kEl); w.appendChild(vEl);
+      el.roomStatsMetrics.appendChild(w);
+    };
+
+    addMetric('Rondes', String(agg.totalRounds));
+    const consensusPct = agg.totalRounds
+      ? Math.round((agg.consensusRounds / agg.totalRounds) * 100) + '%'
+      : '\u2014';
+    addMetric('Consensus', agg.totalRounds ? `${agg.consensusRounds}/${agg.totalRounds} (${consensusPct})` : '\u2014');
+
+    const ticketsEstimated = ticketEntries.filter(t => t.finalEstimate != null).length;
+    addMetric('Tickets geschat', ticketEntries.length ? `${ticketsEstimated}/${ticketEntries.length}` : '0');
+
+    const avgDuration = agg.durationCount ? agg.durationSumMs / agg.durationCount : null;
+    addMetric('Gem. rondeduur', avgDuration != null ? fmtDurationMs(avgDuration) : '\u2014');
+
+    addMetric('Totaal stemmen', String(agg.totalVoteCount));
+    addMetric('Deelnemers', String(participantEntries.length));
+
+    addMetric('Story points (sessie)', String(computeSessionStoryPoints()));
+    const allTime = computeAllTimeStoryPoints();
+    const closedCount = Object.keys(state.sessions || {}).length;
+    if (closedCount > 0) addMetric('Story points (totaal)', String(allTime));
+
+    if (state.statsRoomCreatedAt) {
+      addMetric('Kamer sinds', fmtRelativeTime(state.statsRoomCreatedAt));
+    }
+
+    // -------- Users --------
+    el.roomStatsUsers.innerHTML = '';
+    if (!participantEntries.length) {
+      el.roomStatsUsersWrap.classList.add('hidden');
+    } else {
+      el.roomStatsUsersWrap.classList.remove('hidden');
+      const sorted = participantEntries
+        .map(([cid, a]) => ({ cid, ...a }))
+        .sort((a, b) => (b.roundsParticipated || 0) - (a.roundsParticipated || 0)
+                    || (b.votesCast || 0) - (a.votesCast || 0)
+                    || (a.name || '').localeCompare(b.name || ''));
+
+      for (const p of sorted) {
+        const card = document.createElement('div');
+        card.className = 'user-stat';
+
+        const head = document.createElement('div');
+        head.className = 'u-head';
+        const nameEl = document.createElement('span');
+        nameEl.textContent = p.name || '(onbekend)';
+        head.appendChild(nameEl);
+        const roleEl = document.createElement('span');
+        roleEl.className = 'u-role';
+        roleEl.textContent = (ROLES[normalizeRole(p.role)] || ROLES.other).label;
+        head.appendChild(roleEl);
+        if (state.participants[p.cid] || p.cid === state.clientId) {
+          const pill = document.createElement('span');
+          pill.className = 'u-pill-present';
+          pill.textContent = p.cid === state.clientId ? 'jij' : 'online';
+          head.appendChild(pill);
+        }
+        card.appendChild(head);
+
+        const metrics = document.createElement('div');
+        metrics.className = 'u-metrics';
+
+        const addM = (label, value) => {
+          const span = document.createElement('span');
+          const strong = document.createElement('strong');
+          strong.textContent = value;
+          span.textContent = label + ':';
+          span.appendChild(strong);
+          metrics.appendChild(span);
+        };
+
+        addM('Rondes', String(p.roundsParticipated || 0));
+        addM('Stemmen', String(p.votesCast || 0));
+
+        const avg = p.countNumericVotes
+          ? (p.sumNumericVotes / p.countNumericVotes)
+          : null;
+        addM('Gem. waarde', avg != null ? avg.toFixed(2).replace(/\.00$/, '') : '\u2014');
+
+        const agreePct = p.roundsParticipated
+          ? Math.round(((p.agreementCount || 0) / p.roundsParticipated) * 100) + '%'
+          : '\u2014';
+        addM('Consensus-stem', agreePct);
+
+        const avgTtv = p.timeToVoteCount
+          ? p.totalTimeToVoteMs / p.timeToVoteCount
+          : null;
+        addM('Gem. stemtijd', avgTtv != null ? fmtDurationMs(avgTtv) : '\u2014');
+
+        addM('Snelst', p.fastestTimeToVoteMs != null ? fmtDurationMs(p.fastestTimeToVoteMs) : '\u2014');
+
+        card.appendChild(metrics);
+
+        const histo = p.voteHistogram || {};
+        const histoEntries = Object.entries(histo);
+        if (histoEntries.length) {
+          const hist = document.createElement('div');
+          hist.style.fontSize = '12px';
+          hist.style.color = 'var(--muted)';
+          hist.textContent = 'Favoriet: ' + histoEntries
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 3)
+            .map(([c, n]) => `${c}\u00d7${n}`)
+            .join(', ');
+          card.appendChild(hist);
+        }
+
+        el.roomStatsUsers.appendChild(card);
+      }
+    }
+
+    // -------- Tickets --------
+    el.roomStatsTickets.innerHTML = '';
+    if (!ticketEntries.length) {
+      el.roomStatsTicketsWrap.classList.add('hidden');
+    } else {
+      el.roomStatsTicketsWrap.classList.remove('hidden');
+      const sortedTickets = ticketEntries
+        .slice()
+        .sort((a, b) => (b.firstSeenAt || 0) - (a.firstSeenAt || 0));
+      for (const t of sortedTickets) {
+        const row = document.createElement('div');
+        row.className = 'ticket-stat-row';
+
+        const left = document.createElement('div');
+        const name = document.createElement('div');
+        name.className = 't-name';
+        name.textContent = t.title || '(zonder titel)';
+        left.appendChild(name);
+        const meta = document.createElement('div');
+        meta.className = 't-meta';
+        const parts = [];
+        parts.push(`${t.roundsNeeded || 1} ${(t.roundsNeeded || 1) === 1 ? 'ronde' : 'rondes'}`);
+        if (t.consensus) parts.push('consensus');
+        if (t.firstSeenAt) parts.push('toegevoegd ' + fmtRelativeTime(t.firstSeenAt));
+        meta.textContent = parts.join(' \u00b7 ');
+        left.appendChild(meta);
+        row.appendChild(left);
+
+        const statusCell = document.createElement('span');
+        statusCell.className = 't-meta';
+        statusCell.textContent = t.finalEstimate != null ? 'geschat' : 'open';
+        row.appendChild(statusCell);
+
+        const est = document.createElement('span');
+        est.className = 't-est' + (t.finalEstimate == null ? ' pending' : '');
+        est.textContent = t.finalEstimate != null ? String(t.finalEstimate) : '\u2014';
+        row.appendChild(est);
+
+        el.roomStatsTickets.appendChild(row);
+      }
+    }
+  }
+
   // ---------- MQTT ----------
   function connect() {
     const broker = BROKERS[state.brokerKey];
-    setConn('', 'verbinden met ' + broker.label + '…');
+    setConn('', 'verbinden met ' + broker.label + 'â€¦');
 
     const willTopic = topic('presence/' + state.clientId);
     const client = mqtt.connect(broker.url, {
@@ -2323,7 +2516,7 @@
       });
     });
 
-    client.on('reconnect', () => { state.statsReady = false; setConn('', 'herverbinden…'); });
+    client.on('reconnect', () => { state.statsReady = false; setConn('', 'herverbindenâ€¦'); });
     client.on('close',     () => { state.statsReady = false; setConn('err', 'losgekoppeld'); });
     client.on('error',     (e) => { console.error(e); setConn('err', 'fout: ' + (e.message || e)); });
 
@@ -2335,7 +2528,7 @@
 
   function announceSelf() {
     // If we created the room we publish meta. If joining, we only publish meta if none exists yet
-    // (we can't know — safe fallback: only creator writes meta, done in createRoom()).
+    // (we can't know â€” safe fallback: only creator writes meta, done in createRoom()).
     state.client.publish(
       topic('presence/' + state.clientId),
       JSON.stringify({ name: state.name, role: state.role, joinedAt: state.joinedAt }),
@@ -2382,7 +2575,6 @@
       statsPublish(path, {
         v: 1,
         roomId: state.roomId,
-        scale: state.scale,
         createdAt: state.statsRoomCreatedAt || Date.now(),
         lastSeenAt: Date.now(),
       });
@@ -2401,7 +2593,7 @@
     state._statsParticipantFirstSeen = state._statsParticipantFirstSeen || {};
     if (!existing) state._statsParticipantFirstSeen[clientId] = firstSeenAt;
     state.statsKnownParticipants.add(clientId);
-    // Aggregated counters live on the shard — we read them from state.statsParticipantAgg
+    // Aggregated counters live on the shard â€” we read them from state.statsParticipantAgg
     // (see statsRecordRoundReveal which maintains this incrementally).
     const agg = (state.statsParticipantAgg && state.statsParticipantAgg[clientId]) || {};
     statsPublish(`rooms/${state.roomId}/participants/${clientId}`, {
@@ -2464,7 +2656,7 @@
       return { cid, name, role, card: String(v.card) };
     }).filter(x => x.name);
     if (!voters.length) return;
-    const summary = computeRoundSummary(voters.map(x => ({ name: x.name, role: x.role, card: x.card })), state.scale);
+    const summary = computeRoundSummary(voters.map(x => ({ name: x.name, role: x.role, card: x.card })));
     const ticketId = state.activeTicketId || null;
     statsPublish(`rooms/${state.roomId}/rounds/${roundId}`, {
       v: 1,
@@ -2551,14 +2743,35 @@
           if (typeof parsed.roundsNeeded === 'number') {
             state._statsTicketRounds[tid] = Math.max(state._statsTicketRounds[tid] || 0, parsed.roundsNeeded);
           }
+          state.statsTicketAgg[tid] = {
+            title: parsed.title || '',
+            firstSeenAt: parsed.firstSeenAt ?? null,
+            estimatedAt: parsed.estimatedAt ?? null,
+            finalEstimate: parsed.finalEstimate ?? null,
+            roundsNeeded: parsed.roundsNeeded || 1,
+            consensus: !!parsed.consensus,
+          };
         } else if (sub.startsWith('rounds/')) {
           const rid = parseInt(sub.slice('rounds/'.length), 10);
           if (Number.isFinite(rid)) {
             state.statsRoundsRecorded = state.statsRoundsRecorded || new Set();
             state.statsRoundsRecorded.add(`${state.roomId}:${rid}`);
+            const aggKey = `${state.roomId}:${rid}`;
+            if (!state.statsRoundAggSeen.has(aggKey)) {
+              state.statsRoundAggSeen.add(aggKey);
+              const agg = state.statsRoundAgg;
+              agg.totalRounds += 1;
+              if (parsed.consensus) agg.consensusRounds += 1;
+              if (typeof parsed.durationMs === 'number' && parsed.durationMs >= 0) {
+                agg.durationSumMs += parsed.durationMs;
+                agg.durationCount += 1;
+              }
+              if (typeof parsed.voteCount === 'number') agg.totalVoteCount += parsed.voteCount;
+            }
           }
         }
       } catch (e) { /* ignore */ }
+      scheduleStatsRender();
       return;
     }
 
@@ -2570,12 +2783,12 @@
       if (!payload) return;
       try {
         const meta = JSON.parse(payload);
-        if (meta.scale && SCALES[meta.scale]) state.scale = meta.scale;
         if (meta.host) state.host = meta.host;
         if (typeof meta.createdAt === 'number') state.statsRoomCreatedAt = meta.createdAt;
         writeHash();
         render();
         statsWriteRoomMeta();
+        scheduleHostClaim();
       } catch (e) { /* ignore */ }
       return;
     }
@@ -2620,11 +2833,13 @@
           const parsed = JSON.parse(payload);
           parsed.role = normalizeRole(parsed.role);
           state.participants[id] = parsed;
+          _observedPresent.add(id);
           statsWriteParticipant(id);
           statsWriteRoomMeta();
         } catch (e) {}
       }
       render();
+      if (id === state.host || effectiveHost() === state.clientId) scheduleHostClaim();
       return;
     }
 
@@ -2674,6 +2889,50 @@
         } catch (e) { state.moderators = []; }
       }
       render();
+      return;
+    }
+
+    if (rest === 'activeSession') {
+      if (!payload) {
+        state.sessionId = null;
+        state.activeSessionStartedAt = null;
+      } else {
+        try {
+          const parsed = JSON.parse(payload);
+          if (parsed && typeof parsed.sessionId === 'string') {
+            state.sessionId = parsed.sessionId;
+            state.activeSessionStartedAt = typeof parsed.startedAt === 'number'
+              ? parsed.startedAt
+              : (state.activeSessionStartedAt || Date.now());
+          }
+        } catch (e) { /* ignore */ }
+      }
+      render();
+      return;
+    }
+
+    if (rest.startsWith('sessions/')) {
+      const sid = rest.slice('sessions/'.length);
+      if (!sid) return;
+      if (!payload) {
+        if (state.sessions && state.sessions[sid]) {
+          const next = { ...state.sessions };
+          delete next[sid];
+          state.sessions = next;
+        }
+      } else {
+        try {
+          const parsed = JSON.parse(payload);
+          if (parsed && typeof parsed.sessionId === 'string') {
+            state.sessions = { ...state.sessions, [sid]: parsed };
+          }
+        } catch (e) { /* ignore */ }
+      }
+      render();
+      // If the modal is open, refresh its content.
+      if (el.historyOverlay && !el.historyOverlay.classList.contains('hidden')) {
+        renderHistory();
+      }
       return;
     }
 
@@ -2768,7 +3027,7 @@
     return nextRound;
   }
 
-  // Store current revealed votes — and an auto-computed estimate — onto the active ticket
+  // Store current revealed votes â€” and an auto-computed estimate â€” onto the active ticket
   // whenever they differ from what's saved. No explicit "Bewaar" click needed.
   function snapshotActiveVotesIfChanged() {
     if (!iAmModerator()) return;
@@ -2832,6 +3091,90 @@
     );
   }
 
+  function publishActiveSession() {
+    if (!state.client?.connected) return;
+    if (!state.sessionId) return;
+    state.client.publish(
+      topic('activeSession'),
+      JSON.stringify({ sessionId: state.sessionId, startedAt: state.activeSessionStartedAt || Date.now() }),
+      { qos: 0, retain: true }
+    );
+  }
+
+  function closeSession() {
+    if (!iAmModerator() || !state.client?.connected) return;
+    if (!state.tickets.length) return;
+    if (!state.sessionId) {
+      state.sessionId = randomSessionId();
+      state.activeSessionStartedAt = state.activeSessionStartedAt || Date.now();
+    }
+    const ticketCount = state.tickets.length;
+    const msg = `Sessie afsluiten? ${ticketCount} ticket${ticketCount === 1 ? '' : 's'} `
+              + 'worden gearchiveerd in de historiek en uit de actieve lijst verwijderd.';
+    if (!window.confirm(msg)) return;
+
+    const closedAt = Date.now();
+    const ticketsCopy = state.tickets.map(t => ({
+      id: t.id,
+      title: t.title,
+      description: t.description || '',
+      estimate: (t.estimate == null ? null : String(t.estimate)),
+      votes: Array.isArray(t.votes)
+        ? t.votes.map(v => ({ name: v.name, role: normalizeRole(v.role), card: v.card }))
+        : [],
+    }));
+    const estimatedCount = ticketsCopy.filter(t => t.estimate != null).length;
+    const record = {
+      v: 1,
+      sessionId: state.sessionId,
+      roomId: state.roomId,
+      startedAt: state.activeSessionStartedAt || closedAt,
+      closedAt,
+      closedBy: state.name || '',
+      tickets: ticketsCopy,
+      totals: {
+        ticketCount: ticketsCopy.length,
+        estimatedCount,
+        storyPointsSum: sumStoryPoints(ticketsCopy),
+      },
+    };
+    // Archive the closed session as a retained shard.
+    state.client.publish(
+      topic('sessions/' + state.sessionId),
+      JSON.stringify(record),
+      { qos: 0, retain: true }
+    );
+    // Optimistically reflect locally so the UI updates immediately.
+    state.sessions = { ...state.sessions, [state.sessionId]: record };
+
+    // Start a fresh session: new id, new start timestamp.
+    state.sessionId = randomSessionId();
+    state.activeSessionStartedAt = Date.now();
+    publishActiveSession();
+
+    // Clear active tickets, votes, and active ticket reference.
+    state.tickets = [];
+    state.activeTicketId = null;
+    publishTickets();
+
+    // Clear retained vote topics across known voters (mirrors advanceRound logic).
+    const ids = new Set([...Object.keys(state.votes), ...Object.keys(state.participants), state.clientId]);
+    for (const id of ids) {
+      state.client.publish(topic('vote/' + id), '', { qos: 0, retain: true });
+    }
+    // Reset round counter and revealed flag.
+    state.roundId = 1;
+    state.revealed = false;
+    state.client.publish(
+      topic('round'),
+      JSON.stringify({ roundId: 1, revealed: false }),
+      { qos: 0, retain: true }
+    );
+    state.myCard = null;
+    publishStatus(false);
+    render();
+  }
+
   function toggleModerator(id) {
     if (!iAmModerator()) return;
     if (!id || id === effectiveHost() || id === state.clientId) return;
@@ -2875,6 +3218,7 @@
       state.client?.publish(topic('vote/'     + state.clientId), '', { qos: 0, retain: true });
       state.client?.end(true);
     } catch (e) { /* ignore */ }
+    sessionStorage.removeItem('pp.clientId');
     alert('Je bent uit de kamer verwijderd door een moderator.');
     location.hash = '';
     location.reload();
@@ -2882,16 +3226,41 @@
 
   function openNewTicket() {
     if (!iAmModerator()) return;
+    state.editingTicketId = null;
+    el.ticketForm.classList.remove('editing');
+    el.ticketSubmitBtn.textContent = 'Toevoegen';
     el.ticketTitle.value = '';
     el.ticketDesc.value = '';
     el.ticketForm.classList.remove('hidden');
     el.newTicketBtn.classList.add('hidden');
     el.ticketTitle.focus();
+    renderTickets();
+  }
+
+  function openEditTicket(ticketId) {
+    if (!iAmModerator()) return;
+    const t = state.tickets.find(x => x.id === ticketId);
+    if (!t) return;
+    state.editingTicketId = t.id;
+    el.ticketForm.classList.add('editing');
+    el.ticketSubmitBtn.textContent = 'Opslaan';
+    el.ticketTitle.value = t.title || '';
+    el.ticketDesc.value = t.description || '';
+    el.ticketForm.classList.remove('hidden');
+    el.newTicketBtn.classList.add('hidden');
+    el.ticketTitle.focus();
+    el.ticketTitle.select();
+    el.ticketForm.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    renderTickets();
   }
 
   function closeNewTicket() {
+    state.editingTicketId = null;
+    el.ticketForm.classList.remove('editing');
+    el.ticketSubmitBtn.textContent = 'Toevoegen';
     el.ticketForm.classList.add('hidden');
     if (iAmModerator()) el.newTicketBtn.classList.remove('hidden');
+    renderTickets();
   }
 
   function submitTicket() {
@@ -2899,6 +3268,16 @@
     const title = el.ticketTitle.value.trim();
     if (!title) { el.ticketTitle.focus(); return; }
     const description = el.ticketDesc.value.trim();
+    if (state.editingTicketId) {
+      const idx = state.tickets.findIndex(x => x.id === state.editingTicketId);
+      if (idx === -1) { closeNewTicket(); return; }
+      state.tickets = state.tickets.map((x, i) =>
+        i === idx ? { ...x, title, description } : x
+      );
+      publishTickets();
+      closeNewTicket();
+      return;
+    }
     const ticket = { id: randomTicketId(), title, description, estimate: null };
     const shouldAutoActivate = !state.activeTicketId;
     state.tickets = [...state.tickets, ticket];
@@ -2911,7 +3290,7 @@
         state.revealed;
       if (anyVoteActivity) advanceRound(ticket.id);
       else {
-        // No votes yet on the current round — just bind the current round to this ticket.
+        // No votes yet on the current round â€” just bind the current round to this ticket.
         state.client.publish(
           topic('round'),
           JSON.stringify({ roundId: state.roundId, revealed: false, ticketId: ticket.id }),
@@ -2935,6 +3314,7 @@
     if (!t) return;
     if (!window.confirm('Ticket "' + t.title + '" verwijderen?')) return;
     state.tickets = state.tickets.filter(x => x.id !== ticketId);
+    if (state.editingTicketId === ticketId) closeNewTicket();
     publishTickets();
     // If we just deleted the active ticket, clear the active reference on the next round state.
     if (ticketId === state.activeTicketId) {
@@ -2945,6 +3325,137 @@
       );
     }
   }
+
+  function renderHistory() {
+    if (!el.historyList) return;
+    el.historyList.innerHTML = '';
+    const sessions = Object.values(state.sessions || {})
+      .filter(s => s && typeof s === 'object')
+      .sort((a, b) => (b.closedAt || 0) - (a.closedAt || 0));
+
+    if (!sessions.length) {
+      const empty = document.createElement('p');
+      empty.style.color = 'var(--muted)';
+      empty.style.fontSize = '13px';
+      empty.textContent = 'Nog geen afgesloten sessies in deze kamer.';
+      el.historyList.appendChild(empty);
+      return;
+    }
+
+    for (const s of sessions) {
+      const tickets = Array.isArray(s.tickets) ? s.tickets : [];
+      const totals = s.totals || {
+        ticketCount: tickets.length,
+        estimatedCount: tickets.filter(t => t && t.estimate != null).length,
+        storyPointsSum: sumStoryPoints(tickets),
+      };
+      const wrap = document.createElement('details');
+      wrap.className = 'history-session';
+      wrap.style.border = '1px solid var(--border, rgba(0,0,0,0.1))';
+      wrap.style.borderRadius = '8px';
+      wrap.style.padding = '10px 12px';
+      wrap.style.marginBottom = '10px';
+
+      const summary = document.createElement('summary');
+      summary.style.cursor = 'pointer';
+      summary.style.fontWeight = '600';
+      const closedRel = s.closedAt ? fmtRelativeTime(s.closedAt) : '';
+      const headerBits = [];
+      headerBits.push(closedRel ? ('Afgesloten ' + closedRel) : 'Afgesloten sessie');
+      headerBits.push(`${totals.ticketCount} ticket${totals.ticketCount === 1 ? '' : 's'}`);
+      headerBits.push(`${totals.estimatedCount} geschat`);
+      headerBits.push(`${totals.storyPointsSum} pt`);
+      if (s.closedBy) headerBits.push('door ' + s.closedBy);
+      summary.textContent = headerBits.join(' · ');
+      wrap.appendChild(summary);
+
+      if (tickets.length) {
+        const roleTotals = { dev: 0, tester: 0, other: 0 };
+        const roleSeen = { dev: false, tester: false, other: false };
+        for (const t of tickets) {
+          const votes = Array.isArray(t.votes) ? t.votes : [];
+          for (const v of votes) {
+            const role = normalizeRole(v.role);
+            roleSeen[role] = true;
+            const n = parseFloat(v.card);
+            if (Number.isFinite(n)) roleTotals[role] += n;
+          }
+        }
+        const parts = ROLE_KEYS
+          .filter(r => roleSeen[r])
+          .map(r => `${ROLES[r].plural}: ${roleTotals[r]} pt`);
+        if (parts.length) {
+          const roleLine = document.createElement('div');
+          roleLine.style.fontSize = '12px';
+          roleLine.style.color = 'var(--muted)';
+          roleLine.style.marginTop = '6px';
+          roleLine.textContent = 'Per rol — ' + parts.join(' · ');
+          wrap.appendChild(roleLine);
+        }
+      }
+
+      if (!tickets.length) {
+        const none = document.createElement('p');
+        none.style.color = 'var(--muted)';
+        none.style.fontSize = '13px';
+        none.style.margin = '8px 0 0';
+        none.textContent = 'Geen tickets in deze sessie.';
+        wrap.appendChild(none);
+      } else {
+        const list = document.createElement('div');
+        list.style.marginTop = '10px';
+        for (const t of tickets) {
+          const row = document.createElement('div');
+          row.style.padding = '8px 0';
+          row.style.borderTop = '1px solid var(--border, rgba(0,0,0,0.08))';
+
+          const head = document.createElement('div');
+          head.style.display = 'flex';
+          head.style.justifyContent = 'space-between';
+          head.style.alignItems = 'center';
+          head.style.gap = '12px';
+          const title = document.createElement('span');
+          title.style.fontWeight = '600';
+          title.textContent = t.title || '(zonder titel)';
+          head.appendChild(title);
+          const est = document.createElement('span');
+          est.className = 't-est' + (t.estimate == null ? ' pending' : '');
+          est.textContent = t.estimate != null ? String(t.estimate) : '—';
+          head.appendChild(est);
+          row.appendChild(head);
+
+          const votes = Array.isArray(t.votes) ? t.votes : [];
+          if (votes.length) {
+            const vWrap = document.createElement('div');
+            vWrap.style.fontSize = '12px';
+            vWrap.style.color = 'var(--muted)';
+            vWrap.style.marginTop = '4px';
+            vWrap.textContent = votes
+              .map(v => {
+                const roleLabel = (ROLES[normalizeRole(v.role)] || ROLES.other).label;
+                return `${v.name} (${roleLabel}): ${v.card}`;
+              })
+              .join(', ');
+            row.appendChild(vWrap);
+          }
+          list.appendChild(row);
+        }
+        wrap.appendChild(list);
+      }
+      el.historyList.appendChild(wrap);
+    }
+  }
+
+  const openHistory = () => {
+    renderHistory();
+    el.historyOverlay.classList.remove('hidden');
+    el.historyClose.focus();
+  };
+  const closeHistoryModal = () => {
+    el.historyOverlay.classList.add('hidden');
+    if (el.historyBtn && !el.historyBtn.disabled) el.historyBtn.focus();
+  };
+  const isHistoryOpen = () => !el.historyOverlay.classList.contains('hidden');
 
   function leave() {
     if (state.client) {
@@ -2960,437 +3471,10 @@
         state.client.end(false, {}, () => {});
       } catch (e) { /* ignore */ }
     }
+    sessionStorage.removeItem('pp.clientId');
     location.hash = '';
     location.reload();
   }
-
-  // ---------- Stats viewer ----------
-  function openStatsView() {
-    state.view = 'stats';
-    state.statsShards = state.statsShards || new Map();
-    writeHash();
-    render();
-    statsConnectViewer();
-    scheduleStatsRender();
-  }
-
-  function closeStatsView() {
-    if (state.statsClient) {
-      try { state.statsClient.end(true); } catch (e) {}
-      state.statsClient = null;
-    }
-    state.view = state.roomId ? 'room' : 'landing';
-    location.hash = state.roomId ? shareUrlHashOnly() : '';
-    render();
-  }
-  const shareUrlHashOnly = () => {
-    const p = new URLSearchParams();
-    p.set('room', state.roomId);
-    p.set('scale', state.scale);
-    return p.toString();
-  };
-
-  function statsConnectViewer() {
-    if (state.statsClient) return;
-    const broker = BROKERS[state.brokerKey];
-    const client = mqtt.connect(broker.url, {
-      clientId: 'pp-stats-' + crypto.randomUUID().slice(0, 8),
-      clean: true,
-      keepalive: 30,
-      reconnectPeriod: 3000,
-      connectTimeout: 10000,
-    });
-    state.statsClient = client;
-    const setStatus = (label) => { if (el.statsStatus) el.statsStatus.textContent = label; };
-    setStatus('verbinden met ' + broker.label + '…');
-    client.on('connect', () => {
-      setStatus('verbonden — statistieken laden…');
-      client.subscribe(`${STATS_ROOT}/#`, { qos: 0 }, (err) => {
-        if (err) { setStatus('subscribe mislukt'); return; }
-        // After ~1.2s of silence we assume initial retained delivery is done.
-        setTimeout(() => setStatus(''), 1500);
-      });
-    });
-    client.on('message', (t, payloadBuf) => {
-      const payload = payloadBuf.toString();
-      if (!t.startsWith(STATS_ROOT + '/')) return;
-      const key = t.slice(STATS_ROOT.length + 1);
-      if (!payload) state.statsShards.delete(key);
-      else {
-        try { state.statsShards.set(key, JSON.parse(payload)); } catch (e) {}
-      }
-      scheduleStatsRender();
-    });
-    client.on('error', (e) => { console.error('stats mqtt', e); setStatus('fout: ' + (e.message || e)); });
-  }
-
-  function scheduleStatsRender() {
-    if (state.statsRenderTimer) return;
-    state.statsRenderTimer = setTimeout(() => {
-      state.statsRenderTimer = null;
-      if (state.view === 'stats') renderStatsView();
-    }, 200);
-  }
-
-  // Aggregates all stats shards into a structured object for rendering.
-  function aggregateStats(shards) {
-    const rooms = new Map();         // roomId -> meta
-    const rounds = [];               // array of round payloads
-    const tickets = [];              // array of ticket payloads
-    const participantsRaw = [];      // array of participant payloads
-    for (const [key, val] of shards) {
-      if (!val || typeof val !== 'object') continue;
-      const parts = key.split('/');
-      if (parts[0] !== 'rooms' || !parts[1]) continue;
-      const roomId = parts[1];
-      const kind = parts[2];
-      if (kind === 'meta') rooms.set(roomId, val);
-      else if (kind === 'rounds') rounds.push(val);
-      else if (kind === 'tickets') tickets.push(val);
-      else if (kind === 'participants') participantsRaw.push(val);
-    }
-
-    // Per-user aggregation across rooms, grouped by normalized name (case-insensitive, trimmed).
-    const userKey = (name) => String(name || '').trim().toLowerCase();
-    const users = new Map();
-    for (const p of participantsRaw) {
-      const k = userKey(p.name);
-      if (!k) continue;
-      const u = users.get(k) || {
-        name: p.name, roles: { dev: 0, tester: 0, other: 0 },
-        votesCast: 0, roundsParticipated: 0, sumNumericVotes: 0, countNumericVotes: 0,
-        agreementCount: 0, totalTimeToVoteMs: 0, timeToVoteCount: 0,
-        fastestTimeToVoteMs: null, voteHistogram: {}, rooms: new Set(),
-        firstSeenAt: p.firstSeenAt || null, lastSeenAt: p.lastSeenAt || null,
-      };
-      u.votesCast += p.votesCast || 0;
-      u.roundsParticipated += p.roundsParticipated || 0;
-      u.sumNumericVotes += p.sumNumericVotes || 0;
-      u.countNumericVotes += p.countNumericVotes || 0;
-      u.agreementCount += p.agreementCount || 0;
-      u.totalTimeToVoteMs += p.totalTimeToVoteMs || 0;
-      u.timeToVoteCount += p.timeToVoteCount || 0;
-      if (p.fastestTimeToVoteMs != null) {
-        u.fastestTimeToVoteMs = u.fastestTimeToVoteMs == null ? p.fastestTimeToVoteMs : Math.min(u.fastestTimeToVoteMs, p.fastestTimeToVoteMs);
-      }
-      for (const [card, n] of Object.entries(p.voteHistogram || {})) {
-        u.voteHistogram[card] = (u.voteHistogram[card] || 0) + n;
-      }
-      u.roles[normalizeRole(p.role)] = (u.roles[normalizeRole(p.role)] || 0) + 1;
-      u.rooms.add(p.roomId);
-      if (p.firstSeenAt != null) u.firstSeenAt = u.firstSeenAt == null ? p.firstSeenAt : Math.min(u.firstSeenAt, p.firstSeenAt);
-      if (p.lastSeenAt != null) u.lastSeenAt = u.lastSeenAt == null ? p.lastSeenAt : Math.max(u.lastSeenAt, p.lastSeenAt);
-      // Prefer the latest seen display name
-      if (p.lastSeenAt != null && u._lastSeenForName == null || (p.lastSeenAt > (u._lastSeenForName || 0))) {
-        u.name = p.name; u._lastSeenForName = p.lastSeenAt;
-      }
-      users.set(k, u);
-    }
-
-    // Totals
-    const totalRooms = rooms.size;
-    const totalRounds = rounds.length;
-    const totalTicketsCreated = tickets.length;
-    const totalTickets = tickets.filter(t => t.finalEstimate != null).length;
-    const totalVotes = rounds.reduce((a, r) => a + (r.voteCount || 0), 0);
-    const totalUniqueParticipants = users.size;
-    let totalSessionMs = 0;
-    for (const m of rooms.values()) {
-      if (m.createdAt && m.lastSeenAt && m.lastSeenAt > m.createdAt) totalSessionMs += (m.lastSeenAt - m.createdAt);
-    }
-    const consensusRounds = rounds.filter(r => r.consensus).length;
-    const consensusRate = totalRounds ? consensusRounds / totalRounds : 0;
-    const durs = rounds.map(r => r.durationMs).filter(d => typeof d === 'number' && d > 0);
-    const avgRoundDurationMs = durs.length ? durs.reduce((a, b) => a + b, 0) / durs.length : null;
-
-    // Global vote histogram
-    const voteHistogram = {};
-    for (const r of rounds) {
-      for (const v of (r.votes || [])) voteHistogram[v.card] = (voteHistogram[v.card] || 0) + 1;
-    }
-    // Estimate histogram
-    const estimateHistogram = {};
-    for (const t of tickets) {
-      if (t.finalEstimate != null) estimateHistogram[t.finalEstimate] = (estimateHistogram[t.finalEstimate] || 0) + 1;
-    }
-    // Duration buckets
-    const durationBuckets = { '<30s': 0, '30–60s': 0, '1–2m': 0, '2–5m': 0, '5m+': 0 };
-    for (const d of durs) {
-      if (d < 30000) durationBuckets['<30s']++;
-      else if (d < 60000) durationBuckets['30–60s']++;
-      else if (d < 120000) durationBuckets['1–2m']++;
-      else if (d < 300000) durationBuckets['2–5m']++;
-      else durationBuckets['5m+']++;
-    }
-    // Activity per day (last 90 days)
-    const DAY = 86400000;
-    const today = new Date(); today.setHours(0, 0, 0, 0);
-    const startDay = today.getTime() - 89 * DAY;
-    const activityDays = [];
-    for (let i = 0; i < 90; i++) {
-      const d = new Date(startDay + i * DAY);
-      activityDays.push({ ts: d.getTime(), label: d.toLocaleDateString('nl-NL', { day: '2-digit', month: '2-digit' }), rounds: 0 });
-    }
-    for (const r of rounds) {
-      if (!r.revealedAt) continue;
-      const dayStart = new Date(r.revealedAt); dayStart.setHours(0, 0, 0, 0);
-      const idx = Math.round((dayStart.getTime() - startDay) / DAY);
-      if (idx >= 0 && idx < 90) activityDays[idx].rounds += 1;
-    }
-
-    // Rooms overview rows
-    const roomRows = [...rooms.entries()].map(([roomId, meta]) => {
-      const rRounds = rounds.filter(r => r.roomId === roomId);
-      const rTickets = tickets.filter(t => t.roomId === roomId);
-      const rParticipants = participantsRaw.filter(p => p.roomId === roomId);
-      const rConsensus = rRounds.length ? rRounds.filter(r => r.consensus).length / rRounds.length : 0;
-      return {
-        roomId, scale: meta.scale, createdAt: meta.createdAt, lastSeenAt: meta.lastSeenAt,
-        durationMs: (meta.lastSeenAt || 0) - (meta.createdAt || 0),
-        roundCount: rRounds.length,
-        ticketCount: rTickets.length,
-        participantCount: new Set(rParticipants.map(p => userKey(p.name)).filter(Boolean)).size,
-        consensusRate: rConsensus,
-      };
-    }).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-
-    return {
-      totals: {
-        totalRooms, totalRounds, totalTickets, totalTicketsCreated,
-        totalVotes, totalUniqueParticipants, totalSessionMs,
-        consensusRate, avgRoundDurationMs,
-        avgParticipantsPerRoom: totalRooms ? (totalUniqueParticipants / totalRooms) : 0,
-      },
-      users: [...users.values()],
-      voteHistogram, estimateHistogram, durationBuckets, activityDays,
-      roomRows, rounds, tickets,
-    };
-  }
-
-  const fmtDuration = (ms) => {
-    if (!ms || ms <= 0) return '—';
-    const s = Math.round(ms / 1000);
-    if (s < 60) return s + 's';
-    const m = Math.floor(s / 60), rs = s % 60;
-    if (m < 60) return m + 'm ' + (rs ? rs + 's' : '').trim();
-    const h = Math.floor(m / 60), rm = m % 60;
-    if (h < 48) return h + 'h ' + (rm ? rm + 'm' : '').trim();
-    return Math.floor(h / 24) + 'd';
-  };
-  const fmtDate = (ts) => ts ? new Date(ts).toLocaleString('nl-NL', { year: '2-digit', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : '—';
-  const fmtPct = (r) => (r * 100).toFixed(0) + '%';
-  const fmtNum = (n, d = 0) => n == null || !Number.isFinite(n) ? '—' : d ? n.toFixed(d).replace(/\.?0+$/, '') : Math.round(n).toString();
-
-  function renderHistogramBars(container, data, opts = {}) {
-    container.innerHTML = '';
-    const entries = opts.order ? opts.order.filter(k => data[k] != null).map(k => [k, data[k] || 0]) : Object.entries(data);
-    if (!entries.length) {
-      const p = document.createElement('p'); p.className = 'hint'; p.textContent = 'Nog geen gegevens.'; container.appendChild(p); return;
-    }
-    const max = Math.max(1, ...entries.map(([, n]) => n));
-    for (const [label, n] of entries) {
-      const row = document.createElement('div');
-      row.className = 'hist-row';
-      const lab = document.createElement('div'); lab.className = 'hist-label'; lab.textContent = label;
-      const barWrap = document.createElement('div'); barWrap.className = 'hist-bar-wrap';
-      const bar = document.createElement('div'); bar.className = 'hist-bar';
-      bar.style.setProperty('--pct', (n / max * 100) + '%');
-      barWrap.appendChild(bar);
-      const val = document.createElement('div'); val.className = 'hist-val'; val.textContent = n;
-      row.appendChild(lab); row.appendChild(barWrap); row.appendChild(val);
-      container.appendChild(row);
-    }
-  }
-
-  function renderStatsView() {
-    const agg = aggregateStats(state.statsShards || new Map());
-    const t = agg.totals;
-
-    // Hero cards
-    if (el.statsHeroRooms) {
-      animateCountUp(el.statsHeroRooms, t.totalRooms);
-      animateCountUp(el.statsHeroRounds, t.totalRounds);
-      animateCountUp(el.statsHeroTickets, t.totalTickets);
-      animateCountUp(el.statsHeroUsers, t.totalUniqueParticipants);
-    }
-
-    // Secondary stats
-    if (el.statsSecondary) {
-      el.statsSecondary.innerHTML = '';
-      const rows = [
-        ['Totaal stemmen', fmtNum(t.totalVotes)],
-        ['Tickets aangemaakt', fmtNum(t.totalTicketsCreated)],
-        ['Consensus', fmtPct(t.consensusRate)],
-        ['Gem. ronde-duur', fmtDuration(t.avgRoundDurationMs)],
-        ['Totale spel-tijd', fmtDuration(t.totalSessionMs)],
-        ['Gem. deelnemers/room', fmtNum(t.avgParticipantsPerRoom, 1)],
-      ];
-      for (const [k, v] of rows) {
-        const w = document.createElement('div'); w.className = 'stat';
-        const kEl = document.createElement('div'); kEl.className = 'k'; kEl.textContent = k;
-        const vEl = document.createElement('div'); vEl.className = 'v'; vEl.textContent = v;
-        w.appendChild(kEl); w.appendChild(vEl);
-        el.statsSecondary.appendChild(w);
-      }
-    }
-
-    // Top users
-    if (el.statsUsers) {
-      el.statsUsers.innerHTML = '';
-      const users = [...agg.users];
-      const sortBy = state.statsSortBy || 'votesCast';
-      const keyFn = {
-        votesCast:  u => u.votesCast,
-        rounds:     u => u.roundsParticipated,
-        rooms:      u => u.rooms.size,
-        agreement:  u => u.votesCast ? (u.agreementCount / u.votesCast) : 0,
-        avgVote:    u => u.countNumericVotes ? (u.sumNumericVotes / u.countNumericVotes) : 0,
-        speed:      u => u.timeToVoteCount ? -(u.totalTimeToVoteMs / u.timeToVoteCount) : -Infinity,
-      }[sortBy] || (u => u.votesCast);
-      users.sort((a, b) => keyFn(b) - keyFn(a));
-
-      if (!users.length) {
-        const p = document.createElement('p'); p.className = 'hint'; p.textContent = 'Nog geen deelnemers.'; el.statsUsers.appendChild(p);
-      } else {
-        const table = document.createElement('table'); table.className = 'stats-table';
-        table.innerHTML = `<thead><tr>
-          <th>Deelnemer</th>
-          <th class="num">Stemmen</th>
-          <th class="num">Rondes</th>
-          <th class="num">Rooms</th>
-          <th class="num">Gem. stem</th>
-          <th class="num">Top kaart</th>
-          <th class="num">Overeenkomst</th>
-          <th class="num">Snelheid</th>
-        </tr></thead>`;
-        const tbody = document.createElement('tbody');
-        for (const u of users.slice(0, 50)) {
-          const avgVote = u.countNumericVotes ? (u.sumNumericVotes / u.countNumericVotes) : null;
-          const agreement = u.votesCast ? (u.agreementCount / u.votesCast) : null;
-          const avgSpeed = u.timeToVoteCount ? (u.totalTimeToVoteMs / u.timeToVoteCount) : null;
-          const hist = u.voteHistogram || {};
-          const histEntries = Object.entries(hist);
-          const topCardMax = histEntries.length ? Math.max(...histEntries.map(([, n]) => n)) : 0;
-          const topCards = histEntries.filter(([, n]) => n === topCardMax).map(([c]) => c);
-          const tr = document.createElement('tr');
-          const colors = avatarColors(u.name);
-          tr.innerHTML = `
-            <td class="user-cell">
-              <span class="mini-avatar" style="--av-1:${colors.a};--av-2:${colors.b}">${initialsFor(u.name)}</span>
-              <span class="user-name">${escapeHtml(u.name)}</span>
-            </td>
-            <td class="num">${fmtNum(u.votesCast)}</td>
-            <td class="num">${fmtNum(u.roundsParticipated)}</td>
-            <td class="num">${fmtNum(u.rooms.size)}</td>
-            <td class="num">${avgVote != null ? avgVote.toFixed(2).replace(/\.?0+$/, '') : '—'}</td>
-            <td class="num">${topCardMax > 0 ? escapeHtml(topCards.join(', ')) : '—'}</td>
-            <td class="num">${agreement != null ? fmtPct(agreement) : '—'}</td>
-            <td class="num">${fmtDuration(avgSpeed)}</td>
-          `;
-          tbody.appendChild(tr);
-        }
-        table.appendChild(tbody);
-        el.statsUsers.appendChild(table);
-      }
-    }
-
-    // Distributions
-    const fibOrder = ['0','1','2','3','5','8','13','20','40','100','?','\u2615'];
-    const tshirtOrder = ['XS','S','M','L','XL','XXL','?','\u2615'];
-    const allOrder = [...fibOrder, ...tshirtOrder.filter(x => !fibOrder.includes(x))];
-    if (el.statsVoteHist) renderHistogramBars(el.statsVoteHist, agg.voteHistogram, { order: allOrder });
-    if (el.statsEstHist) renderHistogramBars(el.statsEstHist, agg.estimateHistogram, { order: allOrder });
-    if (el.statsDurHist) renderHistogramBars(el.statsDurHist, agg.durationBuckets, { order: ['<30s','30–60s','1–2m','2–5m','5m+'] });
-
-    // Activity bars
-    if (el.statsActivity) {
-      el.statsActivity.innerHTML = '';
-      const maxRounds = Math.max(1, ...agg.activityDays.map(d => d.rounds));
-      for (const d of agg.activityDays) {
-        const col = document.createElement('div');
-        col.className = 'activity-col';
-        col.title = `${d.label} — ${d.rounds} ronde${d.rounds === 1 ? '' : 's'}`;
-        col.style.setProperty('--pct', (d.rounds / maxRounds * 100) + '%');
-        if (d.rounds === 0) col.classList.add('empty');
-        el.statsActivity.appendChild(col);
-      }
-    }
-
-    // Rooms archive
-    if (el.statsRooms) {
-      el.statsRooms.innerHTML = '';
-      if (!agg.roomRows.length) {
-        const p = document.createElement('p'); p.className = 'hint'; p.textContent = 'Nog geen rooms.'; el.statsRooms.appendChild(p);
-      } else {
-        const table = document.createElement('table'); table.className = 'stats-table';
-        table.innerHTML = `<thead><tr>
-          <th>Kamercode</th><th>Start</th><th>Duur</th>
-          <th class="num">Rondes</th><th class="num">Tickets</th><th class="num">Deelnemers</th>
-          <th class="num">Consensus</th><th>Schaal</th>
-        </tr></thead>`;
-        const tbody = document.createElement('tbody');
-        for (const r of agg.roomRows.slice(0, 100)) {
-          const tr = document.createElement('tr');
-          tr.innerHTML = `
-            <td><span class="room-code">${escapeHtml(r.roomId)}</span></td>
-            <td>${fmtDate(r.createdAt)}</td>
-            <td>${fmtDuration(r.durationMs)}</td>
-            <td class="num">${fmtNum(r.roundCount)}</td>
-            <td class="num">${fmtNum(r.ticketCount)}</td>
-            <td class="num">${fmtNum(r.participantCount)}</td>
-            <td class="num">${r.roundCount ? fmtPct(r.consensusRate) : '—'}</td>
-            <td>${r.scale === 'fib' ? 'Fib' : 'T-shirt'}</td>
-          `;
-          tbody.appendChild(tr);
-        }
-        table.appendChild(tbody);
-        el.statsRooms.appendChild(table);
-      }
-    }
-
-    // Tickets archive
-    if (el.statsTickets) {
-      el.statsTickets.innerHTML = '';
-      const filterText = (el.statsTicketFilter?.value || '').trim().toLowerCase();
-      const rows = agg.tickets
-        .filter(t => !filterText || (t.title || '').toLowerCase().includes(filterText) || (t.roomId || '').toLowerCase().includes(filterText))
-        .sort((a, b) => (b.firstSeenAt || 0) - (a.firstSeenAt || 0));
-      if (!rows.length) {
-        const p = document.createElement('p'); p.className = 'hint';
-        p.textContent = filterText ? 'Geen tickets gevonden voor die filter.' : 'Nog geen tickets.';
-        el.statsTickets.appendChild(p);
-      } else {
-        const table = document.createElement('table'); table.className = 'stats-table';
-        table.innerHTML = `<thead><tr>
-          <th>Titel</th><th>Kamer</th><th>Datum</th>
-          <th class="num">Estimate</th><th class="num">Rondes</th><th class="num">Consensus</th>
-        </tr></thead>`;
-        const tbody = document.createElement('tbody');
-        for (const tk of rows.slice(0, 200)) {
-          const jira = jiraUrlForTitle(tk.title);
-          const titleCell = jira
-            ? `<a href="${jira}" target="_blank" rel="noopener">${escapeHtml(tk.title)}</a>`
-            : escapeHtml(tk.title || '—');
-          const tr = document.createElement('tr');
-          tr.innerHTML = `
-            <td>${titleCell}</td>
-            <td><span class="room-code">${escapeHtml(tk.roomId)}</span></td>
-            <td>${fmtDate(tk.firstSeenAt)}</td>
-            <td class="num">${tk.finalEstimate != null ? escapeHtml(String(tk.finalEstimate)) : '—'}</td>
-            <td class="num">${fmtNum(tk.roundsNeeded)}</td>
-            <td class="num">${tk.finalEstimate == null ? '—' : (tk.consensus ? 'Ja' : 'Nee')}</td>
-          `;
-          tbody.appendChild(tr);
-        }
-        table.appendChild(tbody);
-        el.statsTickets.appendChild(table);
-      }
-    }
-  }
-
-  const escapeHtml = (s) => String(s == null ? '' : s)
-    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 
 
   function joinRoom(roomId) {
@@ -3401,7 +3485,6 @@
     state.name = name; localStorage.setItem('pp.name', name);
     state.role = normalizeRole(el.roleInput.value);
     localStorage.setItem('pp.role', state.role);
-    state.scale = 'fib';
     state.roomId = code;
     state.joinedAt = Date.now();
     state.roundId = 1;
@@ -3410,7 +3493,11 @@
     writeHash();
     render();
     connect();
-    // If no retained meta arrives shortly after subscribing, the room is empty — seed it ourselves.
+    // If no retained meta arrives within the grace window, the room is empty â€” seed it ourselves.
+    // 3s gives slow brokers enough time to deliver retained meta before we wrongly assume
+    // the room is brand-new and overwrite its state. We only publish `meta` and `round` â€”
+    // the other topics' missing-retained state is already the empty default, and
+    // republishing them here would clobber an existing room whose meta merely arrived late.
     const seed = () => {
       if (!state.client?.connected) return setTimeout(seed, 50);
       setTimeout(() => {
@@ -3418,7 +3505,7 @@
         state.host = state.clientId;
         state.client.publish(
           topic('meta'),
-          JSON.stringify({ scale: state.scale, host: state.clientId, createdAt: Date.now() }),
+          JSON.stringify({ host: state.clientId, createdAt: Date.now() }),
           { qos: 0, retain: true }
         );
         state.client.publish(
@@ -3426,13 +3513,27 @@
           JSON.stringify({ roundId: 1, revealed: false }),
           { qos: 0, retain: true }
         );
-        state.client.publish(topic('moderators'), JSON.stringify([]), { qos: 0, retain: true });
-        state.client.publish(topic('tickets'), JSON.stringify([]), { qos: 0, retain: true });
-        state.client.publish(topic('ticket'), '', { qos: 0, retain: true });
+        // Bootstrap a fresh active session for this brand-new room.
+        if (!state.sessionId) {
+          state.sessionId = randomSessionId();
+          state.activeSessionStartedAt = Date.now();
+          publishActiveSession();
+        }
         render();
-      }, 800);
+      }, 3000);
     };
     seed();
+    // After retained `activeSession` payloads have settled in, ensure one exists.
+    // Any moderator may seed it if absent (e.g. an existing room that predates this feature).
+    setTimeout(() => {
+      if (!state.client?.connected) return;
+      if (state.sessionId) return;
+      if (!iAmModerator()) return;
+      state.sessionId = randomSessionId();
+      state.activeSessionStartedAt = Date.now();
+      publishActiveSession();
+      render();
+    }, 1500);
   }
 
   // ---------- Bindings ----------
@@ -3449,6 +3550,11 @@
     if (state.soundEnabled) sound.tick();
   });
   syncSoundToggle();
+
+  el.roomStatsToggle.addEventListener('click', () => {
+    const hidden = el.roomStatsBody.classList.toggle('hidden');
+    el.roomStatsToggle.textContent = hidden ? 'Tonen' : 'Verbergen';
+  });
 
   // Help modal
   const openHelp = () => {
@@ -3469,24 +3575,37 @@
     if (e.key === 'Escape' && isHelpOpen()) { e.preventDefault(); closeHelp(); }
   });
 
+  // History modal
+  if (el.historyBtn) el.historyBtn.addEventListener('click', () => {
+    if (el.historyBtn.disabled) return;
+    openHistory();
+  });
+  if (el.historyClose) el.historyClose.addEventListener('click', closeHistoryModal);
+  if (el.historyOverlay) el.historyOverlay.addEventListener('click', (e) => {
+    if (e.target === el.historyOverlay) closeHistoryModal();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && isHistoryOpen()) { e.preventDefault(); closeHistoryModal(); }
+  });
+  if (el.closeSessionBtn) el.closeSessionBtn.addEventListener('click', closeSession);
+
   // Keyboard shortcuts for cards (when room visible and not typing in input)
   document.addEventListener('keydown', (e) => {
-    if (isHelpOpen()) return;
+    if (isHelpOpen() || isHistoryOpen()) return;
     if (!state.roomId || state.revealed) return;
     if (e.ctrlKey || e.metaKey || e.altKey) return;
     const tag = document.activeElement?.tagName;
     if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
-    const deck = SCALES[state.scale];
     let card = null;
     if (e.key >= '1' && e.key <= '9') {
       const idx = parseInt(e.key, 10) - 1;
-      if (idx < deck.length) card = deck[idx];
+      if (idx < DECK.length) card = DECK[idx];
     } else if (e.key === '0') {
-      if (deck.length >= 10) card = deck[9];
+      if (DECK.length >= 10) card = DECK[9];
     } else if (e.key === '?') {
-      card = deck.includes('?') ? '?' : null;
+      card = DECK.includes('?') ? '?' : null;
     } else if (e.key.toLowerCase() === 'c') {
-      card = deck.includes('\u2615') ? '\u2615' : null;
+      card = DECK.includes('\u2615') ? '\u2615' : null;
     }
     if (card != null) { e.preventDefault(); selectCard(card); }
   });
@@ -3496,6 +3615,7 @@
   el.nameInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') joinRoom(el.joinCodeInput.value); });
   el.nameInput.addEventListener('input', () => { state.name = el.nameInput.value; });
   el.revealBtn.addEventListener('click', doReveal);
+  el.revealBtnTop.addEventListener('click', doReveal);
   el.newRoundBtn.addEventListener('click', doNewRound);
   el.newTicketBtn.addEventListener('click', openNewTicket);
   el.ticketSubmitBtn.addEventListener('click', submitTicket);
@@ -3530,35 +3650,14 @@
     }
   });
 
-  // ---------- Stats bindings ----------
-  if (el.openStatsBtn) el.openStatsBtn.addEventListener('click', () => openStatsView());
-  if (el.statsBackBtn) el.statsBackBtn.addEventListener('click', () => closeStatsView());
-  if (el.statsSort) el.statsSort.addEventListener('change', () => {
-    state.statsSortBy = el.statsSort.value;
-    renderStatsView();
-  });
-  if (el.statsTicketFilter) el.statsTicketFilter.addEventListener('input', () => scheduleStatsRender());
-
-  window.addEventListener('hashchange', () => {
-    const h = parseHash();
-    if (h.stats && state.view !== 'stats') openStatsView();
-    else if (!h.stats && state.view === 'stats') closeStatsView();
-  });
-
   // ---------- Init ----------
   el.nameInput.value = state.name;
   el.roleInput.value = state.role;
   el.brokerSelect.value = state.brokerKey;
 
   const hash = parseHash();
-  if (hash.stats) {
-    openStatsView();
-  } else if (hash.room) {
+  if (hash.room) {
     el.joinCodeInput.value = hash.room;
-    if (hash.scale && SCALES[hash.scale]) {
-      // hint only; the host's `meta` retained message is authoritative.
-      state.scale = hash.scale;
-    }
     // If we already know the user's name, rejoin immediately on refresh.
     if (state.name) joinRoom(hash.room);
     else el.nameInput.focus();
