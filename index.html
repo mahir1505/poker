@@ -1025,6 +1025,7 @@
   <span id="roomTag" class="tag hidden"></span>
   <span id="activeTicketChip" class="active-ticket-chip hidden"></span>
   <div class="spacer"></div>
+  <a href="./retro.html" id="retroLink" title="Naar retrospective" style="font-size:12px; color:var(--muted); text-decoration:none; padding:4px 10px; border-radius:999px; background:var(--surface-1); border:1px solid var(--border); transition:color var(--t-fast), border-color var(--t-fast);">Retro →</a>
   <label for="brokerSelect" style="margin: 0 6px 0 0; font-size: 12px;">Broker</label>
   <select id="brokerSelect" title="Publieke MQTT broker">
     <option value="hivemq">HiveMQ</option>
@@ -1056,7 +1057,7 @@
     </div>
 
     <div class="warn">
-      Dit gebruikt een <strong>publieke</strong> MQTT broker. Gebruik geen vertrouwelijke namen of gegevens â€” iedereen die jouw kamercode kent kan meeluisteren.
+      Dit gebruikt een <strong>publieke</strong> MQTT broker. Gebruik geen vertrouwelijke namen of gegevens — iedereen die jouw kamercode kent kan meeluisteren.
     </div>
 
     <h2>Kom binnen</h2>
@@ -1103,7 +1104,7 @@
       <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
         <h2 style="margin: 0;">Kamer</h2>
         <span class="room-code" id="roomCodeDisplay"></span>
-        <button id="copyLinkBtn" title="Kopieer link">Link kopiÃ«ren</button>
+        <button id="copyLinkBtn" title="Kopieer link">Link kopiëren</button>
         <div class="spacer" style="flex: 1;"></div>
         <button id="leaveBtn">Verlaten</button>
       </div>
@@ -1130,11 +1131,11 @@
       <div id="ticketForm" class="ticket-form hidden">
         <div>
           <label for="ticketTitle">Titel</label>
-          <input id="ticketTitle" maxlength="120" placeholder="bv. VO-1234 â€” login flow" autocomplete="off">
+          <input id="ticketTitle" maxlength="120" placeholder="bv. VO-1234 — login flow" autocomplete="off">
         </div>
         <div>
           <label for="ticketDesc">Beschrijving (optioneel)</label>
-          <textarea id="ticketDesc" maxlength="1000" placeholder="Korte toelichting, acceptatiecriteria, linksâ€¦"></textarea>
+          <textarea id="ticketDesc" maxlength="1000" placeholder="Korte toelichting, acceptatiecriteria, links…"></textarea>
         </div>
         <div class="actions">
           <button id="ticketSubmitBtn" class="primary">Toevoegen</button>
@@ -1188,24 +1189,24 @@
 
     <h3>Wat is dit?</h3>
     <p>Planning Poker is een techniek om samen met een team een inschatting te maken van werk. Iedereen kiest tegelijk een kaart, en na het onthullen bespreek je verschillen tot je consensus hebt.</p>
-    <p><strong>Let op:</strong> deze app gebruikt een <strong>publieke</strong> MQTT broker. Gebruik geen vertrouwelijke namen of gegevens â€” iedereen die jouw kamercode kent kan meeluisteren.</p>
+    <p><strong>Let op:</strong> deze app gebruikt een <strong>publieke</strong> MQTT broker. Gebruik geen vertrouwelijke namen of gegevens — iedereen die jouw kamercode kent kan meeluisteren.</p>
 
     <h3>Een kamer starten of joinen</h3>
     <ul>
       <li>Vul je <strong>naam</strong>, <strong>rol</strong> en een <strong>kamercode</strong> in op het startscherm.</li>
       <li>Typ een bestaande code om mee te doen, of bedenk een nieuwe code om een kamer aan te maken. Kamercodes zijn hoofdletter-ongevoelig.</li>
-      <li>Deel de kamer met collega's via <strong>Link kopiÃ«ren</strong> â€” iedereen met de link komt direct binnen.</li>
+      <li>Deel de kamer met collega's via <strong>Link kopiëren</strong> — iedereen met de link komt direct binnen.</li>
     </ul>
 
     <h3>Stemmen</h3>
     <ul>
       <li>Klik op een kaart om te stemmen. Je kunt je stem wijzigen tot de moderator onthult.</li>
       <li><kbd>?</kbd> betekent <em>geen mening</em> of onduidelijk.</li>
-      <li><kbd>â˜•</kbd> vraagt een pauze aan.</li>
+      <li><kbd>☕</kbd> vraagt een pauze aan.</li>
     </ul>
 
     <h3>Toetsenbord-shortcuts</h3>
-    <div class="shortcut-row"><kbd>1</kbd>â€“<kbd>9</kbd><span>Kies de 1e t/m 9e kaart uit het deck</span></div>
+    <div class="shortcut-row"><kbd>1</kbd>–<kbd>9</kbd><span>Kies de 1e t/m 9e kaart uit het deck</span></div>
     <div class="shortcut-row"><kbd>0</kbd><span>Kies de 10e kaart (indien aanwezig)</span></div>
     <div class="shortcut-row"><kbd>?</kbd><span>Stem <em>geen mening</em></span></div>
     <div class="shortcut-row"><kbd>C</kbd><span>Vraag een pauze aan (koffie)</span></div>
@@ -1215,7 +1216,7 @@
     <ul>
       <li>Alleen de <strong>host</strong> of een <strong>moderator</strong> kan kaarten onthullen of een nieuwe ronde starten.</li>
       <li>Na het onthullen zie je het resultaat met een uitsplitsing per rol (Ontwikkelaar, Tester, Andere).</li>
-      <li>Een <strong>gouden gloed</strong> rond het resultaat betekent dat iedereen dezelfde kaart koos â€” consensus bereikt.</li>
+      <li>Een <strong>gouden gloed</strong> rond het resultaat betekent dat iedereen dezelfde kaart koos — consensus bereikt.</li>
     </ul>
 
     <h3>Tickets</h3>
@@ -1235,7 +1236,7 @@
     <h3>Geluid &amp; broker</h3>
     <ul>
       <li>Zet geluidseffecten aan of uit met de knop naast deze handleiding.</li>
-      <li>Heb je verbindingsproblemen? Wissel tussen <strong>HiveMQ</strong> en <strong>EMQX</strong> bovenin â€” beide zijn publieke MQTT brokers.</li>
+      <li>Heb je verbindingsproblemen? Wissel tussen <strong>HiveMQ</strong> en <strong>EMQX</strong> bovenin — beide zijn publieke MQTT brokers.</li>
     </ul>
   </div>
 </div>
@@ -1331,7 +1332,7 @@
     statsTicketAgg: {},                // ticketId -> { title, firstSeenAt, estimatedAt, finalEstimate, roundsNeeded, consensus }
     sessionId: null,                   // current active session id
     activeSessionStartedAt: null,      // epoch ms when current session started
-    sessions: {},                      // { sessionId: SessionRecord } â€” closed sessions only
+    sessions: {},                      // { sessionId: SessionRecord } — closed sessions only
     loading: false,                    // true while waiting for retained meta after join
     loadingError: null,                // 'connect' | 'subscribe' | 'timeout' | null
     _readyResolved: false,             // one-shot guard for markReady()
@@ -1532,7 +1533,7 @@
   };
 
   const setConn = (cls, label) => {
-    // Empty class means "connecting/intermediate" â€” show a warm pulse instead of grey
+    // Empty class means "connecting/intermediate" — show a warm pulse instead of grey
     const effective = cls || 'connecting';
     el.conn.className = 'conn ' + effective;
     el.conn.querySelector('.label').textContent = label;
@@ -1560,7 +1561,7 @@
   // markReady is the single resolver that ends the loading phase. It fires when retained
   // `meta` arrives (happy path) or when seed() times out (new-room path), whichever first.
   // Idempotent via _readyResolved so the two paths racing is safe. Only after this fires
-  // do we publish our own presence â€” other clients then see us with a fully-loaded view.
+  // do we publish our own presence — other clients then see us with a fully-loaded view.
   function markReady(reason) {
     if (state._readyResolved) return;
     state._readyResolved = true;
@@ -1600,7 +1601,7 @@
     _claimHostTimer = setTimeout(() => {
       _claimHostTimer = null;
       if (!state.client?.connected || !state.roomId) return;
-      if (!state.host || !_observedPresent.has(state.host)) return; // never seen them â€” don't claim
+      if (!state.host || !_observedPresent.has(state.host)) return; // never seen them — don't claim
       if (state.participants[state.host]) return; // host is back/still here
       if (effectiveHost() !== state.clientId) return;
       state.host = state.clientId;
@@ -1780,7 +1781,7 @@
     renderStats();
     renderRoomStats();
 
-    // Reveal transition hook â€” fires once per reveal moment
+    // Reveal transition hook — fires once per reveal moment
     if (state.revealed && !state.lastRevealed) {
       state.lastRevealed = true;
       onRevealTransition();
@@ -1835,7 +1836,7 @@
     state.lastVotedIds = currentVoted;
     state.participantsRendered = true;
 
-    // "All voted" state â€” every participant in room has voted, but not yet revealed
+    // "All voted" state — every participant in room has voted, but not yet revealed
     const allVoted = !state.revealed && ids.length > 0 && ids.every(id => currentVoted.has(id));
     const participantsPanel = el.participants.closest('.panel');
     if (participantsPanel) participantsPanel.classList.toggle('all-voted', allVoted);
@@ -1925,7 +1926,7 @@
           m.textContent = 'Moderator';
           sub.appendChild(m);
         }
-        // Promote/demote and kick buttons â€” visible only to moderators, never for the effective host or self.
+        // Promote/demote and kick buttons — visible only to moderators, never for the effective host or self.
         if (iAmModerator() && id !== eh && id !== state.clientId) {
           const isMod = state.moderators.includes(id);
           const toggle = document.createElement('button');
@@ -2031,7 +2032,7 @@
       if (isActive) {
         const pill = document.createElement('span');
         pill.className = 'active-pill';
-        pill.textContent = state.revealed ? 'onthuld' : 'stemmenâ€¦';
+        pill.textContent = state.revealed ? 'onthuld' : 'stemmen…';
         title.appendChild(pill);
       }
       body.appendChild(title);
@@ -2310,7 +2311,7 @@
       const numeric = cards.map(parseFloat).filter(Number.isFinite);
       if (numeric.length) {
         const avg = numeric.reduce((a, b) => a + b, 0) / numeric.length;
-        detail += ' Â· \u00f8 ' + avg.toFixed(2).replace(/\.00$/, '');
+        detail += ' · \u00f8 ' + avg.toFixed(2).replace(/\.00$/, '');
       }
 
       const w = document.createElement('div');
@@ -2550,7 +2551,7 @@
   // ---------- MQTT ----------
   function connect() {
     const broker = BROKERS[state.brokerKey];
-    setConn('', 'verbinden met ' + broker.label + 'â€¦');
+    setConn('', 'verbinden met ' + broker.label + '…');
 
     const willTopic = topic('presence/' + state.clientId);
     const client = mqtt.connect(broker.url, {
@@ -2590,7 +2591,7 @@
       });
     });
 
-    client.on('reconnect', () => { state.statsReady = false; setConn('', 'herverbindenâ€¦'); });
+    client.on('reconnect', () => { state.statsReady = false; setConn('', 'herverbinden…'); });
     client.on('close',     () => { state.statsReady = false; setConn('err', 'losgekoppeld'); });
     client.on('error',     (e) => {
       console.error(e);
@@ -2606,7 +2607,7 @@
 
   function announceSelf() {
     // If we created the room we publish meta. If joining, we only publish meta if none exists yet
-    // (we can't know â€” safe fallback: only creator writes meta, done in createRoom()).
+    // (we can't know — safe fallback: only creator writes meta, done in createRoom()).
     state.client.publish(
       topic('presence/' + state.clientId),
       JSON.stringify({ name: state.name, role: state.role, joinedAt: state.joinedAt }),
@@ -2671,7 +2672,7 @@
     state._statsParticipantFirstSeen = state._statsParticipantFirstSeen || {};
     if (!existing) state._statsParticipantFirstSeen[clientId] = firstSeenAt;
     state.statsKnownParticipants.add(clientId);
-    // Aggregated counters live on the shard â€” we read them from state.statsParticipantAgg
+    // Aggregated counters live on the shard — we read them from state.statsParticipantAgg
     // (see statsRecordRoundReveal which maintains this incrementally).
     const agg = (state.statsParticipantAgg && state.statsParticipantAgg[clientId]) || {};
     statsPublish(`rooms/${state.roomId}/participants/${clientId}`, {
@@ -3106,7 +3107,7 @@
     return nextRound;
   }
 
-  // Store current revealed votes â€” and an auto-computed estimate â€” onto the active ticket
+  // Store current revealed votes — and an auto-computed estimate — onto the active ticket
   // whenever they differ from what's saved. No explicit "Bewaar" click needed.
   function snapshotActiveVotesIfChanged() {
     if (!iAmModerator()) return;
@@ -3369,7 +3370,7 @@
         state.revealed;
       if (anyVoteActivity) advanceRound(ticket.id);
       else {
-        // No votes yet on the current round â€” just bind the current round to this ticket.
+        // No votes yet on the current round — just bind the current round to this ticket.
         state.client.publish(
           topic('round'),
           JSON.stringify({ roundId: state.roundId, revealed: false, ticketId: ticket.id }),
@@ -3575,13 +3576,13 @@
     writeHash();
     render();
     connect();
-    // If no retained meta arrives within the grace window, the room is empty â€” seed it ourselves.
+    // If no retained meta arrives within the grace window, the room is empty — seed it ourselves.
     // 3s gives slow brokers enough time to deliver retained meta before we wrongly assume
-    // the room is brand-new and overwrite its state. We only publish `meta` and `round` â€”
+    // the room is brand-new and overwrite its state. We only publish `meta` and `round` —
     // the other topics' missing-retained state is already the empty default, and
     // republishing them here would clobber an existing room whose meta merely arrived late.
     const seed = () => {
-      if (!state.roomId) return; // user cancelled or left during loading â€” abort
+      if (!state.roomId) return; // user cancelled or left during loading — abort
       if (!state.client?.connected) return setTimeout(seed, 50);
       setTimeout(() => {
         if (!state.roomId || !state.client?.connected) return; // cancelled during the 3s wait
@@ -3776,6 +3777,17 @@
     el.nameInput.focus();
   }
 })();
+</script>
+<script>
+  // Carry the current room code over when navigating to retro.html, so a team
+  // can flip between poker and retro for the same kamer-code without re-typing.
+  (() => {
+    const link = document.getElementById('retroLink');
+    if (!link) return;
+    const sync = () => { link.href = './retro.html' + (location.hash || ''); };
+    sync();
+    window.addEventListener('hashchange', sync);
+  })();
 </script>
 </body>
 </html>

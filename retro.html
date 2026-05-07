@@ -1,0 +1,3560 @@
+<!doctype html>
+<!--
+  retro.html — Retrospective workspace, sibling SPA to index.html.
+
+  MIRRORED FROM index.html (see MIRRORED-CODE.md):
+    Design tokens, header chrome, sound, confetti, identity, presence/moderators
+    plumbing, host-claim safeguard, statsPublish stats-shard pattern.
+  Topic namespace is `${TOPIC_ROOT}/retro/${roomId}/...` so retro and poker
+  rooms with the same code coexist without cross-talk.
+-->
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>Planning Poker — Retro</title>
+<style>
+  :root {
+    --bg: #f5efe4;
+    --bg-grad-1: #f9ecd9;
+    --bg-grad-2: #f3e4cf;
+    --fg: #1f1a14;
+    --muted: #7a6f5f;
+    --card: #fbf7ef;
+    --surface-1: #f7f0e1;
+    --surface-2: #fbf7ef;
+    --border: #e4dbc9;
+    --border-strong: #c9bca5;
+    --accent: #b5421f;
+    --accent-2: #9a3516;
+    --accent-fg: #fffaf1;
+    --glow: rgba(181, 66, 31, 0.30);
+    --danger: #9a2b2b;
+    --ok: #4f7a3a;
+    --warn: #c17a12;
+    --gold: #c88a1e;
+    --shadow-1: 0 1px 2px rgba(31,26,20,.05);
+    --shadow-2: 0 1px 2px rgba(31,26,20,.05), 0 8px 24px rgba(31,26,20,.07);
+    --shadow-3: 0 4px 12px rgba(31,26,20,.09), 0 24px 48px rgba(31,26,20,.14);
+    --r-sm: 6px;
+    --r-md: 10px;
+    --r-lg: 14px;
+    --r-xl: 20px;
+    --t-fast: 120ms;
+    --t-med: 260ms;
+    --t-slow: 480ms;
+    --ease-out: cubic-bezier(.2,.8,.2,1);
+    --ease-spring: cubic-bezier(.34,1.56,.64,1);
+    --header-bg: rgba(251,247,239,.82);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1a140f;
+      --bg-grad-1: #231a12;
+      --bg-grad-2: #2a1d12;
+      --fg: #efe6d5;
+      --muted: #9a8f7d;
+      --card: #221b14;
+      --surface-1: #2a221a;
+      --surface-2: #302619;
+      --border: #3a2f23;
+      --border-strong: #594a36;
+      --accent: #e06a3b;
+      --accent-2: #b94f27;
+      --accent-fg: #1a140f;
+      --glow: rgba(224, 106, 59, 0.35);
+      --ok: #8cbd6e;
+      --warn: #e4a54e;
+      --gold: #e4a54e;
+      --shadow-1: 0 1px 2px rgba(0,0,0,.4);
+      --shadow-2: 0 1px 2px rgba(0,0,0,.4), 0 10px 30px rgba(0,0,0,.35);
+      --shadow-3: 0 4px 16px rgba(0,0,0,.5), 0 28px 60px rgba(0,0,0,.55);
+      --header-bg: rgba(26,20,15,.75);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: .001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: .001ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+    color: var(--fg);
+    background:
+      radial-gradient(1200px 600px at 85% -10%, var(--bg-grad-2), transparent 60%),
+      radial-gradient(900px 500px at 0% 10%, var(--bg-grad-1), transparent 55%),
+      var(--bg);
+    background-attachment: fixed;
+    -webkit-font-smoothing: antialiased;
+  }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+  button:focus-visible { box-shadow: 0 0 0 3px var(--glow); outline: none; }
+
+  header {
+    position: sticky; top: 0; z-index: 10;
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 20px;
+    background: var(--header-bg);
+    backdrop-filter: saturate(160%) blur(14px);
+    -webkit-backdrop-filter: saturate(160%) blur(14px);
+    border-bottom: 1px solid var(--border);
+  }
+  header h1 {
+    font-size: 16px; margin: 0; font-weight: 700;
+    letter-spacing: -.01em;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    -webkit-background-clip: text; background-clip: text;
+    color: transparent;
+    display: inline-flex; align-items: center; gap: 8px;
+  }
+  header h1::before {
+    content: ""; width: 18px; height: 24px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    border-radius: 3px;
+    box-shadow: inset 0 0 0 2px rgba(255,255,255,.25), 0 2px 6px var(--glow);
+    transform: rotate(-6deg);
+    display: inline-block;
+    flex-shrink: 0;
+  }
+  header .spacer { flex: 1; }
+  .ghost-link {
+    font-size: 12px;
+    color: var(--muted);
+    text-decoration: none;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    transition: color var(--t-fast), border-color var(--t-fast);
+  }
+  .ghost-link:hover { color: var(--fg); border-color: var(--accent); }
+
+  .conn {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 12px; color: var(--muted);
+    padding: 4px 10px; border-radius: 999px;
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+  }
+  .conn .dot {
+    width: 9px; height: 9px; border-radius: 50%;
+    background: var(--muted);
+    transition: background var(--t-fast) var(--ease-out);
+  }
+  .conn.ok .dot { background: var(--ok); }
+  .conn.err .dot { background: var(--danger); }
+  .conn.connecting .dot { background: var(--warn); }
+
+  .sound-toggle, .help-toggle {
+    width: 34px; height: 34px;
+    display: inline-flex; align-items: center; justify-content: center;
+    padding: 0;
+    border-radius: 50%;
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    color: var(--muted);
+    transition: color var(--t-fast), border-color var(--t-fast), background var(--t-fast), transform var(--t-fast);
+  }
+  .sound-toggle:hover, .help-toggle:hover { border-color: var(--accent); color: var(--fg); transform: translateY(-1px); }
+  .sound-toggle.on { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 45%, transparent); background: color-mix(in srgb, var(--accent) 8%, var(--surface-1)); }
+  .sound-toggle svg, .help-toggle svg { width: 16px; height: 16px; display: block; }
+
+  .phase-tag {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--accent) 10%, transparent);
+    border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+    color: var(--accent);
+    font-size: 12px; font-weight: 600;
+    text-transform: capitalize;
+  }
+  .phase-tag::before {
+    content: "";
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--accent);
+  }
+
+  .help-overlay {
+    position: fixed; inset: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px;
+    background: rgba(31,26,20,.5);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    animation: help-fade-in var(--t-med) var(--ease-out);
+  }
+  @media (prefers-color-scheme: dark) {
+    .help-overlay { background: rgba(0,0,0,.6); }
+  }
+  .help-modal {
+    position: relative;
+    width: 100%;
+    max-width: 680px;
+    max-height: 85vh;
+    overflow-y: auto;
+    padding: 24px 26px;
+    box-shadow: var(--shadow-3);
+    animation: help-pop-in var(--t-med) var(--ease-spring);
+  }
+  .help-modal h2 { font-size: 18px; margin: 0 0 4px; }
+  .help-modal .help-tagline { color: var(--muted); font-size: 13px; margin: 0 0 18px; }
+  .help-modal h3 { font-size: 14px; font-weight: 600; margin: 18px 0 8px; color: var(--accent); }
+  .help-modal p, .help-modal li { font-size: 13px; line-height: 1.55; margin: 6px 0; }
+  .help-modal ul { margin: 6px 0 6px 0; padding-left: 20px; }
+  .help-modal strong { color: var(--fg); font-weight: 600; }
+  .help-close {
+    position: absolute; top: 12px; right: 12px;
+    width: 32px; height: 32px;
+    display: inline-flex; align-items: center; justify-content: center;
+    padding: 0;
+    border-radius: 50%;
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 18px; line-height: 1;
+    cursor: pointer;
+  }
+  .help-close:hover { border-color: var(--accent); color: var(--fg); }
+  @keyframes help-fade-in { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes help-pop-in {
+    from { opacity: 0; transform: translateY(8px) scale(.98); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  select, input, textarea, button {
+    font: inherit; color: inherit;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--r-sm);
+    padding: 8px 11px;
+    transition: border-color var(--t-fast) var(--ease-out), box-shadow var(--t-fast) var(--ease-out), background var(--t-fast) var(--ease-out);
+  }
+  select:hover, input:hover, textarea:hover { border-color: var(--border-strong); }
+  select:focus, input:focus, textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--glow); }
+  textarea { resize: vertical; min-height: 60px; font-family: inherit; }
+
+  button {
+    cursor: pointer;
+    transition: background var(--t-fast) var(--ease-out),
+                border-color var(--t-fast) var(--ease-out),
+                color var(--t-fast) var(--ease-out),
+                transform 80ms var(--ease-out),
+                box-shadow var(--t-fast) var(--ease-out);
+  }
+  button:hover:not(:disabled) { border-color: var(--accent); transform: translateY(-1px); }
+  button:active:not(:disabled) { transform: translateY(0); }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  button.primary {
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    color: var(--accent-fg);
+    border-color: transparent;
+    box-shadow: 0 2px 8px var(--glow);
+    font-weight: 600;
+  }
+  button.primary:hover:not(:disabled) { filter: brightness(1.06); box-shadow: 0 6px 18px var(--glow); }
+
+  main { max-width: 1100px; margin: 0 auto; padding: 28px 20px 60px; }
+  .panel {
+    position: relative;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--r-lg);
+    padding: 22px;
+    box-shadow: var(--shadow-2);
+    transition: border-color var(--t-med) var(--ease-out), box-shadow var(--t-med) var(--ease-out);
+  }
+  .panel + .panel { margin-top: 16px; }
+  label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px; font-weight: 500; }
+  .row { display: flex; gap: 10px; align-items: end; flex-wrap: wrap; }
+  .row > * { flex: 1 1 160px; }
+  .row input, .row select { width: 100%; }
+  .hint { color: var(--muted); font-size: 12px; }
+  .warn {
+    background: color-mix(in srgb, var(--warn) 14%, transparent);
+    border: 1px solid color-mix(in srgb, var(--warn) 40%, transparent);
+    border-radius: var(--r-md);
+    padding: 10px 12px;
+    font-size: 12.5px;
+    margin-bottom: 16px;
+  }
+  h2 { font-size: 15px; margin: 0 0 12px; font-weight: 600; letter-spacing: -.005em; }
+  .actions { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+  .hidden { display: none !important; }
+
+  /* Landing hero */
+  #landing { overflow: hidden; }
+  .hero {
+    position: relative;
+    text-align: center;
+    padding: 30px 10px 22px;
+    margin: -22px -22px 12px;
+    border-radius: var(--r-lg) var(--r-lg) 0 0;
+    overflow: hidden;
+    isolation: isolate;
+  }
+  .hero::before {
+    content: "";
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(600px 220px at 30% 50%, color-mix(in srgb, var(--accent) 18%, transparent), transparent 70%),
+      radial-gradient(500px 200px at 70% 60%, color-mix(in srgb, var(--accent-2) 16%, transparent), transparent 70%);
+    z-index: -1;
+  }
+  .hero-title {
+    font-size: 34px; font-weight: 800; letter-spacing: -.02em;
+    margin: 0 0 6px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    -webkit-background-clip: text; background-clip: text;
+    color: transparent;
+    line-height: 1.1;
+  }
+  .hero-tagline { color: var(--muted); font-size: 14px; margin: 0; }
+
+  /* Template picker */
+  .template-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 10px;
+    margin-top: 8px;
+  }
+  .template-card {
+    background: var(--surface-1);
+    border: 1.5px solid var(--border);
+    border-radius: var(--r-md);
+    padding: 12px 14px;
+    cursor: pointer;
+    text-align: left;
+    transition: border-color var(--t-fast), background var(--t-fast), transform var(--t-fast);
+  }
+  .template-card:hover { border-color: var(--border-strong); transform: translateY(-1px); }
+  .template-card.selected {
+    border-color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 8%, var(--surface-1));
+    box-shadow: 0 0 0 3px var(--glow);
+  }
+  .template-card .t-name { font-weight: 600; font-size: 13.5px; margin-bottom: 4px; }
+  .template-card .t-cols {
+    display: flex; flex-wrap: wrap; gap: 4px;
+    font-size: 11px; color: var(--muted);
+  }
+  .template-card .t-col-chip {
+    padding: 1px 6px;
+    border-radius: 8px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+  }
+
+  .room-code {
+    font-family: ui-monospace, "SF Mono", Consolas, monospace;
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    padding: 4px 9px;
+    border-radius: var(--r-sm);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: .02em;
+  }
+  .tag {
+    display: inline-block;
+    padding: 1px 7px;
+    border-radius: 10px;
+    font-size: 11px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--muted);
+  }
+
+  /* Loading spinner */
+  .loading-spinner {
+    width: 36px; height: 36px; margin: 18px auto;
+    border: 3px solid var(--border); border-top-color: var(--accent);
+    border-radius: 50%; animation: pp-spin 900ms linear infinite;
+  }
+  @keyframes pp-spin { to { transform: rotate(360deg); } }
+  #loading.error .loading-spinner { display: none; }
+
+  /* Participants */
+  .participants {
+    list-style: none; margin: 0; padding: 0;
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px;
+  }
+  .participant {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px;
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: var(--r-md);
+    transition: border-color var(--t-med) var(--ease-out), transform var(--t-med) var(--ease-out);
+  }
+  .participant.is-mod { border-color: color-mix(in srgb, var(--accent) 35%, var(--border)); }
+  .participant .avatar {
+    flex-shrink: 0;
+    width: 32px; height: 32px; border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    color: #fff; font-weight: 700; font-size: 12px;
+    background: linear-gradient(135deg, var(--av-1, #888), var(--av-2, #555));
+    box-shadow: inset 0 -2px 3px rgba(0,0,0,.15), 0 2px 6px rgba(0,0,0,.08);
+  }
+  .participant .name-wrap { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  .participant .name {
+    font-weight: 600; font-size: 13.5px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .participant .sub { font-size: 11px; color: var(--muted); display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+  .participant .me { font-size: 10px; color: var(--muted); font-weight: 500; padding: 1px 6px; border-radius: 8px; background: color-mix(in srgb, var(--muted) 14%, transparent); }
+  .participant .mod-badge {
+    font-size: 10px;
+    color: var(--accent);
+    padding: 1px 6px;
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--accent) 14%, transparent);
+    border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+  }
+  .participant .p-actions {
+    display: flex; gap: 4px;
+    opacity: 0;
+    transition: opacity var(--t-fast);
+  }
+  .participant:hover .p-actions, .participant.has-actions .p-actions { opacity: 1; }
+  .p-actions button {
+    width: 26px; height: 26px;
+    padding: 0;
+    font-size: 12px;
+    line-height: 1;
+    border-radius: 50%;
+  }
+
+  /* Phase header */
+  .phase-head {
+    display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+    margin-bottom: 12px;
+  }
+  .phase-head h2 { margin: 0; }
+  .phase-help {
+    color: var(--muted); font-size: 12px;
+    margin: 0 0 14px;
+  }
+
+  /* Retro columns (Collect / Group / Vote / Discuss) */
+  .columns {
+    display: grid;
+    grid-template-columns: repeat(var(--col-count, 3), minmax(0, 1fr));
+    gap: 12px;
+  }
+  @media (max-width: 800px) {
+    .columns { grid-template-columns: 1fr; }
+  }
+  .column {
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: var(--r-md);
+    padding: 12px;
+    display: flex; flex-direction: column; gap: 10px;
+    min-height: 180px;
+  }
+  .column .col-head {
+    display: flex; align-items: center; gap: 8px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--col-color, var(--accent));
+  }
+  .column .col-title {
+    font-weight: 700;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--col-color, var(--accent));
+  }
+  .column .col-count {
+    margin-left: auto;
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: 500;
+  }
+  .column .col-add {
+    display: flex; gap: 4px; align-items: stretch;
+  }
+  .column .col-add input {
+    flex: 1 1 0;
+    min-width: 0;          /* allow shrinking below intrinsic input width */
+    font-size: 13px;
+    padding: 6px 8px;
+  }
+  .column .col-add button {
+    flex-shrink: 0;
+    width: 32px;
+    padding: 0;
+    line-height: 1;
+    font-size: 16px;
+    font-weight: 700;
+  }
+  .column .col-items {
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .item-card {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--r-sm);
+    padding: 8px 10px;
+    font-size: 13px;
+    line-height: 1.4;
+    box-shadow: var(--shadow-1);
+    word-break: break-word;
+    position: relative;
+    animation: item-enter .26s var(--ease-out) both;
+  }
+  .item-card.is-mine {
+    border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
+    background: color-mix(in srgb, var(--accent) 4%, var(--surface-2));
+  }
+  .item-card .item-text {
+    word-break: break-word;
+    white-space: pre-wrap;
+  }
+  .item-card .item-actions {
+    display: flex; gap: 4px; margin-top: 6px;
+    opacity: 0;
+    transition: opacity var(--t-fast);
+  }
+  .item-card:hover .item-actions,
+  .item-card.editing .item-actions { opacity: 1; }
+  .item-actions button {
+    padding: 2px 8px;
+    font-size: 11px;
+    background: transparent;
+  }
+  .item-actions button.danger {
+    color: var(--danger);
+    border-color: color-mix(in srgb, var(--danger) 30%, transparent);
+  }
+  .item-card .mine-badge {
+    position: absolute; top: 4px; right: 6px;
+    font-size: 9.5px;
+    color: var(--accent);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+  }
+  /* Redacted (collect phase, not author) — visible as a placeholder card so the
+     count/feeling-of-progress is shared, but text stays private until reveal. */
+  .item-card.redacted {
+    background: repeating-linear-gradient(
+      135deg,
+      var(--surface-1),
+      var(--surface-1) 6px,
+      var(--surface-2) 6px,
+      var(--surface-2) 12px
+    );
+    color: var(--muted);
+    font-style: italic;
+    user-select: none;
+  }
+  .item-card.redacted .item-text { letter-spacing: .12em; }
+  .item-card.editing .item-text { display: none; }
+  .item-card .edit-area {
+    display: none;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .item-card.editing .edit-area { display: flex; }
+  .item-card .edit-area textarea {
+    width: 100%;
+    font-size: 13px;
+    padding: 6px 8px;
+  }
+  @keyframes item-enter {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Drag & drop (Group phase) */
+  .item-card.draggable { cursor: grab; }
+  .item-card.draggable:active { cursor: grabbing; }
+  .item-card.dragging { opacity: 0.4; }
+  .item-card.drop-target {
+    box-shadow: 0 0 0 3px var(--glow);
+    border-color: var(--accent);
+  }
+  .col-drop-zone {
+    margin-top: 4px;
+    padding: 10px;
+    text-align: center;
+    font-size: 11px;
+    color: var(--muted);
+    border: 1.5px dashed var(--border-strong);
+    border-radius: var(--r-sm);
+    transition: border-color var(--t-fast), background var(--t-fast), color var(--t-fast);
+  }
+  .col-drop-zone.active {
+    border-color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 8%, transparent);
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .item-group .ungroup-btn {
+    width: 22px; height: 22px;
+    padding: 0;
+    border-radius: 50%;
+    line-height: 1;
+    font-size: 14px;
+    background: var(--surface-1);
+    color: var(--muted);
+    flex-shrink: 0;
+    margin-left: auto;
+  }
+  .item-group .ungroup-btn:hover { color: var(--danger); border-color: var(--danger); }
+  .item-card .item-row {
+    display: flex; align-items: flex-start; gap: 6px;
+  }
+  .item-card .item-row .item-text { flex: 1; min-width: 0; }
+  .item-card .single-ungroup-btn {
+    width: 22px; height: 22px;
+    padding: 0;
+    border-radius: 50%;
+    line-height: 1;
+    font-size: 14px;
+    background: transparent;
+    color: var(--muted);
+    flex-shrink: 0;
+    border-color: var(--border);
+  }
+  .item-card .single-ungroup-btn:hover { color: var(--danger); border-color: var(--danger); }
+
+  /* Item group (Group / Vote / Discuss phases) */
+  .item-group {
+    border: 1.5px solid color-mix(in srgb, var(--col-color, var(--accent)) 35%, var(--border));
+    border-radius: var(--r-md);
+    padding: 8px;
+    background: color-mix(in srgb, var(--col-color, var(--accent)) 4%, var(--surface-2));
+    display: flex; flex-direction: column; gap: 6px;
+    position: relative;
+  }
+  .item-group .grp-head {
+    display: flex; align-items: center; gap: 6px;
+    margin-bottom: 4px;
+  }
+  .item-group .grp-label-input {
+    flex: 1;
+    font-size: 12.5px;
+    font-weight: 600;
+    padding: 4px 8px;
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--col-color, var(--accent));
+    text-transform: uppercase;
+    letter-spacing: .03em;
+  }
+  .item-group .grp-label-input:hover:not(:disabled),
+  .item-group .grp-label-input:focus { border-color: var(--border); background: var(--surface-2); }
+  .item-group .grp-label-input:disabled {
+    cursor: default;
+    color: var(--col-color, var(--accent));
+    opacity: 1;
+  }
+  .item-group .grp-actions {
+    display: flex; gap: 4px;
+    opacity: 0;
+    transition: opacity var(--t-fast);
+  }
+  .item-group:hover .grp-actions { opacity: 1; }
+  .item-group .grp-actions button {
+    padding: 2px 8px;
+    font-size: 11px;
+    background: transparent;
+  }
+
+  /* Vote phase chips */
+  .vote-target {
+    display: flex; flex-direction: column; gap: 4px;
+    position: relative;
+  }
+  .vote-row {
+    display: flex; align-items: center; gap: 6px;
+    margin-top: 4px;
+  }
+  .vote-chip {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    font-size: 12px;
+  }
+  .vote-chip button {
+    width: 22px; height: 22px;
+    padding: 0;
+    border-radius: 50%;
+    background: var(--surface-2);
+    border: 1px solid var(--border-strong);
+    line-height: 1;
+    font-weight: 600;
+  }
+  .vote-chip button.primary {
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    color: var(--accent-fg);
+    border-color: transparent;
+  }
+  .vote-chip .my-count {
+    min-width: 16px;
+    text-align: center;
+    font-weight: 700;
+    color: var(--accent);
+  }
+  .vote-tally {
+    font-size: 11px;
+    color: var(--muted);
+    margin-left: auto;
+    font-weight: 600;
+  }
+  .vote-tally.has-votes {
+    color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+    padding: 2px 8px;
+    border-radius: 999px;
+  }
+  .vote-tally.top-vote {
+    color: var(--gold);
+    background: color-mix(in srgb, var(--gold) 18%, transparent);
+  }
+
+  .budget-pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--accent) 10%, transparent);
+    border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+    color: var(--accent);
+    font-size: 12px; font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+  .budget-pill.full { background: color-mix(in srgb, var(--ok) 14%, transparent); border-color: color-mix(in srgb, var(--ok) 35%, transparent); color: var(--ok); }
+
+  /* Discuss phase */
+  .discuss-progress {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .spotlight-wrap {
+    display: grid; gap: 14px;
+    grid-template-columns: 1fr;
+  }
+  .spotlight-card {
+    background: var(--card);
+    border: 2px solid var(--col-color, var(--accent));
+    border-radius: var(--r-lg);
+    padding: 18px 22px;
+    box-shadow: var(--shadow-2), 0 0 0 4px var(--glow);
+    animation: spot-pop .3s var(--ease-out) both;
+  }
+  @keyframes spot-pop {
+    from { opacity: 0; transform: scale(.97); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+  .spotlight-card .sp-head {
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    margin-bottom: 12px;
+  }
+  .spotlight-card .sp-col {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--col-color, var(--accent));
+    font-weight: 700;
+  }
+  .spotlight-card .sp-label {
+    font-size: 22px;
+    font-weight: 800;
+    line-height: 1.2;
+    letter-spacing: -.01em;
+    margin: 0;
+  }
+  .spotlight-card .sp-tally {
+    margin-left: auto;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--gold);
+    background: color-mix(in srgb, var(--gold) 18%, transparent);
+    padding: 4px 12px;
+    border-radius: 999px;
+  }
+  .spotlight-card .sp-items {
+    display: flex; flex-direction: column; gap: 6px;
+    margin-top: 8px;
+  }
+  .spotlight-card .sp-items .item-card { animation: none; }
+
+  .timer-wrap {
+    display: flex; align-items: center; gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 14px;
+  }
+  .timer-svg { width: 64px; height: 64px; flex-shrink: 0; }
+  .timer-svg circle.bg { fill: none; stroke: var(--border); stroke-width: 4; }
+  .timer-svg circle.fg {
+    fill: none; stroke: var(--accent); stroke-width: 4;
+    stroke-linecap: round;
+    transform-origin: center;
+    transform: rotate(-90deg);
+    transition: stroke-dashoffset 1s linear, stroke var(--t-fast);
+  }
+  .timer-svg.expired circle.fg { stroke: var(--danger); }
+  .timer-text {
+    font-size: 24px;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    color: var(--fg);
+    letter-spacing: -.02em;
+    min-width: 70px;
+  }
+  .timer-text.expired { color: var(--danger); animation: pulse-red 1s infinite; }
+  @keyframes pulse-red { 50% { opacity: .55; } }
+  .timer-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+
+  .upcoming-list {
+    display: flex; flex-direction: column; gap: 4px;
+    margin-top: 18px;
+  }
+  .upcoming-list h3 {
+    font-size: 11px; text-transform: uppercase; letter-spacing: .06em;
+    color: var(--muted); margin: 0 0 4px; font-weight: 600;
+  }
+  .upcoming-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 12px;
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: var(--r-sm);
+    font-size: 13px;
+    cursor: pointer;
+    transition: border-color var(--t-fast), background var(--t-fast);
+  }
+  .upcoming-row:hover { border-color: var(--accent); background: var(--surface-2); }
+  .upcoming-row.done { opacity: 0.45; cursor: default; }
+  .upcoming-row.current { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, var(--surface-1)); }
+  .upcoming-row .u-tally {
+    font-weight: 700;
+    color: var(--accent);
+    min-width: 36px;
+    font-variant-numeric: tabular-nums;
+  }
+  .upcoming-row .u-label {
+    flex: 1;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .upcoming-row .u-col-tag {
+    font-size: 10.5px;
+    color: var(--col-color, var(--muted));
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    font-weight: 700;
+  }
+
+  /* Actions phase */
+  .action-form {
+    display: grid;
+    gap: 8px;
+    grid-template-columns: 2fr 1fr 1fr auto;
+    align-items: end;
+    padding: 12px;
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: var(--r-md);
+    margin-bottom: 14px;
+  }
+  @media (max-width: 720px) {
+    .action-form { grid-template-columns: 1fr; }
+  }
+  .action-form input, .action-form select { width: 100%; }
+  .action-form .submit-btn { white-space: nowrap; }
+
+  .action-list { display: flex; flex-direction: column; gap: 6px; }
+  .action-row {
+    display: grid;
+    grid-template-columns: 24px 1fr auto auto;
+    gap: 10px;
+    align-items: center;
+    padding: 10px 12px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--r-sm);
+    font-size: 13px;
+    transition: opacity var(--t-fast);
+  }
+  .action-row.done { opacity: 0.55; }
+  .action-row.done .a-text { text-decoration: line-through; color: var(--muted); }
+  .action-row .a-text { word-break: break-word; }
+  .action-row .a-text a { color: var(--accent); }
+  .action-row .a-meta {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 12px; color: var(--muted);
+    flex-wrap: wrap;
+  }
+  .action-row .a-mini-avatar {
+    width: 22px; height: 22px; border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    color: #fff; font-weight: 700; font-size: 10px;
+    background: linear-gradient(135deg, var(--av-1, #888), var(--av-2, #555));
+  }
+  .action-row .a-actions {
+    display: flex; gap: 4px;
+    opacity: 0;
+    transition: opacity var(--t-fast);
+  }
+  .action-row:hover .a-actions, .action-row.editing .a-actions { opacity: 1; }
+  .action-row .a-actions button {
+    padding: 2px 8px; font-size: 11px;
+    background: transparent;
+  }
+  .action-row.editing .a-text, .action-row.editing .a-meta { display: none; }
+  .action-row .a-edit-area { display: none; grid-column: 2 / -1; flex-direction: column; gap: 6px; }
+  .action-row.editing .a-edit-area { display: flex; }
+
+  /* Phase navigation */
+  .phase-nav {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  }
+  .phase-nav .spacer { flex: 1; }
+  .mod-hint {
+    font-size: 12px;
+    color: var(--muted);
+    font-style: italic;
+  }
+
+  /* Mobile */
+  @media (max-width: 640px) {
+    main { padding: 18px 14px 60px; }
+    .panel { padding: 16px; }
+    .hero-title { font-size: 26px; }
+    header { padding: 10px 14px; gap: 8px; }
+    header h1 { font-size: 14px; }
+    .help-overlay { padding: 10px; }
+    .help-modal { padding: 20px 18px; max-height: 92vh; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Retro</h1>
+  <span id="roomTag" class="tag hidden"></span>
+  <span id="phaseTag" class="phase-tag hidden"></span>
+  <div class="spacer"></div>
+  <a href="./index.html" id="pokerLink" class="ghost-link" title="Naar planning poker">Poker →</a>
+  <label for="brokerSelect" style="margin: 0 6px 0 0; font-size: 12px;">Broker</label>
+  <select id="brokerSelect" title="Publieke MQTT broker">
+    <option value="hivemq">HiveMQ</option>
+    <option value="emqx">EMQX</option>
+  </select>
+  <button id="helpToggle" class="help-toggle" type="button" title="Handleiding openen" aria-label="Handleiding openen">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+  </button>
+  <button id="soundToggle" class="sound-toggle" type="button" aria-pressed="false" title="Geluidseffecten aan/uit">
+    <svg id="soundIconOff" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
+    <svg id="soundIconOn" class="hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+  </button>
+  <span id="conn" class="conn"><span class="dot"></span><span class="label">offline</span></span>
+</header>
+
+<main>
+
+  <!-- Landing screen -->
+  <section id="landing" class="panel">
+    <div class="hero">
+      <h2 class="hero-title">Team retro</h2>
+      <p class="hero-tagline">Verzamel anoniem. Groepeer. Stem. Bespreek. Leg actiepunten vast.</p>
+    </div>
+
+    <div class="warn">
+      Dit gebruikt een <strong>publieke</strong> MQTT broker. Gebruik geen vertrouwelijke namen of gegevens — iedereen die jouw kamercode kent kan meeluisteren.
+    </div>
+
+    <h2>Kom binnen</h2>
+    <div class="row">
+      <div>
+        <label for="nameInput">Jouw naam</label>
+        <input id="nameInput" maxlength="32" placeholder="bv. Alice" autocomplete="off">
+      </div>
+      <div>
+        <label for="roleInput">Jouw rol</label>
+        <select id="roleInput">
+          <option value="dev">Ontwikkelaar</option>
+          <option value="tester">Tester</option>
+          <option value="other">Andere</option>
+        </select>
+      </div>
+      <div>
+        <label for="joinCodeInput">Kamercode</label>
+        <input id="joinCodeInput" maxlength="40" placeholder="bv. retro-sprint-42" autocomplete="off">
+      </div>
+    </div>
+
+    <div id="templateSection" style="margin-top: 16px;">
+      <label>Template (alleen relevant bij nieuwe kamer)</label>
+      <div id="templateGrid" class="template-grid"></div>
+      <div id="customColsWrap" class="hidden" style="margin-top: 10px;">
+        <label for="customCols">Eigen kolommen (komma-gescheiden, 1-6)</label>
+        <input id="customCols" placeholder="bv. Wat ging goed, Wat kan beter, Acties" maxlength="200">
+      </div>
+      <div style="display:flex; gap:14px; flex-wrap:wrap; margin-top:10px;">
+        <div style="flex: 0 0 140px;">
+          <label for="voteBudgetInput">Stemmen p.p.</label>
+          <input id="voteBudgetInput" type="number" min="1" max="10" value="3">
+        </div>
+      </div>
+    </div>
+
+    <div class="actions" style="margin-top: 16px;">
+      <button id="joinBtn" class="primary">Kamer binnengaan</button>
+    </div>
+    <p class="hint" style="margin-top: 10px;">Typ een bestaande code om mee te doen, of bedenk een nieuwe naam om een retro aan te maken. Template-keuze wordt alleen gebruikt voor nieuwe kamers.</p>
+  </section>
+
+  <!-- Loading screen -->
+  <section id="loading" class="panel hidden" aria-live="polite">
+    <div class="hero" style="padding: 24px 0;">
+      <h2 class="hero-title" id="loadingTitle">Retro laden...</h2>
+      <p class="hero-tagline" id="loadingMsg">Verbinden met broker en kamerstatus ophalen...</p>
+      <div class="loading-spinner" aria-hidden="true"></div>
+    </div>
+    <div class="actions" style="margin-top: 16px; justify-content: center;">
+      <button id="loadingCancelBtn">Annuleren</button>
+      <button id="loadingRetryBtn" class="primary hidden">Opnieuw proberen</button>
+    </div>
+  </section>
+
+  <!-- Room screen -->
+  <section id="room" class="hidden">
+    <div class="panel">
+      <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+        <h2 style="margin: 0;">Retro</h2>
+        <span class="room-code" id="roomCodeDisplay"></span>
+        <span class="tag" id="templateTag"></span>
+        <button id="copyLinkBtn" title="Kopieer link">Link kopiëren</button>
+        <button id="historyBtn" type="button" title="Eerder afgeronde retro's voor deze kamer">Geschiedenis</button>
+        <button id="exportMdBtn" type="button" class="hidden" title="Kopieer deze retro als markdown">Kopieer als MD</button>
+        <div class="spacer" style="flex: 1;"></div>
+        <button id="wipeRoomBtn" type="button" class="hidden" title="Alle retained topics opruimen — kamer wordt vrij voor een nieuwe retro">Wis kamer</button>
+        <button id="leaveBtn">Verlaten</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="phase-head">
+        <h2>Deelnemers (<span id="participantCount">0</span>)</h2>
+      </div>
+      <div id="participants" class="participants"></div>
+    </div>
+
+    <div class="panel" id="phasePanel">
+      <div class="phase-head">
+        <h2 id="phaseTitle">Lobby</h2>
+        <span id="phaseSubtitle" class="hint"></span>
+      </div>
+      <p id="phaseHelp" class="phase-help"></p>
+      <div id="phaseBody"></div>
+    </div>
+
+    <div class="panel" id="phaseControls">
+      <div class="phase-nav">
+        <span id="phaseNavHint" class="mod-hint"></span>
+        <div class="spacer"></div>
+        <button id="closeRetroBtn" class="hidden">Retro sluiten</button>
+        <button id="prevPhaseBtn" class="hidden">← Vorige fase</button>
+        <button id="nextPhaseBtn" class="primary hidden">Volgende fase →</button>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<div id="historyOverlay" class="help-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="historyTitle">
+  <div class="help-modal panel" role="document">
+    <button id="historyClose" class="help-close" type="button" aria-label="Geschiedenis sluiten" title="Sluiten">&times;</button>
+    <h2 id="historyTitle">Eerder afgeronde retro's</h2>
+    <p class="help-tagline">Alle afgesloten retro's voor deze kamer-code.</p>
+    <div id="historyList"></div>
+  </div>
+</div>
+
+<div id="helpOverlay" class="help-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+  <div class="help-modal panel" role="document">
+    <button id="helpClose" class="help-close" type="button" aria-label="Handleiding sluiten" title="Sluiten">&times;</button>
+    <h2 id="helpTitle">Retro — Handleiding</h2>
+    <p class="help-tagline">Hoe je deze retro-tool gebruikt.</p>
+
+    <h3>Wat is dit?</h3>
+    <p>Een team-retrospective tool die je samen, real-time gebruikt. Verzamel anoniem feedback, groepeer thema's, stem op de belangrijkste, bespreek ze en leg actiepunten vast.</p>
+    <p><strong>Let op:</strong> dit gebruikt een <strong>publieke</strong> MQTT broker. Gebruik geen vertrouwelijke gegevens — iedereen die jouw kamercode kent kan meeluisteren.</p>
+
+    <h3>Templates</h3>
+    <ul>
+      <li><strong>Start / Stop / Continue</strong> — drie kolommen, snel en helder.</li>
+      <li><strong>Mad / Sad / Glad</strong> — emotie-georiënteerd.</li>
+      <li><strong>4Ls</strong> — Liked / Learned / Lacked / Longed for.</li>
+      <li><strong>Starfish</strong> — Keep / More of / Less of / Stop / Start.</li>
+      <li><strong>KALM</strong> — Keep / Add / Less / More.</li>
+      <li><strong>DAKI</strong> — Drop / Add / Keep / Improve.</li>
+      <li><strong>Custom</strong> — definieer je eigen kolommen.</li>
+    </ul>
+
+    <h3>De fases</h3>
+    <ol>
+      <li><strong>Collect</strong> — iedereen voegt items toe in de juiste kolom. <em>De inhoud van andermans kaarten blijft verborgen</em>; je ziet alleen hoeveel kaarten er liggen. Pas wanneer de moderator de fase doorzet, worden alle items zichtbaar.</li>
+      <li><strong>Group</strong> — moderator groepeert vergelijkbare items tot thema's (drag &amp; drop).</li>
+      <li><strong>Vote</strong> — iedereen verdeelt zijn stemmen over de items/thema's.</li>
+      <li><strong>Discuss</strong> — moderator zet thema's één voor één in de spotlight, met timer.</li>
+      <li><strong>Actions</strong> — leg actiepunten vast met eigenaar (en optioneel Jira-key).</li>
+    </ol>
+
+    <h3>Anonimiteit</h3>
+    <p>In de Collect-fase blijft de inhoud van iedere kaart privé tot de moderator de fase doorzet. Bovendien bevatten items géén auteursnaam op de wire. Je kunt je <em>eigen</em> items nog wel bewerken/verwijderen op dezelfde browser; collega's zien geen herkomst, ook niet na de reveal.</p>
+
+    <h3>Moderators</h3>
+    <p>De host (kamer-aanmaker) is altijd moderator en kan extra moderators benoemen. Alleen moderators kunnen fases doorzetten en deelnemers verwijderen (kick).</p>
+  </div>
+</div>
+
+<script src="https://unpkg.com/mqtt@5.3.4/dist/mqtt.min.js"></script>
+<script>
+(() => {
+  'use strict';
+
+  // ---------- Constants ----------
+  const TOPIC_ROOT = 'vo-planpoker-4f9k';
+  const RETRO_NS = 'retro';
+  const STATS_GUID = '99761b44-ed34-4072-ada3-709cff3c2a0e';
+  const STATS_ROOT = `${TOPIC_ROOT}/stats/${STATS_GUID}`;
+  const JIRA_BASE = 'https://mvgond.atlassian.net/browse/';
+  const JIRA_KEY_RE = /\b([A-Z][A-Z0-9]+-\d+)\b/;
+  const extractJiraKey = (text) => {
+    if (!text) return null;
+    const m = String(text).match(JIRA_KEY_RE);
+    return m ? m[1] : null;
+  };
+  const jiraUrlFor = (text) => {
+    const key = extractJiraKey(text);
+    return key ? JIRA_BASE + key : null;
+  };
+  const BROKERS = {
+    hivemq: { url: 'wss://broker.hivemq.com:8884/mqtt', label: 'HiveMQ' },
+    emqx:   { url: 'wss://broker.emqx.io:8084/mqtt',    label: 'EMQX' },
+  };
+  const ROLES = {
+    dev:    { label: 'Ontwikkelaar', plural: 'Ontwikkelaars', order: 0 },
+    tester: { label: 'Tester',       plural: 'Testers',       order: 1 },
+    other:  { label: 'Andere',       plural: 'Andere',        order: 2 },
+  };
+  const normalizeRole = (r) => (ROLES[r] ? r : 'other');
+
+  const PHASES = ['lobby', 'collect', 'group', 'vote', 'discuss', 'actions', 'closed'];
+  const PHASE_LABEL = {
+    lobby:    'Lobby',
+    collect:  'Verzamelen',
+    group:    'Groeperen',
+    vote:     'Stemmen',
+    discuss:  'Bespreken',
+    actions:  'Actiepunten',
+    closed:   'Afgesloten',
+  };
+
+  // ---------- Templates ----------
+  const TEMPLATES = [
+    {
+      id: 'start-stop-continue',
+      label: 'Start / Stop / Continue',
+      columns: [
+        { id: 'start',    label: 'Start',    color: '#4f7a3a' },
+        { id: 'stop',     label: 'Stop',     color: '#9a2b2b' },
+        { id: 'continue', label: 'Continue', color: '#b5421f' },
+      ],
+    },
+    {
+      id: 'mad-sad-glad',
+      label: 'Mad / Sad / Glad',
+      columns: [
+        { id: 'mad',  label: 'Mad',  color: '#9a2b2b' },
+        { id: 'sad',  label: 'Sad',  color: '#7a6f5f' },
+        { id: 'glad', label: 'Glad', color: '#4f7a3a' },
+      ],
+    },
+    {
+      id: '4ls',
+      label: '4Ls',
+      columns: [
+        { id: 'liked',     label: 'Liked',      color: '#4f7a3a' },
+        { id: 'learned',   label: 'Learned',    color: '#b5421f' },
+        { id: 'lacked',    label: 'Lacked',     color: '#9a2b2b' },
+        { id: 'longed',    label: 'Longed for', color: '#c17a12' },
+      ],
+    },
+    {
+      id: 'starfish',
+      label: 'Starfish',
+      columns: [
+        { id: 'keep',  label: 'Keep doing', color: '#4f7a3a' },
+        { id: 'more',  label: 'More of',    color: '#7a9a3a' },
+        { id: 'less',  label: 'Less of',    color: '#c17a12' },
+        { id: 'stop',  label: 'Stop doing', color: '#9a2b2b' },
+        { id: 'start', label: 'Start doing', color: '#b5421f' },
+      ],
+    },
+    {
+      id: 'kalm',
+      label: 'KALM',
+      columns: [
+        { id: 'keep', label: 'Keep', color: '#4f7a3a' },
+        { id: 'add',  label: 'Add',  color: '#b5421f' },
+        { id: 'less', label: 'Less', color: '#c17a12' },
+        { id: 'more', label: 'More', color: '#7a9a3a' },
+      ],
+    },
+    {
+      id: 'daki',
+      label: 'DAKI',
+      columns: [
+        { id: 'drop',    label: 'Drop',    color: '#9a2b2b' },
+        { id: 'add',     label: 'Add',     color: '#b5421f' },
+        { id: 'keep',    label: 'Keep',    color: '#4f7a3a' },
+        { id: 'improve', label: 'Improve', color: '#c17a12' },
+      ],
+    },
+    {
+      id: 'custom',
+      label: 'Custom',
+      columns: null, // user-defined at creation time
+    },
+  ];
+  const findTemplate = (id) => TEMPLATES.find(t => t.id === id) || TEMPLATES[0];
+
+  const buildCustomColumns = (raw) => {
+    const labels = String(raw || '')
+      .split(',')
+      .map(s => s.trim())
+      .filter(Boolean)
+      .slice(0, 6);
+    if (!labels.length) return null;
+    const palette = ['#b5421f', '#4f7a3a', '#c17a12', '#9a2b2b', '#7a9a3a', '#7a6f5f'];
+    return labels.map((label, i) => ({
+      id: 'c' + i,
+      label,
+      color: palette[i % palette.length],
+    }));
+  };
+
+  // ---------- Identity (reused with poker via sessionStorage / localStorage keys) ----------
+  const persistedClientId = sessionStorage.getItem('pp.clientId');
+  const clientId = persistedClientId || ('pp-' + crypto.randomUUID().slice(0, 12));
+  if (!persistedClientId) sessionStorage.setItem('pp.clientId', clientId);
+
+  // ---------- State ----------
+  const state = {
+    clientId,
+    brokerKey: localStorage.getItem('pp.broker') || 'hivemq',
+    name: localStorage.getItem('pp.name') || '',
+    role: normalizeRole(localStorage.getItem('pp.role') || 'dev'),
+    soundEnabled: true,
+    roomId: null,
+    host: null,
+    joinedAt: null,
+    participants: {},   // clientId -> { name, role, joinedAt }
+    moderators: [],     // extra moderator clientIds (host always moderator)
+    client: null,
+    kicked: false,
+    loading: false,
+    loadingError: null, // 'connect' | 'subscribe' | 'timeout' | null
+    _readyResolved: false,
+
+    // Retro-specific
+    selectedTemplate: 'start-stop-continue',
+    templateId: null,
+    columns: [],
+    phase: 'lobby',
+    phaseStartedAt: null,
+    voteBudget: 3,
+    revealVotes: false,
+    discussTargetId: null,
+    discussEndsAt: null,    // epoch ms when current discuss timer expires; null when not running
+    discussedTargets: [],   // ordered list of targetIds already spotlighted (lives on phase topic)
+    items: {},          // itemId -> { columnId, text, groupId|null, createdAt }
+    groups: {},         // groupId -> { columnId, label, createdAt }
+    votes: {},          // clientId -> { [targetId]: count }
+    actions: {},        // actionId -> { text, ownerClientId|null, jiraKey|null, done, createdAt }
+    statsRoomCreatedAt: null,
+    statsReady: false,
+    retroId: null,      // generated at creation; persists in meta
+
+    // History — populated from STATS_ROOT/retros/{roomId}/{retroId}/* shards.
+    retroHistory: {},   // retroId -> { meta, themes: { gid: {...} }, actions: { aid: {...} } }
+  };
+  window.__retro = state; // debug
+
+  const prefersReducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // ---------- Local authorship tracking (anonymity) ----------
+  // Items don't carry authorClientId on the wire. Authorship is local-only so the same
+  // browser can edit/delete its own items after refresh; other clients see no herkomst.
+  const _authoredKey = (kind) => `retro.authored.${kind}.${state.roomId}`;
+  function getAuthored(kind) {
+    if (!state.roomId) return {};
+    try { return JSON.parse(localStorage.getItem(_authoredKey(kind)) || '{}') || {}; }
+    catch (e) { return {}; }
+  }
+  function markAuthored(kind, id) {
+    if (!state.roomId) return;
+    const m = getAuthored(kind);
+    m[id] = true;
+    localStorage.setItem(_authoredKey(kind), JSON.stringify(m));
+  }
+  function unmarkAuthored(kind, id) {
+    if (!state.roomId) return;
+    const m = getAuthored(kind);
+    delete m[id];
+    localStorage.setItem(_authoredKey(kind), JSON.stringify(m));
+  }
+  const isMine = (kind, id) => !!getAuthored(kind)[id];
+
+  // ---------- Sound ----------
+  const sound = (() => {
+    let ctx = null;
+    const ensure = () => {
+      if (ctx) return ctx;
+      try {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return null;
+        ctx = new AC();
+      } catch (e) { return null; }
+      return ctx;
+    };
+    const tone = (freq, durMs, { type = 'sine', gain = 0.08, sweepTo = null, delay = 0 } = {}) => {
+      if (!state.soundEnabled) return;
+      const c = ensure(); if (!c) return;
+      if (c.state === 'suspended') c.resume().catch(() => {});
+      const t0 = c.currentTime + delay;
+      const osc = c.createOscillator();
+      const g = c.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, t0);
+      if (sweepTo != null) osc.frequency.linearRampToValueAtTime(sweepTo, t0 + durMs / 1000);
+      g.gain.setValueAtTime(0.0001, t0);
+      g.gain.exponentialRampToValueAtTime(gain, t0 + 0.012);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + durMs / 1000);
+      osc.connect(g).connect(c.destination);
+      osc.start(t0);
+      osc.stop(t0 + durMs / 1000 + 0.02);
+    };
+    return {
+      tick:      () => tone(880, 40, { type: 'triangle', gain: 0.05 }),
+      reveal:    () => tone(320, 420, { type: 'sawtooth', gain: 0.06, sweepTo: 860 }),
+      vote:      () => tone(620, 50, { type: 'sine', gain: 0.035 }),
+      timerDone: () => {
+        tone(523.25, 160, { type: 'triangle', gain: 0.06, delay: 0 });
+        tone(659.25, 160, { type: 'triangle', gain: 0.06, delay: 0.12 });
+        tone(783.99, 320, { type: 'triangle', gain: 0.07, delay: 0.24 });
+      },
+    };
+  })();
+
+  // ---------- Confetti ----------
+  const launchConfetti = () => {
+    if (prefersReducedMotion()) return;
+    const layer = document.createElement('div');
+    layer.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:200;overflow:hidden;';
+    const count = Math.min(80, Math.max(40, Math.floor(window.innerWidth / 16)));
+    const w = window.innerWidth;
+    for (let i = 0; i < count; i++) {
+      const s = document.createElement('span');
+      const startX = Math.random() * w;
+      const drift = (Math.random() - 0.5) * 280;
+      const rot = Math.random() * 360;
+      const spin = 360 + Math.random() * 720;
+      const hue = [40, 140, 220, 280, 340][Math.floor(Math.random() * 5)] + Math.floor(Math.random() * 30);
+      const dur = 2200 + Math.random() * 1400;
+      const delay = Math.random() * 250;
+      s.style.cssText = `
+        position:absolute; left:${startX}px; top:-20px;
+        width:8px; height:14px; border-radius:1px;
+        background: hsl(${hue}, 80%, 55%);
+        animation: retro-confetti-fall ${dur}ms cubic-bezier(.2,.7,.3,1) ${delay}ms forwards;
+        --drift: ${drift}px; --rot: ${rot}deg; --spin: ${spin}deg;
+        transform: rotate(${rot}deg);
+      `;
+      layer.appendChild(s);
+    }
+    document.body.appendChild(layer);
+    setTimeout(() => layer.remove(), 4200);
+  };
+  // Inject once
+  (() => {
+    const sty = document.createElement('style');
+    sty.textContent = `@keyframes retro-confetti-fall {
+      0% { transform: translate3d(0, -20px, 0) rotate(var(--rot, 0deg)); opacity: 1; }
+      100% { transform: translate3d(var(--drift, 0px), 110vh, 0) rotate(calc(var(--rot, 0deg) + var(--spin, 540deg))); opacity: .6; }
+    }`;
+    document.head.appendChild(sty);
+  })();
+
+  // ---------- Avatar helpers ----------
+  const hashString = (s) => {
+    let h = 0; for (let i = 0; i < s.length; i++) { h = ((h << 5) - h + s.charCodeAt(i)) | 0; }
+    return Math.abs(h);
+  };
+  const avatarColors = (name) => {
+    const h = hashString(name || '?') % 360;
+    return { a: `hsl(${h}, 72%, 58%)`, b: `hsl(${(h + 42) % 360}, 68%, 44%)` };
+  };
+  const initialsFor = (name) => {
+    const parts = String(name || '?').trim().split(/\s+/).filter(Boolean);
+    if (!parts.length) return '?';
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  };
+  const escapeHtml = (s) => String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+
+  const randomId = (prefix) =>
+    prefix + '-' + Array.from(crypto.getRandomValues(new Uint8Array(6)))
+                    .map(b => (b % 36).toString(36)).join('');
+
+  // ---------- DOM refs ----------
+  const $ = (id) => document.getElementById(id);
+  const el = {
+    landing:        $('landing'),
+    loading:        $('loading'),
+    loadingTitle:   $('loadingTitle'),
+    loadingMsg:     $('loadingMsg'),
+    loadingCancelBtn: $('loadingCancelBtn'),
+    loadingRetryBtn:  $('loadingRetryBtn'),
+    room:           $('room'),
+    nameInput:      $('nameInput'),
+    roleInput:      $('roleInput'),
+    joinCodeInput:  $('joinCodeInput'),
+    joinBtn:        $('joinBtn'),
+    templateGrid:   $('templateGrid'),
+    customColsWrap: $('customColsWrap'),
+    customCols:     $('customCols'),
+    voteBudgetInput: $('voteBudgetInput'),
+    conn:           $('conn'),
+    roomTag:        $('roomTag'),
+    phaseTag:       $('phaseTag'),
+    roomCodeDisplay: $('roomCodeDisplay'),
+    templateTag:    $('templateTag'),
+    copyLinkBtn:    $('copyLinkBtn'),
+    leaveBtn:       $('leaveBtn'),
+    participants:   $('participants'),
+    participantCount: $('participantCount'),
+    phasePanel:     $('phasePanel'),
+    phaseTitle:     $('phaseTitle'),
+    phaseSubtitle:  $('phaseSubtitle'),
+    phaseHelp:      $('phaseHelp'),
+    phaseBody:      $('phaseBody'),
+    phaseControls:  $('phaseControls'),
+    phaseNavHint:   $('phaseNavHint'),
+    closeRetroBtn:  $('closeRetroBtn'),
+    prevPhaseBtn:   $('prevPhaseBtn'),
+    nextPhaseBtn:   $('nextPhaseBtn'),
+    brokerSelect:   $('brokerSelect'),
+    soundToggle:    $('soundToggle'),
+    soundIconOn:    $('soundIconOn'),
+    soundIconOff:   $('soundIconOff'),
+    helpToggle:     $('helpToggle'),
+    helpOverlay:    $('helpOverlay'),
+    helpClose:      $('helpClose'),
+    historyBtn:     $('historyBtn'),
+    historyOverlay: $('historyOverlay'),
+    historyClose:   $('historyClose'),
+    historyList:    $('historyList'),
+    exportMdBtn:    $('exportMdBtn'),
+    wipeRoomBtn:    $('wipeRoomBtn'),
+  };
+
+  // ---------- Topics ----------
+  const topic = (suffix) => `${TOPIC_ROOT}/${RETRO_NS}/${state.roomId}/${suffix}`;
+
+  // ---------- Hash routing ----------
+  const parseHash = () => {
+    const h = location.hash.replace(/^#/, '');
+    const p = new URLSearchParams(h);
+    const room = p.get('room');
+    return { room: room ? room.toLowerCase() : room };
+  };
+  const writeHash = () => {
+    const p = new URLSearchParams();
+    p.set('room', state.roomId);
+    location.hash = p.toString();
+  };
+  const shareUrl = () => {
+    const p = new URLSearchParams();
+    p.set('room', state.roomId);
+    const base = location.origin + location.pathname + location.search;
+    return base + '#' + p.toString();
+  };
+
+  // ---------- Conn pill ----------
+  const setConn = (cls, label) => {
+    const effective = cls || 'connecting';
+    el.conn.className = 'conn ' + effective;
+    el.conn.querySelector('.label').textContent = label;
+  };
+
+  // ---------- Moderator helpers ----------
+  const effectiveHost = () => {
+    if (state.host && state.participants[state.host]) return state.host;
+    const entries = Object.entries(state.participants)
+      .filter(([, p]) => p && typeof p.joinedAt === 'number');
+    if (!entries.length) return state.host;
+    entries.sort((a, b) => a[1].joinedAt - b[1].joinedAt || a[0].localeCompare(b[0]));
+    return entries[0][0];
+  };
+  const isModerator = (id) => {
+    if (!id) return false;
+    return id === effectiveHost() || state.moderators.includes(id);
+  };
+  const iAmModerator = () => isModerator(state.clientId);
+
+  // Lowest-clientId moderator becomes the stats writer (mirrors poker pattern).
+  function isStatsWriter() {
+    if (!state.statsReady) return false;
+    if (!iAmModerator()) return false;
+    const mods = Object.keys(state.participants).filter(id => isModerator(id)).sort();
+    return mods[0] === state.clientId;
+  }
+
+  // ---------- Loading ----------
+  function markReady(reason) {
+    if (state._readyResolved) return;
+    state._readyResolved = true;
+    state.loading = false;
+    state.loadingError = null;
+    if (reason !== 'cancel' && state.client?.connected) {
+      announceSelf();
+    }
+    render();
+  }
+  function updateLoadingPanel() {
+    const err = state.loadingError;
+    el.loading.classList.toggle('error', !!err);
+    el.loadingRetryBtn.classList.toggle('hidden', !err);
+    if (err === 'connect') {
+      el.loadingTitle.textContent = 'Verbinding mislukt';
+      el.loadingMsg.textContent = 'Kon geen verbinding maken met de broker.';
+    } else if (err === 'subscribe') {
+      el.loadingTitle.textContent = 'Abonneren mislukt';
+      el.loadingMsg.textContent = 'Verbonden, maar abonneren op de kamer-topics is mislukt.';
+    } else {
+      el.loadingTitle.textContent = 'Retro ' + (state.roomId || '') + ' laden...';
+      el.loadingMsg.textContent = 'Verbinden met broker en kamerstatus ophalen...';
+    }
+  }
+
+  // ---------- Host claim safeguard ----------
+  const _observedPresent = new Set();
+  let _claimHostTimer = null;
+  function scheduleHostClaim() {
+    if (_claimHostTimer) clearTimeout(_claimHostTimer);
+    _claimHostTimer = setTimeout(() => {
+      _claimHostTimer = null;
+      if (!state.client?.connected || !state.roomId) return;
+      if (!state.host || !_observedPresent.has(state.host)) return;
+      if (state.participants[state.host]) return;
+      if (effectiveHost() !== state.clientId) return;
+      state.host = state.clientId;
+      publishMeta();
+      render();
+    }, 10000);
+  }
+
+  // ---------- Publishers ----------
+  function publishMeta() {
+    if (!state.client?.connected) return;
+    state.client.publish(
+      topic('meta'),
+      JSON.stringify({
+        host: state.host,
+        createdAt: state.statsRoomCreatedAt || Date.now(),
+        templateId: state.templateId,
+        columns: state.columns,
+        voteBudget: state.voteBudget,
+        retroId: state.retroId,
+      }),
+      { qos: 0, retain: true }
+    );
+  }
+
+  function publishPhase() {
+    if (!state.client?.connected) return;
+    state.client.publish(
+      topic('phase'),
+      JSON.stringify({
+        phase: state.phase,
+        startedAt: state.phaseStartedAt || Date.now(),
+        revealVotes: state.revealVotes,
+        discussTargetId: state.discussTargetId,
+        discussEndsAt: state.discussEndsAt,
+        discussedTargets: state.discussedTargets,
+      }),
+      { qos: 0, retain: true }
+    );
+  }
+
+  function publishModerators() {
+    if (!state.client?.connected) return;
+    state.client.publish(
+      topic('moderators'),
+      JSON.stringify(state.moderators),
+      { qos: 0, retain: true }
+    );
+  }
+
+  // Per-id retained: edits/deletes are atomic, no last-write-wins clobbering.
+  function publishItem(itemId, data) {
+    if (!state.client?.connected) return;
+    state.client.publish(
+      topic('item/' + itemId),
+      data == null ? '' : JSON.stringify(data),
+      { qos: 0, retain: true }
+    );
+  }
+  function publishGroup(groupId, data) {
+    if (!state.client?.connected) return;
+    state.client.publish(
+      topic('group/' + groupId),
+      data == null ? '' : JSON.stringify(data),
+      { qos: 0, retain: true }
+    );
+  }
+  function publishVote(cid, allocations) {
+    if (!state.client?.connected) return;
+    state.client.publish(
+      topic('vote/' + cid),
+      allocations == null ? '' : JSON.stringify(allocations),
+      { qos: 0, retain: true }
+    );
+  }
+
+  // ---------- MQTT ----------
+  function connect() {
+    const broker = BROKERS[state.brokerKey];
+    setConn('', 'verbinden met ' + broker.label + '…');
+
+    const willTopic = topic('presence/' + state.clientId);
+    const client = mqtt.connect(broker.url, {
+      clientId: state.clientId,
+      clean: true,
+      keepalive: 30,
+      reconnectPeriod: 2500,
+      connectTimeout: 10000,
+      will: { topic: willTopic, payload: '', qos: 0, retain: true },
+    });
+    state.client = client;
+
+    client.on('connect', () => {
+      setConn('ok', 'verbonden met ' + broker.label);
+      const roomTopics = `${TOPIC_ROOT}/${RETRO_NS}/${state.roomId}/#`;
+      const statsTopics = `${STATS_ROOT}/retros/${state.roomId}/#`;
+      state.statsReady = false;
+      client.subscribe([roomTopics, statsTopics], { qos: 0 }, (err) => {
+        if (err) {
+          console.error('subscribe failed', err);
+          setConn('err', 'subscribe mislukt');
+          if (state.loading) { state.loadingError = 'subscribe'; render(); }
+          return;
+        }
+        if (!state.loading) announceSelf();
+        setTimeout(() => { state.statsReady = true; }, 1200);
+      });
+    });
+
+    client.on('reconnect', () => { state.statsReady = false; setConn('', 'herverbinden…'); });
+    client.on('close',     () => { state.statsReady = false; setConn('err', 'losgekoppeld'); });
+    client.on('error',     (e) => {
+      console.error(e);
+      setConn('err', 'fout: ' + (e.message || e));
+      if (state.loading) { state.loadingError = 'connect'; render(); }
+    });
+
+    client.on('message', (t, payloadBuf) => {
+      const payload = payloadBuf.toString();
+      handleMessage(t, payload);
+    });
+  }
+
+  function announceSelf() {
+    if (!state.client?.connected) return;
+    state.client.publish(
+      topic('presence/' + state.clientId),
+      JSON.stringify({ name: state.name, role: state.role, joinedAt: state.joinedAt }),
+      { qos: 0, retain: true }
+    );
+  }
+
+  // ---------- Message dispatch ----------
+  function handleMessage(t, payload) {
+    const statsPrefix = `${STATS_ROOT}/retros/${state.roomId}/`;
+    if (t.startsWith(statsPrefix)) {
+      // Shards layout: retros/{roomId}/{retroId}/{kind}[/{subId}]
+      const sub = t.slice(statsPrefix.length);
+      const parts = sub.split('/');
+      const retroId = parts[0];
+      const kind = parts[1];
+      const subId = parts[2];
+      if (!retroId) return;
+      const rec = state.retroHistory[retroId] || (state.retroHistory[retroId] = { meta: null, themes: {}, actions: {} });
+      if (!payload) {
+        if (kind === 'meta') rec.meta = null;
+        else if (kind === 'themes' && subId) delete rec.themes[subId];
+        else if (kind === 'actions' && subId) delete rec.actions[subId];
+      } else {
+        try {
+          const parsed = JSON.parse(payload);
+          if (kind === 'meta') rec.meta = parsed;
+          else if (kind === 'themes' && subId) rec.themes[subId] = parsed;
+          else if (kind === 'actions' && subId) rec.actions[subId] = parsed;
+        } catch (e) { /* ignore */ }
+      }
+      // If the room-level history modal is open, refresh.
+      if (el.historyOverlay && !el.historyOverlay.classList.contains('hidden')) {
+        renderHistory();
+      }
+      return;
+    }
+
+    const prefix = `${TOPIC_ROOT}/${RETRO_NS}/${state.roomId}/`;
+    if (!t.startsWith(prefix)) return;
+    const rest = t.slice(prefix.length);
+
+    if (rest === 'meta') {
+      if (!payload) return;
+      try {
+        const meta = JSON.parse(payload);
+        if (meta.host) state.host = meta.host;
+        if (typeof meta.createdAt === 'number') state.statsRoomCreatedAt = meta.createdAt;
+        if (typeof meta.templateId === 'string') state.templateId = meta.templateId;
+        if (Array.isArray(meta.columns)) state.columns = meta.columns;
+        if (typeof meta.voteBudget === 'number') state.voteBudget = meta.voteBudget;
+        if (typeof meta.retroId === 'string') state.retroId = meta.retroId;
+        writeHash();
+        render();
+        scheduleHostClaim();
+        if (state.loading) markReady('meta');
+      } catch (e) { /* ignore */ }
+      return;
+    }
+
+    if (rest === 'phase') {
+      if (!payload) {
+        state.phase = 'lobby';
+        state.phaseStartedAt = null;
+        state.revealVotes = false;
+        state.discussTargetId = null;
+        state.discussEndsAt = null;
+        state.discussedTargets = [];
+      } else {
+        try {
+          const p = JSON.parse(payload);
+          state.phase = PHASES.includes(p.phase) ? p.phase : 'lobby';
+          state.phaseStartedAt = typeof p.startedAt === 'number' ? p.startedAt : null;
+          state.revealVotes = !!p.revealVotes;
+          state.discussTargetId = (typeof p.discussTargetId === 'string') ? p.discussTargetId : null;
+          state.discussEndsAt = typeof p.discussEndsAt === 'number' ? p.discussEndsAt : null;
+          state.discussedTargets = Array.isArray(p.discussedTargets)
+            ? p.discussedTargets.filter(x => typeof x === 'string')
+            : [];
+        } catch (e) { /* ignore */ }
+      }
+      render();
+      return;
+    }
+
+    if (rest.startsWith('presence/')) {
+      const id = rest.slice('presence/'.length);
+      if (!payload) {
+        delete state.participants[id];
+      } else {
+        try {
+          const parsed = JSON.parse(payload);
+          parsed.role = normalizeRole(parsed.role);
+          state.participants[id] = parsed;
+          _observedPresent.add(id);
+        } catch (e) {}
+      }
+      render();
+      if (id === state.host || effectiveHost() === state.clientId) scheduleHostClaim();
+      return;
+    }
+
+    if (rest === 'moderators') {
+      if (!payload) state.moderators = [];
+      else {
+        try {
+          const parsed = JSON.parse(payload);
+          state.moderators = Array.isArray(parsed) ? parsed.filter(x => typeof x === 'string') : [];
+        } catch (e) { state.moderators = []; }
+      }
+      render();
+      return;
+    }
+
+    if (rest.startsWith('kicks/')) {
+      const id = rest.slice('kicks/'.length);
+      if (payload && id === state.clientId) handleKicked();
+      return;
+    }
+
+    if (rest.startsWith('item/')) {
+      const id = rest.slice('item/'.length);
+      if (!payload) {
+        delete state.items[id];
+      } else {
+        try {
+          const parsed = JSON.parse(payload);
+          state.items[id] = {
+            columnId: typeof parsed.columnId === 'string' ? parsed.columnId : '',
+            text: typeof parsed.text === 'string' ? parsed.text : '',
+            groupId: typeof parsed.groupId === 'string' ? parsed.groupId : null,
+            createdAt: typeof parsed.createdAt === 'number' ? parsed.createdAt : Date.now(),
+          };
+        } catch (e) { /* ignore */ }
+      }
+      render();
+      return;
+    }
+
+    if (rest.startsWith('group/')) {
+      const id = rest.slice('group/'.length);
+      if (!payload) delete state.groups[id];
+      else {
+        try { state.groups[id] = JSON.parse(payload); } catch (e) {}
+      }
+      render();
+      return;
+    }
+
+    if (rest.startsWith('vote/')) {
+      const id = rest.slice('vote/'.length);
+      if (!payload) delete state.votes[id];
+      else {
+        try { state.votes[id] = JSON.parse(payload); } catch (e) {}
+      }
+      render();
+      return;
+    }
+
+    if (rest.startsWith('action/')) {
+      const id = rest.slice('action/'.length);
+      if (!payload) delete state.actions[id];
+      else {
+        try { state.actions[id] = JSON.parse(payload); } catch (e) {}
+      }
+      render();
+      return;
+    }
+  }
+
+  // ---------- Phase transitions ----------
+  function setPhase(next, extra = {}) {
+    if (!iAmModerator()) return;
+    if (!PHASES.includes(next)) return;
+    state.phase = next;
+    state.phaseStartedAt = Date.now();
+    if ('revealVotes' in extra) state.revealVotes = !!extra.revealVotes;
+    if ('discussTargetId' in extra) state.discussTargetId = extra.discussTargetId;
+    publishPhase();
+    render();
+  }
+  const phaseIndex = (p) => PHASES.indexOf(p);
+  function nextPhase() {
+    if (!iAmModerator()) return;
+    const i = phaseIndex(state.phase);
+    if (i < 0 || i >= PHASES.length - 1) return;
+    const target = PHASES[i + 1];
+    // Vote → Discuss: reveal votes (if not already), auto-pick top theme + start timer.
+    if (state.phase === 'vote' && target === 'discuss') {
+      if (!state.revealVotes) { sound.reveal(); launchConfetti(); }
+      const order = getDiscussOrder();
+      const first = order[0];
+      state.phase = target;
+      state.phaseStartedAt = Date.now();
+      state.revealVotes = true;
+      state.discussTargetId = first ? first.id : null;
+      state.discussEndsAt = first ? Date.now() + DISCUSS_TIMER_MS : null;
+      state.discussedTargets = first ? [first.id] : [];
+      publishPhase();
+      render();
+      return;
+    }
+    setPhase(target);
+  }
+  function prevPhase() {
+    const i = phaseIndex(state.phase);
+    if (i <= 0) return;
+    setPhase(PHASES[i - 1]);
+  }
+
+  // ---------- Item ops (Collect phase) ----------
+  function addItem(columnId, text) {
+    const trimmed = String(text || '').trim();
+    if (!trimmed) return;
+    if (state.phase !== 'collect') return;
+    if (!state.client?.connected) return;
+    const id = randomId('i');
+    publishItem(id, {
+      columnId,
+      text: trimmed,
+      groupId: null,
+      createdAt: Date.now(),
+    });
+    markAuthored('item', id);
+  }
+  function editItem(itemId, newText) {
+    const trimmed = String(newText || '').trim();
+    if (!trimmed) return;
+    const cur = state.items[itemId];
+    if (!cur) return;
+    if (state.phase !== 'collect') return;
+    if (!isMine('item', itemId) && !iAmModerator()) return;
+    publishItem(itemId, { ...cur, text: trimmed });
+  }
+  function deleteItem(itemId) {
+    const cur = state.items[itemId];
+    if (!cur) return;
+    if (state.phase !== 'collect') return;
+    if (!isMine('item', itemId) && !iAmModerator()) return;
+    publishItem(itemId, null);
+    unmarkAuthored('item', itemId);
+  }
+
+  // ---------- Group ops (Group phase) ----------
+  function setItemGroup(itemId, groupId) {
+    const cur = state.items[itemId];
+    if (!cur) return;
+    publishItem(itemId, { ...cur, groupId: groupId || null });
+  }
+  // Drop card A onto card B. Semantic: A always *follows* B (matches Mural / EasyRetro
+   // mental model where the dragged item is the one that moves).
+   //   - target solo  → A+target form a new group
+   //   - target in G  → A joins G
+   // In both cases, A leaves its old group (which is cleaned up if it ends up
+   // empty or with a single lone member).
+  function dropItemOnTarget(srcItemId, targetItemId) {
+    if (!iAmModerator()) return;
+    if (srcItemId === targetItemId) return;
+    const src = state.items[srcItemId];
+    const tgt = state.items[targetItemId];
+    if (!src || !tgt) return;
+    // Items must be in same column to be grouped (otherwise the column-by-column
+    // layout would be misleading). Silently ignore cross-column drops.
+    if (src.columnId !== tgt.columnId) return;
+
+    const srcGid = src.groupId;
+    const tgtGid = tgt.groupId;
+    if (srcGid && tgtGid && srcGid === tgtGid) return; // already same group
+
+    if (!tgtGid) {
+      // Form a fresh group from src + tgt.
+      const gid = randomId('g');
+      const label = (tgt.text || src.text || '').slice(0, 40) || 'Thema';
+      publishGroup(gid, { columnId: tgt.columnId, label, createdAt: Date.now() });
+      publishItem(srcItemId, { ...src, groupId: gid });
+      publishItem(targetItemId, { ...tgt, groupId: gid });
+    } else {
+      // Target is in a group → src joins it.
+      publishItem(srcItemId, { ...src, groupId: tgtGid });
+    }
+
+    // If src came from a group, clean it up if now empty / lone-member.
+    if (srcGid) {
+      setTimeout(() => {
+        const remaining = Object.values(state.items).filter(it => it.groupId === srcGid);
+        if (remaining.length <= 1) {
+          if (remaining.length === 1) {
+            const lone = Object.entries(state.items).find(([, it]) => it.groupId === srcGid);
+            if (lone) publishItem(lone[0], { ...lone[1], groupId: null });
+          }
+          publishGroup(srcGid, null);
+        }
+      }, 50);
+    }
+  }
+  // Drop a card onto empty column area → ungroup it. If its old group becomes empty
+  // (or has 1 lone item), dissolve it.
+  function ungroupItem(itemId) {
+    if (!iAmModerator()) return;
+    const cur = state.items[itemId];
+    if (!cur || !cur.groupId) return;
+    const oldGid = cur.groupId;
+    publishItem(itemId, { ...cur, groupId: null });
+    // After this update lands locally, optimistically check if oldGid still has members.
+    // The remaining members count from the in-memory map (may be stale by 1 frame; harmless).
+    setTimeout(() => {
+      const remaining = Object.values(state.items).filter(it => it.groupId === oldGid);
+      if (remaining.length <= 1) {
+        if (remaining.length === 1) {
+          // Dissolve: pull the lone remaining member out too.
+          const lone = Object.entries(state.items).find(([, it]) => it.groupId === oldGid);
+          if (lone) publishItem(lone[0], { ...lone[1], groupId: null });
+        }
+        publishGroup(oldGid, null);
+      }
+    }, 50);
+  }
+  function renameGroup(groupId, newLabel) {
+    if (!iAmModerator()) return;
+    const cur = state.groups[groupId];
+    if (!cur) return;
+    const trimmed = String(newLabel || '').trim().slice(0, 60);
+    if (!trimmed) return;
+    if (trimmed === cur.label) return;
+    publishGroup(groupId, { ...cur, label: trimmed });
+  }
+
+  // ---------- Vote ops (Vote phase) ----------
+  // Each user holds one retained `vote/{cid}` payload: `{ targetId: count }`.
+  // targetId = groupId for grouped items, or itemId for un-grouped items.
+  function getMyAllocations() {
+    return state.votes[state.clientId] || {};
+  }
+  function getMySpent() {
+    const a = getMyAllocations();
+    return Object.values(a).reduce((s, n) => s + (Number(n) || 0), 0);
+  }
+  function adjustVote(targetId, delta) {
+    if (state.phase !== 'vote') return;
+    if (!state.client?.connected) return;
+    const cur = { ...getMyAllocations() };
+    const prev = Number(cur[targetId] || 0);
+    const next = Math.max(0, prev + delta);
+    if (next === prev) return;
+    // Clamp to budget.
+    const otherSum = Object.entries(cur).reduce((s, [k, v]) => k === targetId ? s : s + (Number(v) || 0), 0);
+    const allowed = Math.max(0, state.voteBudget - otherSum);
+    cur[targetId] = Math.min(next, allowed);
+    if (cur[targetId] === 0) delete cur[targetId];
+    if (cur[targetId] === prev) return; // no change after clamp
+    publishVote(state.clientId, cur);
+    if (delta > 0) sound.vote();
+  }
+  // Tally across all clients' vote payloads.
+  function getTally(targetId) {
+    let sum = 0;
+    for (const a of Object.values(state.votes)) {
+      if (!a) continue;
+      sum += Number(a[targetId] || 0);
+    }
+    return sum;
+  }
+  function getAllTallies() {
+    const out = {};
+    for (const a of Object.values(state.votes)) {
+      if (!a) continue;
+      for (const [k, n] of Object.entries(a)) {
+        out[k] = (out[k] || 0) + (Number(n) || 0);
+      }
+    }
+    return out;
+  }
+
+  // ---------- Discuss helpers ----------
+  const DISCUSS_TIMER_MS = 3 * 60 * 1000;
+
+  // Targets ordered by tally desc, then by createdAt asc (for ties / 0-vote items).
+  function getDiscussOrder() {
+    const targets = buildVoteTargets();
+    const tallies = getAllTallies();
+    return targets
+      .map(t => ({ ...t, tally: tallies[t.id] || 0 }))
+      .sort((a, b) => {
+        if (b.tally !== a.tally) return b.tally - a.tally;
+        const aFirst = (a.items[0]?.createdAt) || 0;
+        const bFirst = (b.items[0]?.createdAt) || 0;
+        return aFirst - bFirst;
+      });
+  }
+  function pickDiscussTarget(targetId) {
+    if (!iAmModerator()) return;
+    if (state.phase !== 'discuss') return;
+    state.discussTargetId = targetId;
+    state.discussEndsAt = Date.now() + DISCUSS_TIMER_MS;
+    if (!state.discussedTargets.includes(targetId)) {
+      state.discussedTargets = [...state.discussedTargets, targetId];
+    }
+    publishPhase();
+    render();
+  }
+  // Returns the first not-yet-spotlighted target, or null if everything is done.
+  function findNextDiscussTarget() {
+    const order = getDiscussOrder();
+    if (!order.length) return null;
+    const done = new Set(state.discussedTargets);
+    if (state.discussTargetId) done.add(state.discussTargetId);
+    return order.find(t => !done.has(t.id)) || null;
+  }
+  function nextDiscussTarget() {
+    if (!iAmModerator()) return;
+    const next = findNextDiscussTarget();
+    if (next) {
+      pickDiscussTarget(next.id);
+    } else {
+      // No more themes to spotlight — natural moment to move to Actiepunten.
+      setPhase('actions');
+    }
+  }
+  function extendDiscussTimer(ms) {
+    if (!iAmModerator()) return;
+    const base = (state.discussEndsAt && state.discussEndsAt > Date.now())
+      ? state.discussEndsAt
+      : Date.now();
+    state.discussEndsAt = base + ms;
+    publishPhase();
+    render();
+  }
+
+  // ---------- Action ops (Discuss + Actions phases) ----------
+  function publishAction(actionId, data) {
+    if (!state.client?.connected) return;
+    state.client.publish(
+      topic('action/' + actionId),
+      data == null ? '' : JSON.stringify(data),
+      { qos: 0, retain: true }
+    );
+  }
+  function addAction({ text, ownerClientId, jiraKey }) {
+    const trimmed = String(text || '').trim();
+    if (!trimmed) return;
+    if (state.phase !== 'discuss' && state.phase !== 'actions') return;
+    if (!state.client?.connected) return;
+    const id = randomId('a');
+    const auto = extractJiraKey(trimmed);
+    publishAction(id, {
+      text: trimmed,
+      ownerClientId: ownerClientId || null,
+      jiraKey: jiraKey || auto || null,
+      done: false,
+      createdAt: Date.now(),
+    });
+    markAuthored('action', id);
+  }
+  function editAction(actionId, patch) {
+    const cur = state.actions[actionId];
+    if (!cur) return;
+    if (!isMine('action', actionId) && !iAmModerator()) return;
+    publishAction(actionId, { ...cur, ...patch });
+  }
+  function deleteAction(actionId) {
+    const cur = state.actions[actionId];
+    if (!cur) return;
+    if (!isMine('action', actionId) && !iAmModerator()) return;
+    publishAction(actionId, null);
+    unmarkAuthored('action', actionId);
+  }
+  function toggleActionDone(actionId) {
+    const cur = state.actions[actionId];
+    if (!cur) return;
+    publishAction(actionId, { ...cur, done: !cur.done });
+  }
+
+  // ---------- Stats shards (history persistence) ----------
+  function statsPublishShard(subPath, payload) {
+    if (!state.client?.connected) return;
+    const body = payload == null ? '' : JSON.stringify(payload);
+    state.client.publish(`${STATS_ROOT}/${subPath}`, body, { qos: 0, retain: true });
+  }
+  // Snapshot the current retro to STATS_ROOT/retros/{roomId}/{retroId}/...
+  // Only the lowest-cid moderator (stats writer) emits, mirroring poker's pattern.
+  function snapshotRetroToStats({ closing = false } = {}) {
+    if (!state.retroId) return;
+    if (!isStatsWriter()) return;
+    const targets = buildVoteTargets();
+    const tallies = getAllTallies();
+    const colsByCid = {};
+    for (const c of (state.columns || [])) colsByCid[c.id] = c;
+    const participantNames = Object.values(state.participants).map(p => p.name).filter(Boolean);
+
+    statsPublishShard(`retros/${state.roomId}/${state.retroId}/meta`, {
+      v: 1,
+      retroId: state.retroId,
+      roomId: state.roomId,
+      templateId: state.templateId,
+      columns: state.columns,
+      voteBudget: state.voteBudget,
+      createdAt: state.statsRoomCreatedAt || Date.now(),
+      closedAt: closing ? Date.now() : null,
+      participantNames,
+    });
+
+    for (const t of targets) {
+      const col = colsByCid[t.columnId];
+      statsPublishShard(`retros/${state.roomId}/${state.retroId}/themes/${t.id}`, {
+        v: 1,
+        targetId: t.id,
+        kind: t.kind,
+        columnId: t.columnId,
+        colLabel: col?.label || '',
+        colColor: col?.color || null,
+        label: t.label,
+        votes: tallies[t.id] || 0,
+        items: t.items.map(it => ({ text: it.text })),
+      });
+    }
+    for (const [aid, a] of Object.entries(state.actions)) {
+      const owner = a.ownerClientId ? state.participants[a.ownerClientId] : null;
+      statsPublishShard(`retros/${state.roomId}/${state.retroId}/actions/${aid}`, {
+        v: 1,
+        actionId: aid,
+        text: a.text,
+        ownerName: owner?.name || null,
+        jiraKey: a.jiraKey || extractJiraKey(a.text) || null,
+        done: !!a.done,
+        createdAt: a.createdAt || null,
+      });
+    }
+  }
+
+  // ---------- Markdown export ----------
+  function buildMarkdown() {
+    const tpl = state.templateId ? findTemplate(state.templateId) : null;
+    const tplName = tpl ? (tpl.id === 'custom' ? 'Custom kolommen' : tpl.label) : '—';
+    const date = new Date().toLocaleDateString('nl-NL', { year: 'numeric', month: '2-digit', day: '2-digit' });
+    const participantNames = Object.values(state.participants).map(p => p.name).filter(Boolean);
+
+    const lines = [];
+    lines.push(`# Retro — ${state.roomId} — ${date}`);
+    lines.push(`Template: ${tplName} · Deelnemers: ${participantNames.join(', ') || '—'}`);
+    lines.push('');
+
+    const cols = state.columns || [];
+    const tallies = getAllTallies();
+    const targets = buildVoteTargets();
+    for (const col of cols) {
+      lines.push(`## ${col.label}`);
+      const colTargets = targets
+        .filter(t => t.columnId === col.id)
+        .map(t => ({ ...t, tally: tallies[t.id] || 0 }))
+        .sort((a, b) => b.tally - a.tally || ((a.items[0]?.createdAt || 0) - (b.items[0]?.createdAt || 0)));
+      if (!colTargets.length) {
+        lines.push('_(geen items)_');
+        lines.push('');
+        continue;
+      }
+      for (const t of colTargets) {
+        const voteLabel = t.tally === 0 ? '0 stemmen' : (t.tally === 1 ? '1 stem' : `${t.tally} stemmen`);
+        if (t.kind === 'group') {
+          lines.push(`- **${voteLabel}** — ${t.label || '(zonder label)'} _(thema)_`);
+          for (const m of t.items) {
+            lines.push(`  - ${m.text.replace(/\n/g, ' ')}`);
+          }
+        } else {
+          lines.push(`- **${voteLabel}** — ${t.label.replace(/\n/g, ' ')}`);
+        }
+      }
+      lines.push('');
+    }
+
+    const actions = Object.values(state.actions).sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+    if (actions.length) {
+      lines.push('## Actiepunten');
+      for (const a of actions) {
+        const owner = a.ownerClientId ? state.participants[a.ownerClientId]?.name : null;
+        const jiraKey = a.jiraKey || extractJiraKey(a.text);
+        const jiraUrl = jiraKey ? (JIRA_BASE + jiraKey) : null;
+        const bits = [];
+        bits.push(a.text.replace(/\n/g, ' '));
+        if (owner) bits.push(`@${owner}`);
+        if (jiraUrl) bits.push(`[${jiraKey}](${jiraUrl})`);
+        lines.push(`- [${a.done ? 'x' : ' '}] ${bits.join(' — ')}`);
+      }
+      lines.push('');
+    }
+
+    return lines.join('\n');
+  }
+  async function copyMarkdown() {
+    const md = buildMarkdown();
+    try {
+      await navigator.clipboard.writeText(md);
+      const orig = el.exportMdBtn.textContent;
+      el.exportMdBtn.textContent = 'Gekopieerd!';
+      setTimeout(() => { el.exportMdBtn.textContent = orig; }, 1500);
+    } catch (e) {
+      // Fallback: textarea + execCommand
+      const ta = document.createElement('textarea');
+      ta.value = md; ta.style.position = 'fixed'; ta.style.left = '-9999px';
+      document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); } catch (e2) { /* ignore */ }
+      ta.remove();
+      const orig = el.exportMdBtn.textContent;
+      el.exportMdBtn.textContent = 'Gekopieerd!';
+      setTimeout(() => { el.exportMdBtn.textContent = orig; }, 1500);
+    }
+  }
+
+  // ---------- Wipe room (clean up all retained topics) ----------
+  // Called by the moderator after the retro is closed to free the kamer-code for reuse.
+  // Stats shards under STATS_ROOT/retros/... remain — they are the long-term archive.
+  function wipeRoom() {
+    if (!iAmModerator() || !state.client?.connected) return;
+    if (!window.confirm('Alle retained topics van deze kamer wissen? De geschiedenis blijft bewaard, maar de huidige retro wordt volledig verwijderd. Iedereen wordt teruggestuurd naar het startscherm.')) return;
+    const c = state.client;
+    const empty = (sub) => c.publish(topic(sub), '', { qos: 0, retain: true });
+    empty('meta');
+    empty('phase');
+    empty('moderators');
+    for (const id of Object.keys(state.items))   empty('item/' + id);
+    for (const id of Object.keys(state.groups))  empty('group/' + id);
+    for (const cid of Object.keys(state.votes))  empty('vote/' + cid);
+    for (const aid of Object.keys(state.actions)) empty('action/' + aid);
+    for (const cid of Object.keys(state.participants)) empty('presence/' + cid);
+    // Give the broker a moment to flush before we leave.
+    setTimeout(() => { leave(); }, 300);
+  }
+
+  // ---------- History modal ----------
+  function renderHistory() {
+    el.historyList.innerHTML = '';
+    const records = Object.entries(state.retroHistory)
+      .filter(([rid, r]) => r.meta && rid !== state.retroId)
+      .map(([rid, r]) => ({ retroId: rid, ...r }))
+      .sort((a, b) => (b.meta.closedAt || b.meta.createdAt || 0) - (a.meta.closedAt || a.meta.createdAt || 0));
+    if (!records.length) {
+      const p = document.createElement('p');
+      p.className = 'hint';
+      p.textContent = 'Nog geen afgeronde retro\'s voor deze kamer.';
+      el.historyList.appendChild(p);
+      return;
+    }
+    for (const rec of records) {
+      const det = document.createElement('details');
+      det.style.border = '1px solid var(--border)';
+      det.style.borderRadius = '8px';
+      det.style.padding = '10px 12px';
+      det.style.marginBottom = '10px';
+      const tpl = rec.meta.templateId ? findTemplate(rec.meta.templateId) : null;
+      const tplLabel = tpl ? (tpl.id === 'custom' ? 'Custom' : tpl.label) : '—';
+      const closedAt = rec.meta.closedAt
+        ? new Date(rec.meta.closedAt).toLocaleString('nl-NL', { year: '2-digit', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
+        : 'open';
+      const themeCount = Object.keys(rec.themes).length;
+      const actionCount = Object.keys(rec.actions).length;
+      const summary = document.createElement('summary');
+      summary.style.cursor = 'pointer';
+      summary.style.fontWeight = '600';
+      summary.textContent = `${closedAt} · ${tplLabel} · ${themeCount} thema's · ${actionCount} acties`;
+      det.appendChild(summary);
+
+      const body = document.createElement('div');
+      body.style.marginTop = '10px';
+
+      // Themes — group by columnId, sorted by votes desc
+      const themesByCol = {};
+      for (const th of Object.values(rec.themes)) {
+        if (!themesByCol[th.columnId]) themesByCol[th.columnId] = { label: th.colLabel, color: th.colColor, list: [] };
+        themesByCol[th.columnId].list.push(th);
+      }
+      const cols = Array.isArray(rec.meta.columns) ? rec.meta.columns : Object.values(themesByCol).map(g => ({ id: '', label: g.label }));
+      for (const col of cols) {
+        const grp = themesByCol[col.id];
+        if (!grp || !grp.list.length) continue;
+        const h = document.createElement('h4');
+        h.style.fontSize = '12px';
+        h.style.textTransform = 'uppercase';
+        h.style.letterSpacing = '.05em';
+        h.style.margin = '8px 0 4px';
+        h.style.color = col.color || 'var(--accent)';
+        h.textContent = col.label;
+        body.appendChild(h);
+        const ul = document.createElement('ul');
+        ul.style.margin = '0 0 0 18px';
+        ul.style.padding = '0';
+        ul.style.fontSize = '13px';
+        const sorted = grp.list.slice().sort((a, b) => (b.votes || 0) - (a.votes || 0));
+        for (const th of sorted) {
+          const li = document.createElement('li');
+          const voteText = (th.votes || 0) === 1 ? '1 stem' : `${th.votes || 0} stemmen`;
+          li.innerHTML = `<strong>${voteText}</strong> — ${escapeHtml(th.label || '(zonder label)')}`;
+          if (Array.isArray(th.items) && th.items.length > 1) {
+            const sub = document.createElement('ul');
+            sub.style.margin = '2px 0 4px 14px';
+            sub.style.color = 'var(--muted)';
+            for (const it of th.items) {
+              const sli = document.createElement('li');
+              sli.textContent = it.text;
+              sub.appendChild(sli);
+            }
+            li.appendChild(sub);
+          }
+          ul.appendChild(li);
+        }
+        body.appendChild(ul);
+      }
+
+      // Actions
+      const actions = Object.values(rec.actions).sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+      if (actions.length) {
+        const h = document.createElement('h4');
+        h.style.fontSize = '12px';
+        h.style.textTransform = 'uppercase';
+        h.style.letterSpacing = '.05em';
+        h.style.margin = '12px 0 4px';
+        h.textContent = 'Actiepunten';
+        body.appendChild(h);
+        const ul = document.createElement('ul');
+        ul.style.margin = '0 0 0 18px';
+        ul.style.padding = '0';
+        ul.style.fontSize = '13px';
+        for (const a of actions) {
+          const li = document.createElement('li');
+          li.style.opacity = a.done ? '0.55' : '1';
+          if (a.done) li.style.textDecoration = 'line-through';
+          const bits = [escapeHtml(a.text)];
+          if (a.ownerName) bits.push(`@${escapeHtml(a.ownerName)}`);
+          if (a.jiraKey) bits.push(`<a href="${JIRA_BASE + a.jiraKey}" target="_blank" rel="noopener">${escapeHtml(a.jiraKey)}</a>`);
+          li.innerHTML = bits.join(' — ');
+          ul.appendChild(li);
+        }
+        body.appendChild(ul);
+      }
+
+      det.appendChild(body);
+      el.historyList.appendChild(det);
+    }
+  }
+
+  // Voting targets: each group is one target; each ungrouped item is one target.
+  function buildVoteTargets() {
+    const targets = []; // { id, columnId, kind: 'group'|'item', label, items: [...] }
+    const seenGroups = new Set();
+    // Walk items in createdAt order so column order stays stable.
+    const allItems = Object.entries(state.items)
+      .map(([id, it]) => ({ id, ...it }))
+      .sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+    for (const it of allItems) {
+      if (it.groupId && state.groups[it.groupId]) {
+        if (seenGroups.has(it.groupId)) continue;
+        seenGroups.add(it.groupId);
+        const grp = state.groups[it.groupId];
+        const members = allItems.filter(x => x.groupId === it.groupId);
+        targets.push({
+          id: it.groupId,
+          columnId: grp.columnId,
+          kind: 'group',
+          label: grp.label,
+          items: members,
+        });
+      } else {
+        targets.push({
+          id: it.id,
+          columnId: it.columnId,
+          kind: 'item',
+          label: it.text,
+          items: [it],
+        });
+      }
+    }
+    return targets;
+  }
+
+  // ---------- Kick / leave ----------
+  function kickParticipant(id) {
+    if (!iAmModerator() || !state.client?.connected) return;
+    if (!id || id === effectiveHost() || id === state.clientId) return;
+    const name = state.participants[id]?.name || 'deze deelnemer';
+    if (!window.confirm('Deelnemer "' + name + '" uit de kamer verwijderen?')) return;
+    if (state.moderators.includes(id)) {
+      state.moderators = state.moderators.filter(x => x !== id);
+      publishModerators();
+    }
+    state.client.publish(topic('kicks/' + id), '1', { qos: 0, retain: true });
+    state.client.publish(topic('presence/' + id), '', { qos: 0, retain: true });
+    setTimeout(() => {
+      if (state.client?.connected) {
+        state.client.publish(topic('kicks/' + id), '', { qos: 0, retain: true });
+      }
+    }, 5000);
+  }
+  function handleKicked() {
+    if (state.kicked) return;
+    state.kicked = true;
+    try {
+      state.client?.publish(topic('presence/' + state.clientId), '', { qos: 0, retain: true });
+      state.client?.end(true);
+    } catch (e) { /* ignore */ }
+    sessionStorage.removeItem('pp.clientId');
+    alert('Je bent uit de retro verwijderd door een moderator.');
+    location.hash = '';
+    location.reload();
+  }
+  function toggleModerator(id) {
+    if (!iAmModerator() || !state.client?.connected) return;
+    if (id === effectiveHost()) return; // host always moderator
+    state.moderators = state.moderators.includes(id)
+      ? state.moderators.filter(x => x !== id)
+      : [...state.moderators, id];
+    publishModerators();
+    render();
+  }
+  function leave() {
+    if (state.client) {
+      try {
+        if (state.moderators.includes(state.clientId)) {
+          state.moderators = state.moderators.filter(x => x !== state.clientId);
+          publishModerators();
+        }
+        state.client.publish(topic('presence/' + state.clientId), '', { qos: 0, retain: true });
+        state.client.end(false, {}, () => {});
+      } catch (e) { /* ignore */ }
+    }
+    sessionStorage.removeItem('pp.clientId');
+    location.hash = '';
+    location.reload();
+  }
+
+  // ---------- Render ----------
+  function render() {
+    if (state.loading) {
+      el.landing.classList.add('hidden');
+      el.loading.classList.remove('hidden');
+      el.room.classList.add('hidden');
+      updateLoadingPanel();
+      return;
+    }
+    if (!state.roomId) {
+      el.landing.classList.remove('hidden');
+      el.loading.classList.add('hidden');
+      el.room.classList.add('hidden');
+      return;
+    }
+    el.landing.classList.add('hidden');
+    el.loading.classList.add('hidden');
+    el.room.classList.remove('hidden');
+
+    el.roomTag.textContent = state.roomId;
+    el.roomTag.classList.remove('hidden');
+    el.roomCodeDisplay.textContent = state.roomId;
+
+    const tpl = state.templateId ? findTemplate(state.templateId) : null;
+    if (tpl && state.templateId !== 'custom') {
+      el.templateTag.textContent = tpl.label;
+      el.templateTag.classList.remove('hidden');
+    } else if (state.templateId === 'custom') {
+      el.templateTag.textContent = 'Custom (' + (state.columns?.length || 0) + ' kolommen)';
+      el.templateTag.classList.remove('hidden');
+    } else {
+      el.templateTag.classList.add('hidden');
+    }
+
+    el.phaseTag.textContent = PHASE_LABEL[state.phase] || state.phase;
+    el.phaseTag.classList.remove('hidden');
+
+    // Header buttons that are phase-dependent
+    const showExport = state.phase === 'discuss' || state.phase === 'actions' || state.phase === 'closed';
+    el.exportMdBtn.classList.toggle('hidden', !showExport);
+    const showWipe = iAmModerator() && state.phase === 'closed';
+    el.wipeRoomBtn.classList.toggle('hidden', !showWipe);
+
+    renderParticipants();
+    renderPhase();
+    renderPhaseControls();
+  }
+
+  function renderParticipants() {
+    el.participants.innerHTML = '';
+    const ids = Object.keys(state.participants);
+    el.participantCount.textContent = String(ids.length);
+    const sorted = ids.slice().sort((a, b) => {
+      const pa = state.participants[a], pb = state.participants[b];
+      return (pa.joinedAt || 0) - (pb.joinedAt || 0) || a.localeCompare(b);
+    });
+    const meIsMod = iAmModerator();
+    const hostId = effectiveHost();
+    for (const id of sorted) {
+      const p = state.participants[id];
+      const isMe = id === state.clientId;
+      const isMod = isModerator(id);
+      const isHost = id === hostId;
+      const colors = avatarColors(p.name);
+      const div = document.createElement('div');
+      div.className = 'participant' + (isMod ? ' is-mod' : '');
+      div.innerHTML = `
+        <span class="avatar" style="--av-1:${colors.a};--av-2:${colors.b};">${escapeHtml(initialsFor(p.name))}</span>
+        <div class="name-wrap">
+          <div class="name">${escapeHtml(p.name)}${isMe ? '<span class="me">jij</span>' : ''}</div>
+          <div class="sub">
+            <span>${escapeHtml((ROLES[normalizeRole(p.role)] || ROLES.other).label)}</span>
+            ${isHost ? '<span class="mod-badge">host</span>' : (isMod ? '<span class="mod-badge">mod</span>' : '')}
+          </div>
+        </div>
+        <div class="p-actions"></div>
+      `;
+      // Moderator-only actions (kick, toggle mod). Host can't be kicked or demoted.
+      if (meIsMod && !isMe && !isHost) {
+        const actions = div.querySelector('.p-actions');
+        const modBtn = document.createElement('button');
+        modBtn.title = isMod ? 'Moderator-rechten intrekken' : 'Moderator-rechten geven';
+        modBtn.textContent = isMod ? '−' : '+';
+        modBtn.addEventListener('click', () => toggleModerator(id));
+        actions.appendChild(modBtn);
+        const kickBtn = document.createElement('button');
+        kickBtn.title = 'Uit kamer verwijderen';
+        kickBtn.textContent = '×';
+        kickBtn.addEventListener('click', () => kickParticipant(id));
+        actions.appendChild(kickBtn);
+        div.classList.add('has-actions');
+      }
+      el.participants.appendChild(div);
+    }
+  }
+
+  function renderPhase() {
+    el.phaseTitle.textContent = PHASE_LABEL[state.phase] || state.phase;
+    el.phaseSubtitle.textContent = '';
+    el.phaseHelp.textContent = '';
+    el.phaseBody.innerHTML = '';
+
+    if (state.phase === 'lobby') {
+      el.phaseHelp.textContent = iAmModerator()
+        ? 'Wachten op iedereen. Klik "Volgende fase →" om te starten met verzamelen.'
+        : 'Wachten tot een moderator de retro start.';
+      return;
+    }
+
+    if (state.phase === 'collect') {
+      el.phaseHelp.textContent = 'Voeg items toe per kolom. Andere deelnemers zien hoeveel kaarten er liggen, maar de inhoud blijft verborgen tot de moderator naar Groeperen gaat. Je kunt je eigen items nog bewerken of verwijderen.';
+      renderColumns({ phase: 'collect' });
+      return;
+    }
+
+    if (state.phase === 'group') {
+      el.phaseHelp.textContent = iAmModerator()
+        ? 'Sleep items op elkaar om thema\'s te vormen. Sleep een item naar de lege ruimte onder een kolom om het uit zijn groep te halen. Klik op een groeplabel om die te hernoemen.'
+        : 'De moderator groepeert items tot thema\'s.';
+      renderColumns({ phase: 'group' });
+      return;
+    }
+
+    if (state.phase === 'vote') {
+      const spent = getMySpent();
+      const remaining = state.voteBudget - spent;
+      el.phaseSubtitle.innerHTML = `<span class="budget-pill ${remaining === 0 ? 'full' : ''}">${spent} / ${state.voteBudget} stemmen</span>`;
+      el.phaseHelp.textContent = state.revealVotes
+        ? 'De stemmen zijn onthuld. Elke kaart toont het totaal.'
+        : 'Verdeel je stemmen over de items en thema\'s die jij belangrijk vindt. Andere stemmen blijven verborgen tot de moderator onthult.';
+      renderColumns({ phase: 'vote' });
+      return;
+    }
+
+    if (state.phase === 'discuss') {
+      const order = getDiscussOrder();
+      const done = new Set(state.discussedTargets);
+      const doneCount = [...done].filter(id => order.some(o => o.id === id)).length;
+      el.phaseSubtitle.innerHTML = `<span class="discuss-progress">${doneCount} / ${order.length} besproken</span>`;
+      el.phaseHelp.textContent = iAmModerator()
+        ? 'Bespreek thema\'s op volgorde van stemmen. Klik op een thema in de lijst onderaan om dat te selecteren, of gebruik "Volgende thema →".'
+        : 'De moderator licht thema\'s één voor één toe.';
+      renderDiscussPhase(order);
+      return;
+    }
+
+    if (state.phase === 'actions') {
+      el.phaseHelp.textContent = 'Leg afspraken vast met optioneel een eigenaar en een Jira-key. Acties blijven na afsluiten zichtbaar in de geschiedenis.';
+      renderActionsPhase();
+      return;
+    }
+
+    if (state.phase === 'closed') {
+      el.phaseHelp.textContent = 'Deze retro is afgesloten. Bedankt!';
+      renderActionsPhase({ readOnly: true });
+      return;
+    }
+  }
+
+  function renderDiscussPhase(order) {
+    const wrap = document.createElement('div');
+    wrap.className = 'spotlight-wrap';
+
+    // Spotlight on current target (or "select a theme" prompt if none).
+    const currentId = state.discussTargetId;
+    const current = order.find(t => t.id === currentId);
+    if (current) {
+      const col = (state.columns || []).find(c => c.id === current.columnId);
+      const card = document.createElement('div');
+      card.className = 'spotlight-card';
+      card.style.setProperty('--col-color', col?.color || 'var(--accent)');
+      const head = document.createElement('div');
+      head.className = 'sp-head';
+      head.innerHTML = `
+        <span class="sp-col">${escapeHtml(col?.label || '')}</span>
+        <h3 class="sp-label">${escapeHtml(current.label || '(zonder label)')}</h3>
+        <span class="sp-tally">${current.tally} ${current.tally === 1 ? 'stem' : 'stemmen'}</span>
+      `;
+      card.appendChild(head);
+      const items = document.createElement('div');
+      items.className = 'sp-items';
+      for (const m of current.items) {
+        items.appendChild(renderItemCard(m, { phase: 'discuss', allowDnD: false, draggable: false, voteTargetId: null, tally: 0, maxTally: 0, isInsideGroup: true }));
+      }
+      card.appendChild(items);
+
+      // Timer
+      if (iAmModerator() || state.discussEndsAt) {
+        card.appendChild(renderTimerWidget());
+      }
+      wrap.appendChild(card);
+    } else {
+      const empty = document.createElement('div');
+      empty.className = 'spotlight-card';
+      empty.style.setProperty('--col-color', 'var(--accent)');
+      empty.innerHTML = `
+        <h3 class="sp-label">Geen thema geselecteerd</h3>
+        <p class="hint" style="margin: 8px 0 0;">${iAmModerator() ? 'Klik hieronder op het eerstvolgende thema om te starten.' : 'De moderator gaat zo aan de slag.'}</p>
+      `;
+      wrap.appendChild(empty);
+    }
+
+    // Upcoming list (clickable for moderators)
+    if (order.length) {
+      const list = document.createElement('div');
+      list.className = 'upcoming-list';
+      const heading = document.createElement('h3');
+      heading.textContent = 'Alle thema\'s op stemvolgorde';
+      list.appendChild(heading);
+      const meIsMod = iAmModerator();
+      const done = new Set(state.discussedTargets);
+      for (const t of order) {
+        const col = (state.columns || []).find(c => c.id === t.columnId);
+        const isCurrent = t.id === state.discussTargetId;
+        const isDone = done.has(t.id) && !isCurrent;
+        const row = document.createElement('div');
+        row.className = 'upcoming-row' + (isCurrent ? ' current' : '') + (isDone ? ' done' : '');
+        row.style.setProperty('--col-color', col?.color || 'var(--accent)');
+        row.innerHTML = `
+          <span class="u-tally">${t.tally}${t.tally === 1 ? ' stem' : ' stemmen'}</span>
+          <span class="u-col-tag">${escapeHtml(col?.label || '')}</span>
+          <span class="u-label">${escapeHtml(t.label || '(zonder label)')}</span>
+        `;
+        if (meIsMod && !isCurrent) {
+          row.addEventListener('click', () => pickDiscussTarget(t.id));
+        }
+        list.appendChild(row);
+      }
+      wrap.appendChild(list);
+    }
+
+    el.phaseBody.appendChild(wrap);
+  }
+
+  function renderTimerWidget() {
+    const meIsMod = iAmModerator();
+    const hasNext = !!findNextDiscussTarget();
+    const nextLabel = hasNext ? 'Volgende thema →' : 'Alle besproken — Actiepunten →';
+    const wrap = document.createElement('div');
+    wrap.className = 'timer-wrap';
+    wrap.innerHTML = `
+      <svg class="timer-svg" viewBox="0 0 64 64" aria-hidden="true">
+        <circle class="bg" cx="32" cy="32" r="28"></circle>
+        <circle class="fg" cx="32" cy="32" r="28" stroke-dasharray="${(2 * Math.PI * 28).toFixed(2)}" stroke-dashoffset="0"></circle>
+      </svg>
+      <div class="timer-text">--:--</div>
+      ${meIsMod ? `
+        <div class="timer-actions">
+          <button data-act="ext60">+ 1 min</button>
+          <button data-act="ext30">+ 30s</button>
+          <button data-act="next" class="primary">${nextLabel}</button>
+        </div>
+      ` : ''}
+    `;
+    if (meIsMod) {
+      wrap.querySelector('[data-act="ext60"]').addEventListener('click', () => extendDiscussTimer(60_000));
+      wrap.querySelector('[data-act="ext30"]').addEventListener('click', () => extendDiscussTimer(30_000));
+      wrap.querySelector('[data-act="next"]').addEventListener('click', () => nextDiscussTarget());
+    }
+    return wrap;
+  }
+
+  function renderActionsPhase({ readOnly = false } = {}) {
+    const wrap = document.createElement('div');
+
+    if (!readOnly) {
+      const form = document.createElement('div');
+      form.className = 'action-form';
+      const ownerOptions = ['<option value="">— eigenaar —</option>']
+        .concat(Object.entries(state.participants)
+          .sort((a, b) => (a[1].joinedAt || 0) - (b[1].joinedAt || 0))
+          .map(([cid, p]) => `<option value="${escapeHtml(cid)}">${escapeHtml(p.name)}</option>`))
+        .join('');
+      form.innerHTML = `
+        <div>
+          <label for="actionTextInput">Actiepunt</label>
+          <input id="actionTextInput" maxlength="240" placeholder="Wat gaan we doen?">
+        </div>
+        <div>
+          <label for="actionOwnerInput">Eigenaar</label>
+          <select id="actionOwnerInput">${ownerOptions}</select>
+        </div>
+        <div>
+          <label for="actionJiraInput">Jira-key (optioneel)</label>
+          <input id="actionJiraInput" maxlength="20" placeholder="bv. VO-1234">
+        </div>
+        <div>
+          <button id="actionSubmitBtn" class="primary submit-btn">Toevoegen</button>
+        </div>
+      `;
+      wrap.appendChild(form);
+
+      const textIn = form.querySelector('#actionTextInput');
+      const ownerIn = form.querySelector('#actionOwnerInput');
+      const jiraIn = form.querySelector('#actionJiraInput');
+      const submit = () => {
+        if (!textIn.value.trim()) { textIn.focus(); return; }
+        addAction({
+          text: textIn.value,
+          ownerClientId: ownerIn.value || null,
+          jiraKey: jiraIn.value.trim().toUpperCase() || null,
+        });
+        textIn.value = '';
+        jiraIn.value = '';
+        textIn.focus();
+      };
+      form.querySelector('#actionSubmitBtn').addEventListener('click', submit);
+      textIn.addEventListener('keydown', (e) => { if (e.key === 'Enter') submit(); });
+      jiraIn.addEventListener('keydown', (e) => { if (e.key === 'Enter') submit(); });
+    }
+
+    const list = document.createElement('div');
+    list.className = 'action-list';
+    const actions = Object.entries(state.actions)
+      .map(([id, a]) => ({ id, ...a }))
+      .sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+
+    if (!actions.length) {
+      const p = document.createElement('p');
+      p.className = 'hint';
+      p.textContent = readOnly ? 'Geen actiepunten vastgelegd.' : 'Nog geen actiepunten. Voeg er een toe.';
+      wrap.appendChild(p);
+    } else {
+      for (const a of actions) {
+        list.appendChild(renderActionRow(a, { readOnly }));
+      }
+      wrap.appendChild(list);
+    }
+
+    el.phaseBody.appendChild(wrap);
+  }
+
+  function renderActionRow(a, { readOnly }) {
+    const meIsMod = iAmModerator();
+    const isMineAction = isMine('action', a.id);
+    const canEdit = !readOnly && (isMineAction || meIsMod);
+    const owner = a.ownerClientId ? state.participants[a.ownerClientId] : null;
+    const ownerColors = owner ? avatarColors(owner.name) : null;
+    const jiraUrl = a.jiraKey ? (JIRA_BASE + a.jiraKey) : jiraUrlFor(a.text);
+    const row = document.createElement('div');
+    row.className = 'action-row' + (a.done ? ' done' : '');
+    row.dataset.actionId = a.id;
+
+    const linked = jiraUrl
+      ? escapeHtml(a.text).replace(JIRA_KEY_RE, (m, k) => `<a href="${JIRA_BASE + k}" target="_blank" rel="noopener">${k}</a>`)
+      : escapeHtml(a.text);
+
+    row.innerHTML = `
+      <input type="checkbox" class="a-check" ${a.done ? 'checked' : ''} ${readOnly ? 'disabled' : ''}>
+      <div class="a-text">${linked}</div>
+      <div class="a-meta">
+        ${owner ? `<span class="a-mini-avatar" style="--av-1:${ownerColors.a};--av-2:${ownerColors.b};">${escapeHtml(initialsFor(owner.name))}</span><span>${escapeHtml(owner.name)}</span>` : '<span style="color:var(--muted);font-style:italic;">geen eigenaar</span>'}
+        ${a.jiraKey && jiraUrl ? `<span>·</span><a href="${jiraUrl}" target="_blank" rel="noopener">${escapeHtml(a.jiraKey)}</a>` : ''}
+      </div>
+      ${canEdit ? `
+        <div class="a-actions">
+          <button class="a-edit-btn">Bewerk</button>
+          <button class="a-del-btn" style="color:var(--danger); border-color:color-mix(in srgb, var(--danger) 30%, transparent);">Verwijder</button>
+        </div>
+      ` : '<div></div>'}
+      <div class="a-edit-area">
+        <input class="a-edit-text" maxlength="240" value="${escapeHtml(a.text)}">
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:6px;">
+          <select class="a-edit-owner">
+            <option value="">— eigenaar —</option>
+            ${Object.entries(state.participants).sort((p1, p2) => (p1[1].joinedAt || 0) - (p2[1].joinedAt || 0)).map(([cid, p]) => `<option value="${escapeHtml(cid)}" ${cid === a.ownerClientId ? 'selected' : ''}>${escapeHtml(p.name)}</option>`).join('')}
+          </select>
+          <input class="a-edit-jira" maxlength="20" placeholder="Jira-key" value="${escapeHtml(a.jiraKey || '')}">
+        </div>
+        <div style="display:flex; gap:6px;">
+          <button class="primary a-save-btn">Opslaan</button>
+          <button class="a-cancel-btn">Annuleren</button>
+        </div>
+      </div>
+    `;
+
+    if (!readOnly) {
+      const check = row.querySelector('.a-check');
+      check.addEventListener('change', () => toggleActionDone(a.id));
+    }
+    if (canEdit) {
+      const editBtn = row.querySelector('.a-edit-btn');
+      const delBtn = row.querySelector('.a-del-btn');
+      const saveBtn = row.querySelector('.a-save-btn');
+      const cancelBtn = row.querySelector('.a-cancel-btn');
+      editBtn.addEventListener('click', () => row.classList.add('editing'));
+      cancelBtn.addEventListener('click', () => row.classList.remove('editing'));
+      saveBtn.addEventListener('click', () => {
+        editAction(a.id, {
+          text: row.querySelector('.a-edit-text').value,
+          ownerClientId: row.querySelector('.a-edit-owner').value || null,
+          jiraKey: row.querySelector('.a-edit-jira').value.trim().toUpperCase() || null,
+        });
+        row.classList.remove('editing');
+      });
+      delBtn.addEventListener('click', () => {
+        if (window.confirm('Dit actiepunt verwijderen?')) deleteAction(a.id);
+      });
+    }
+    return row;
+  }
+
+  function renderColumns({ phase }) {
+    const cols = Array.isArray(state.columns) ? state.columns : [];
+    if (!cols.length) {
+      el.phaseBody.innerHTML = '<p class="hint">Geen kolommen geconfigureerd. Maak een nieuwe retro aan.</p>';
+      return;
+    }
+    const wrap = document.createElement('div');
+    wrap.className = 'columns';
+    wrap.style.setProperty('--col-count', cols.length);
+
+    const allItems = Object.entries(state.items)
+      .map(([id, it]) => ({ id, ...it }))
+      .sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+
+    const meIsMod = iAmModerator();
+    const allowDnD = phase === 'group' && meIsMod;
+    const tallies = (phase === 'vote' || phase === 'discuss') ? getAllTallies() : {};
+    const maxTally = Math.max(0, ...Object.values(tallies));
+
+    for (const col of cols) {
+      const colEl = document.createElement('div');
+      colEl.className = 'column';
+      colEl.style.setProperty('--col-color', col.color);
+
+      const colItems = allItems.filter(x => x.columnId === col.id);
+
+      const head = document.createElement('div');
+      head.className = 'col-head';
+      head.innerHTML = `
+        <span class="col-title">${escapeHtml(col.label)}</span>
+        <span class="col-count">${colItems.length}</span>
+      `;
+      colEl.appendChild(head);
+
+      if (phase === 'collect') {
+        const addRow = document.createElement('div');
+        addRow.className = 'col-add';
+        const inp = document.createElement('input');
+        inp.type = 'text';
+        inp.maxLength = 240;
+        inp.placeholder = 'Voeg toe…';
+        const addFn = () => {
+          const v = inp.value;
+          if (!v.trim()) return;
+          addItem(col.id, v);
+          inp.value = '';
+          inp.focus();
+        };
+        inp.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') { e.preventDefault(); addFn(); }
+        });
+        const btn = document.createElement('button');
+        btn.className = 'primary';
+        btn.textContent = '+';
+        btn.title = 'Toevoegen';
+        btn.addEventListener('click', addFn);
+        addRow.appendChild(inp);
+        addRow.appendChild(btn);
+        colEl.appendChild(addRow);
+      }
+
+      const itemsWrap = document.createElement('div');
+      itemsWrap.className = 'col-items';
+
+      // The wrap-level drop handler still works for cases where the column has empty
+      // vertical space; the explicit .col-drop-zone below covers full-column groups.
+      if (allowDnD) {
+        itemsWrap.addEventListener('dragover', (e) => {
+          if (e.target === itemsWrap) e.preventDefault();
+        });
+        itemsWrap.addEventListener('drop', (e) => {
+          if (e.target !== itemsWrap) return;
+          const srcId = e.dataTransfer.getData('text/plain');
+          if (srcId) ungroupItem(srcId);
+        });
+      }
+
+      // Block sequence: groups (rendered as one unit) then solo items, in createdAt order.
+      const seenGroups = new Set();
+      for (const it of colItems) {
+        if (it.groupId && state.groups[it.groupId]) {
+          if (seenGroups.has(it.groupId)) continue;
+          seenGroups.add(it.groupId);
+          const grp = state.groups[it.groupId];
+          const members = colItems.filter(x => x.groupId === it.groupId);
+          itemsWrap.appendChild(
+            renderGroupBlock(it.groupId, grp, members, { phase, allowDnD, col, tally: tallies[it.groupId] || 0, maxTally })
+          );
+        } else {
+          itemsWrap.appendChild(
+            renderItemCard(it, { phase, allowDnD, draggable: allowDnD, voteTargetId: it.id, tally: tallies[it.id] || 0, maxTally })
+          );
+        }
+      }
+
+      colEl.appendChild(itemsWrap);
+
+      // Explicit ungroup drop-zone — always visible during Group phase so you can
+      // pull an item out even when a group fills the entire column area.
+      if (allowDnD && colItems.some(it => it.groupId && state.groups[it.groupId])) {
+        const dz = document.createElement('div');
+        dz.className = 'col-drop-zone';
+        dz.textContent = 'Sleep hier om uit groep te halen';
+        dz.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          e.dataTransfer.dropEffect = 'move';
+          dz.classList.add('active');
+        });
+        dz.addEventListener('dragleave', () => dz.classList.remove('active'));
+        dz.addEventListener('drop', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          dz.classList.remove('active');
+          const srcId = e.dataTransfer.getData('text/plain');
+          if (srcId) ungroupItem(srcId);
+        });
+        colEl.appendChild(dz);
+      }
+
+      wrap.appendChild(colEl);
+    }
+    el.phaseBody.appendChild(wrap);
+  }
+
+  function renderItemCard(it, { phase, allowDnD, draggable, voteTargetId, tally, maxTally, isInsideGroup }) {
+    const mine = isMine('item', it.id);
+    const canEdit = mine && phase === 'collect';
+    // Anonymity: in collect phase, only the author sees their own text. Everyone else
+    // sees a redacted placeholder so the count is shared but the contents stay private
+    // until the moderator advances to Group.
+    const redacted = phase === 'collect' && !mine;
+    const div = document.createElement('div');
+    div.className = 'item-card'
+      + (mine ? ' is-mine' : '')
+      + (draggable ? ' draggable' : '')
+      + (redacted ? ' redacted' : '');
+    div.dataset.itemId = it.id;
+    if (draggable) {
+      div.draggable = true;
+      div.addEventListener('dragstart', (e) => {
+        e.dataTransfer.setData('text/plain', it.id);
+        e.dataTransfer.effectAllowed = 'move';
+        div.classList.add('dragging');
+      });
+      div.addEventListener('dragend', () => div.classList.remove('dragging'));
+      div.addEventListener('dragover', (e) => {
+        const srcId = e.dataTransfer.types.includes('text/plain') ? null : null;
+        // Always allow — actual same-column check happens on drop.
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        div.classList.add('drop-target');
+      });
+      div.addEventListener('dragleave', () => div.classList.remove('drop-target'));
+      div.addEventListener('drop', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        div.classList.remove('drop-target');
+        const srcId = e.dataTransfer.getData('text/plain');
+        if (!srcId || srcId === it.id) return;
+        dropItemOnTarget(srcId, it.id);
+      });
+    }
+    const displayText = redacted ? '• • • • •' : it.text;
+    const showUngroupBtn = phase === 'group' && isInsideGroup && iAmModerator();
+    div.innerHTML = `
+      ${mine && phase === 'collect' ? '<span class="mine-badge">jij</span>' : ''}
+      <div class="item-row">
+        <div class="item-text">${escapeHtml(displayText)}</div>
+        ${showUngroupBtn ? '<button class="single-ungroup-btn" title="Uit groep halen">×</button>' : ''}
+      </div>
+      <div class="edit-area">
+        <textarea maxlength="240">${escapeHtml(it.text)}</textarea>
+        <div style="display:flex; gap:6px;">
+          <button class="primary save-btn">Opslaan</button>
+          <button class="cancel-btn">Annuleren</button>
+        </div>
+      </div>
+      ${canEdit ? `
+      <div class="item-actions">
+        <button class="edit-btn">Bewerk</button>
+        <button class="danger del-btn">Verwijder</button>
+      </div>
+      ` : ''}
+    `;
+    if (showUngroupBtn) {
+      div.querySelector('.single-ungroup-btn').addEventListener('click', (e) => {
+        e.stopPropagation();
+        ungroupItem(it.id);
+      });
+    }
+    if (canEdit) {
+      const editBtn = div.querySelector('.edit-btn');
+      const delBtn  = div.querySelector('.del-btn');
+      const saveBtn = div.querySelector('.save-btn');
+      const cancelBtn = div.querySelector('.cancel-btn');
+      const ta = div.querySelector('textarea');
+      editBtn.addEventListener('click', () => {
+        div.classList.add('editing');
+        ta.value = it.text;
+        ta.focus();
+        ta.select();
+      });
+      cancelBtn.addEventListener('click', () => { div.classList.remove('editing'); });
+      saveBtn.addEventListener('click', () => {
+        editItem(it.id, ta.value);
+        div.classList.remove('editing');
+      });
+      ta.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); saveBtn.click(); }
+        if (e.key === 'Escape') { e.preventDefault(); cancelBtn.click(); }
+      });
+      delBtn.addEventListener('click', () => {
+        if (window.confirm('Dit item verwijderen?')) deleteItem(it.id);
+      });
+    }
+    // Vote chips on solo items in vote/discuss phases.
+    if ((phase === 'vote' || phase === 'discuss') && voteTargetId && !isInsideGroup) {
+      div.appendChild(renderVoteRow(voteTargetId, tally, maxTally, phase));
+    }
+    return div;
+  }
+
+  function renderGroupBlock(groupId, grp, members, { phase, allowDnD, col, tally, maxTally }) {
+    const wrap = document.createElement('div');
+    wrap.className = 'item-group';
+    wrap.style.setProperty('--col-color', col.color);
+    wrap.dataset.groupId = groupId;
+
+    const head = document.createElement('div');
+    head.className = 'grp-head';
+    const labelInput = document.createElement('input');
+    labelInput.type = 'text';
+    labelInput.className = 'grp-label-input';
+    labelInput.value = grp.label || '';
+    labelInput.maxLength = 60;
+    const canRename = phase === 'group' && iAmModerator();
+    labelInput.disabled = !canRename;
+    if (canRename) {
+      labelInput.addEventListener('blur', () => renameGroup(groupId, labelInput.value));
+      labelInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); labelInput.blur(); }
+        if (e.key === 'Escape') { e.preventDefault(); labelInput.value = grp.label || ''; labelInput.blur(); }
+      });
+    }
+    head.appendChild(labelInput);
+    wrap.appendChild(head);
+
+    if (allowDnD) {
+      // Allow dropping items onto the group block to add them to the group.
+      wrap.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        wrap.classList.add('drop-target');
+      });
+      wrap.addEventListener('dragleave', () => wrap.classList.remove('drop-target'));
+      wrap.addEventListener('drop', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        wrap.classList.remove('drop-target');
+        const srcId = e.dataTransfer.getData('text/plain');
+        if (!srcId) return;
+        const src = state.items[srcId];
+        if (!src || src.columnId !== grp.columnId) return;
+        if (src.groupId === groupId) return;
+        // Add to this group (or merge from other group).
+        const oldGid = src.groupId;
+        publishItem(srcId, { ...src, groupId });
+        if (oldGid && oldGid !== groupId) {
+          // Check if old group becomes empty; cleanup similar to ungroupItem.
+          setTimeout(() => {
+            const remaining = Object.values(state.items).filter(it => it.groupId === oldGid);
+            if (remaining.length <= 1) {
+              if (remaining.length === 1) {
+                const lone = Object.entries(state.items).find(([, it]) => it.groupId === oldGid);
+                if (lone) publishItem(lone[0], { ...lone[1], groupId: null });
+              }
+              publishGroup(oldGid, null);
+            }
+          }, 50);
+        }
+      });
+    }
+
+    for (const m of members) {
+      // Members of a group don't get individual vote chips; the group has one.
+      wrap.appendChild(
+        renderItemCard(m, { phase, allowDnD, draggable: allowDnD, voteTargetId: null, tally: 0, maxTally, isInsideGroup: true })
+      );
+    }
+    if ((phase === 'vote' || phase === 'discuss')) {
+      wrap.appendChild(renderVoteRow(groupId, tally, maxTally, phase));
+    }
+    return wrap;
+  }
+
+  function renderVoteRow(targetId, tally, maxTally, phase) {
+    const row = document.createElement('div');
+    row.className = 'vote-row';
+    const myAlloc = getMyAllocations();
+    const myCount = Number(myAlloc[targetId] || 0);
+    const showTally = phase === 'discuss' || state.revealVotes;
+    const isTop = showTally && tally > 0 && tally === maxTally;
+
+    if (phase === 'vote' && !state.revealVotes) {
+      const chip = document.createElement('div');
+      chip.className = 'vote-chip';
+      const minus = document.createElement('button');
+      minus.textContent = '−';
+      minus.title = 'Stem afhalen';
+      minus.disabled = myCount <= 0;
+      minus.addEventListener('click', () => adjustVote(targetId, -1));
+      const cnt = document.createElement('span');
+      cnt.className = 'my-count';
+      cnt.textContent = String(myCount);
+      const plus = document.createElement('button');
+      plus.className = 'primary';
+      plus.textContent = '+';
+      plus.title = 'Stem geven';
+      const remaining = state.voteBudget - getMySpent();
+      plus.disabled = remaining <= 0;
+      plus.addEventListener('click', () => adjustVote(targetId, +1));
+      chip.appendChild(minus);
+      chip.appendChild(cnt);
+      chip.appendChild(plus);
+      row.appendChild(chip);
+    }
+
+    if (showTally) {
+      const tallyEl = document.createElement('span');
+      tallyEl.className = 'vote-tally' + (tally > 0 ? ' has-votes' : '') + (isTop ? ' top-vote' : '');
+      tallyEl.textContent = tally === 0 ? '0 stemmen' : (tally === 1 ? '1 stem' : `${tally} stemmen`);
+      row.appendChild(tallyEl);
+    } else if (phase === 'vote') {
+      // Subtle hint that votes are hidden until reveal.
+      const hint = document.createElement('span');
+      hint.className = 'vote-tally';
+      hint.textContent = 'verborgen';
+      row.appendChild(hint);
+    }
+
+    return row;
+  }
+
+  function renderPhaseControls() {
+    const meIsMod = iAmModerator();
+    el.phaseControls.classList.toggle('hidden', state.phase === 'closed');
+
+    const i = phaseIndex(state.phase);
+    const showNext = meIsMod && state.phase !== 'closed' && state.phase !== 'actions';
+    const showPrev = meIsMod && i > 0 && state.phase !== 'closed';
+    const showClose = meIsMod && (state.phase === 'actions' || state.phase === 'closed');
+
+    el.nextPhaseBtn.classList.toggle('hidden', !showNext);
+    el.prevPhaseBtn.classList.toggle('hidden', !showPrev);
+    el.closeRetroBtn.classList.toggle('hidden', !showClose || state.phase === 'closed');
+
+    if (state.phase === 'lobby') el.nextPhaseBtn.textContent = 'Start: Verzamelen →';
+    else if (state.phase === 'collect') el.nextPhaseBtn.textContent = 'Volgende: Groeperen →';
+    else if (state.phase === 'group')   el.nextPhaseBtn.textContent = 'Volgende: Stemmen →';
+    else if (state.phase === 'vote')    el.nextPhaseBtn.textContent = state.revealVotes ? 'Volgende: Bespreken →' : 'Onthul + ga naar bespreken →';
+    else if (state.phase === 'discuss') el.nextPhaseBtn.textContent = 'Volgende: Actiepunten →';
+    else el.nextPhaseBtn.textContent = 'Volgende fase →';
+
+    // Contextual moderator toggle button (created/removed dynamically).
+    let revealBtn = document.getElementById('revealVotesBtn');
+    if (revealBtn) revealBtn.remove();
+    if (meIsMod && state.phase === 'vote') {
+      revealBtn = document.createElement('button');
+      revealBtn.id = 'revealVotesBtn';
+      revealBtn.textContent = state.revealVotes ? 'Verberg stemmen' : 'Toon stemmen';
+      revealBtn.title = state.revealVotes ? 'Stemmen weer verbergen' : 'Stemmen tonen aan iedereen';
+      revealBtn.addEventListener('click', () => {
+        if (!iAmModerator()) return;
+        state.revealVotes = !state.revealVotes;
+        publishPhase();
+        if (state.revealVotes) { sound.reveal(); launchConfetti(); }
+        render();
+      });
+      // Insert before the prev/next buttons inside the phase-nav.
+      el.prevPhaseBtn.parentNode.insertBefore(revealBtn, el.prevPhaseBtn);
+    }
+
+    if (meIsMod) {
+      el.phaseNavHint.textContent = '';
+    } else {
+      el.phaseNavHint.textContent = 'Alleen een moderator kan fases doorzetten.';
+    }
+  }
+
+  // ---------- Join / create room ----------
+  function joinRoom(roomId) {
+    const name = el.nameInput.value.trim();
+    if (!name) { el.nameInput.focus(); return; }
+    const code = (roomId || '').trim().toLowerCase();
+    if (!code) { el.joinCodeInput.focus(); return; }
+    state.name = name; localStorage.setItem('pp.name', name);
+    state.role = normalizeRole(el.roleInput.value);
+    localStorage.setItem('pp.role', state.role);
+
+    // Capture template choice (only used if we end up seeding a brand-new room).
+    const tplId = state.selectedTemplate;
+    let cols = null;
+    if (tplId === 'custom') {
+      cols = buildCustomColumns(el.customCols.value);
+      if (!cols) { alert('Vul minstens één custom kolomnaam in.'); el.customCols.focus(); return; }
+    } else {
+      const tpl = findTemplate(tplId);
+      cols = tpl.columns ? tpl.columns.map(c => ({ ...c })) : null;
+    }
+    const budget = Math.max(1, Math.min(10, parseInt(el.voteBudgetInput.value, 10) || 3));
+
+    state.roomId = code;
+    state.joinedAt = Date.now();
+    state.participants[state.clientId] = { name: state.name, role: state.role, joinedAt: state.joinedAt };
+    state.loading = true;
+    state.loadingError = null;
+    state._readyResolved = false;
+    // These are tentative — overridden by retained `meta` if the room exists.
+    state.templateId = tplId;
+    state.columns = cols;
+    state.voteBudget = budget;
+
+    writeHash();
+    render();
+    connect();
+
+    // Seed if empty: only host writes meta + initial phase.
+    const seed = () => {
+      if (!state.roomId) return;
+      if (!state.client?.connected) return setTimeout(seed, 50);
+      setTimeout(() => {
+        if (!state.roomId || !state.client?.connected) return;
+        if (state.host) {
+          if (state.loading) markReady('meta-late');
+          return;
+        }
+        // No retained meta → we are creating a new retro room.
+        state.host = state.clientId;
+        state.retroId = randomId('r');
+        state.statsRoomCreatedAt = Date.now();
+        publishMeta();
+        state.client.publish(
+          topic('phase'),
+          JSON.stringify({ phase: 'lobby', startedAt: Date.now(), revealVotes: false, discussTargetId: null }),
+          { qos: 0, retain: true }
+        );
+        markReady('seed');
+      }, 3000);
+    };
+    seed();
+  }
+
+  // ---------- Bindings ----------
+  function syncSoundToggle() {
+    el.soundToggle.classList.toggle('on', state.soundEnabled);
+    el.soundToggle.setAttribute('aria-pressed', state.soundEnabled ? 'true' : 'false');
+    el.soundToggle.title = state.soundEnabled ? 'Geluid uit zetten' : 'Geluid aan zetten';
+    el.soundIconOn.classList.toggle('hidden', !state.soundEnabled);
+    el.soundIconOff.classList.toggle('hidden', state.soundEnabled);
+  }
+  el.soundToggle.addEventListener('click', () => {
+    state.soundEnabled = !state.soundEnabled;
+    syncSoundToggle();
+    if (state.soundEnabled) sound.tick();
+  });
+  syncSoundToggle();
+
+  // Help modal
+  const openHelp = () => { el.helpOverlay.classList.remove('hidden'); el.helpClose.focus(); };
+  const closeHelp = () => { el.helpOverlay.classList.add('hidden'); el.helpToggle.focus(); };
+  const isHelpOpen = () => !el.helpOverlay.classList.contains('hidden');
+  el.helpToggle.addEventListener('click', openHelp);
+  el.helpClose.addEventListener('click', closeHelp);
+  el.helpOverlay.addEventListener('click', (e) => { if (e.target === el.helpOverlay) closeHelp(); });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && isHelpOpen()) { e.preventDefault(); closeHelp(); }
+  });
+
+  // Template picker
+  function renderTemplatePicker() {
+    el.templateGrid.innerHTML = '';
+    for (const tpl of TEMPLATES) {
+      const card = document.createElement('button');
+      card.type = 'button';
+      card.className = 'template-card' + (tpl.id === state.selectedTemplate ? ' selected' : '');
+      const cols = tpl.columns
+        ? tpl.columns.map(c => `<span class="t-col-chip" style="border-color:${c.color}; color:${c.color};">${escapeHtml(c.label)}</span>`).join('')
+        : '<span class="t-col-chip">Definieer zelf</span>';
+      card.innerHTML = `
+        <div class="t-name">${escapeHtml(tpl.label)}</div>
+        <div class="t-cols">${cols}</div>
+      `;
+      card.addEventListener('click', () => {
+        state.selectedTemplate = tpl.id;
+        renderTemplatePicker();
+        el.customColsWrap.classList.toggle('hidden', tpl.id !== 'custom');
+      });
+      el.templateGrid.appendChild(card);
+    }
+  }
+
+  el.joinBtn.addEventListener('click', () => joinRoom(el.joinCodeInput.value));
+  el.joinCodeInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') joinRoom(el.joinCodeInput.value); });
+  el.nameInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') joinRoom(el.joinCodeInput.value); });
+  el.customCols.addEventListener('keydown', (e) => { if (e.key === 'Enter') joinRoom(el.joinCodeInput.value); });
+
+  el.loadingCancelBtn.addEventListener('click', () => {
+    try { state.client?.end(true); } catch (e) {}
+    state.client = null;
+    state.roomId = null;
+    state.host = null;
+    state.loading = false;
+    state.loadingError = null;
+    state._readyResolved = false;
+    delete state.participants[state.clientId];
+    location.hash = '';
+    render();
+  });
+  el.loadingRetryBtn.addEventListener('click', () => {
+    const roomId = state.roomId;
+    if (!roomId) return;
+    try { state.client?.end(true); } catch (e) {}
+    state.client = null;
+    state.loadingError = null;
+    state._readyResolved = false;
+    joinRoom(roomId);
+  });
+
+  el.leaveBtn.addEventListener('click', leave);
+  el.copyLinkBtn.addEventListener('click', async () => {
+    const url = shareUrl();
+    try {
+      await navigator.clipboard.writeText(url);
+      const orig = el.copyLinkBtn.textContent;
+      el.copyLinkBtn.textContent = 'Gekopieerd!';
+      setTimeout(() => { el.copyLinkBtn.textContent = orig; }, 1200);
+    } catch (e) { alert(url); }
+  });
+  el.brokerSelect.addEventListener('change', () => {
+    state.brokerKey = el.brokerSelect.value;
+    localStorage.setItem('pp.broker', state.brokerKey);
+    if (state.roomId && state.client) {
+      try { state.client.end(true); } catch (e) {}
+      connect();
+    }
+  });
+
+  el.nextPhaseBtn.addEventListener('click', () => nextPhase());
+  el.prevPhaseBtn.addEventListener('click', () => {
+    if (window.confirm('Terug naar de vorige fase? Dit kan inhoud beïnvloeden.')) prevPhase();
+  });
+  el.closeRetroBtn.addEventListener('click', () => {
+    if (!iAmModerator()) return;
+    if (!window.confirm('Retro definitief afsluiten? De retro wordt naar de geschiedenis geschreven.')) return;
+    snapshotRetroToStats({ closing: true });
+    setPhase('closed');
+  });
+
+  // History modal
+  const openHistory = () => { renderHistory(); el.historyOverlay.classList.remove('hidden'); el.historyClose.focus(); };
+  const closeHistoryModal = () => { el.historyOverlay.classList.add('hidden'); el.historyBtn?.focus(); };
+  const isHistoryOpen = () => !el.historyOverlay.classList.contains('hidden');
+  el.historyBtn.addEventListener('click', openHistory);
+  el.historyClose.addEventListener('click', closeHistoryModal);
+  el.historyOverlay.addEventListener('click', (e) => {
+    if (e.target === el.historyOverlay) closeHistoryModal();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && isHistoryOpen()) { e.preventDefault(); closeHistoryModal(); }
+  });
+
+  // Markdown export + wipe
+  el.exportMdBtn.addEventListener('click', copyMarkdown);
+  el.wipeRoomBtn.addEventListener('click', wipeRoom);
+
+  window.addEventListener('beforeunload', () => {
+    if (state.client?.connected) {
+      try {
+        state.client.publish(topic('presence/' + state.clientId), '', { qos: 0, retain: true });
+      } catch (e) {}
+    }
+  });
+
+  // ---------- Discuss timer tick ----------
+  // Updates the timer display in-place so we don't re-render the entire phase every second.
+  // Plays sound once per target when it crosses zero.
+  const _timerSound = { firedFor: null };
+  setInterval(() => {
+    if (state.phase !== 'discuss') return;
+    const text = document.querySelector('.timer-text');
+    const svg = document.querySelector('.timer-svg');
+    if (!text || !svg) return;
+    if (!state.discussEndsAt) {
+      text.textContent = '--:--';
+      text.classList.remove('expired');
+      svg.classList.remove('expired');
+      svg.querySelector('circle.fg').style.strokeDashoffset = '0';
+      return;
+    }
+    const remaining = state.discussEndsAt - Date.now();
+    const mins = Math.max(0, Math.floor(remaining / 60000));
+    const secs = Math.max(0, Math.floor((remaining % 60000) / 1000));
+    text.textContent = `${mins}:${String(secs).padStart(2, '0')}`;
+    const expired = remaining <= 0;
+    text.classList.toggle('expired', expired);
+    svg.classList.toggle('expired', expired);
+    const circ = 2 * Math.PI * 28;
+    const elapsed = Math.max(0, DISCUSS_TIMER_MS - Math.max(0, remaining));
+    const pct = Math.min(1, elapsed / DISCUSS_TIMER_MS);
+    svg.querySelector('circle.fg').style.strokeDashoffset = String(circ * pct);
+    if (expired && _timerSound.firedFor !== state.discussTargetId) {
+      _timerSound.firedFor = state.discussTargetId;
+      sound.timerDone();
+    } else if (!expired && _timerSound.firedFor === state.discussTargetId) {
+      // Timer was extended past zero — re-arm.
+      _timerSound.firedFor = null;
+    }
+  }, 1000);
+
+  // ---------- Init ----------
+  el.nameInput.value = state.name;
+  el.roleInput.value = state.role;
+  el.brokerSelect.value = state.brokerKey;
+  renderTemplatePicker();
+
+  const hash = parseHash();
+  if (hash.room) {
+    el.joinCodeInput.value = hash.room;
+    if (state.name) joinRoom(hash.room);
+    else el.nameInput.focus();
+  } else {
+    el.nameInput.focus();
+  }
+})();
+</script>
+</body>
+</html>
