@@ -1249,6 +1249,16 @@
     </div>
 
     <div class="panel">
+      <h2 id="cardsTitle">Kies je kaart</h2>
+      <div id="cards" class="cards"></div>
+      <div class="actions">
+        <button id="revealBtn" class="primary hidden" disabled>Reveal</button>
+        <button id="newRoundBtn" class="hidden" disabled>Nieuwe ronde</button>
+        <span id="modHint" class="mod-hint hidden">Alleen een moderator kan onthullen of een nieuwe ronde starten.</span>
+      </div>
+    </div>
+
+    <div class="panel">
       <div class="ticket-head">
         <h2>Tickets <span class="tag" id="ticketCount">0</span></h2>
         <div class="spacer" style="flex: 1;"></div>
@@ -1271,16 +1281,6 @@
           <button id="ticketSubmitBtn" class="primary">Toevoegen</button>
           <button id="ticketCancelBtn">Annuleren</button>
         </div>
-      </div>
-    </div>
-
-    <div class="panel">
-      <h2 id="cardsTitle">Kies je kaart</h2>
-      <div id="cards" class="cards"></div>
-      <div class="actions">
-        <button id="revealBtn" class="primary hidden" disabled>Reveal</button>
-        <button id="newRoundBtn" class="hidden" disabled>Nieuwe ronde</button>
-        <span id="modHint" class="mod-hint hidden">Alleen een moderator kan onthullen of een nieuwe ronde starten.</span>
       </div>
     </div>
 
@@ -2153,7 +2153,11 @@
       return;
     }
 
-    for (const t of state.tickets) {
+    // Nieuwste ticket bovenaan. Alleen de weergave keert om: state.tickets blijft
+    // chronologisch, want nextTicketToVote() loopt die lijst in aanmaakvolgorde af
+    // om het volgende te stemmen ticket te kiezen, en het sessie-archief plus de
+    // stats-shards bewaren dezelfde volgorde.
+    for (const t of [...state.tickets].reverse()) {
       const isActive = t.id === state.activeTicketId;
       const isDone = t.estimate != null && !isActive;
       const isEditing = t.id === state.editingTicketId;
