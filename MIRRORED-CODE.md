@@ -9,16 +9,33 @@ The two files don't share a JS module — instead, the lower-level plumbing is
 **copied** between them. This keeps the build-step-free, single-file SPA
 property (which `stats.html` already established as the project convention).
 
+## Machine-checked regions
+
+Two CSS regions are delimited by sentinel comments and must be **identical in all
+three files** — `index.html`, `retro.html` *and* `stats.html`:
+
+| Sentinel | Contents |
+|---|---|
+| `VO THEME START` … `VO THEME END` | the `:root` token block (VO base palette + poker alias layer) and the `prefers-reduced-motion` guard |
+| `VO CHROME START` … `VO CHROME END` | body base, focus rules, the VO header shell (`header`, `.header-content`, `.header-title`, `.header-context`, `header h1`), links, `.broker-label` |
+
+Run `./check-theme-drift.ps1` before committing; it fails if the regions differ.
+Line endings are normalised in the comparison (`index.html` is CRLF, the other two
+are LF — pre-existing and not worth a repo-wide rewrite).
+
+Everything outside the sentinels is still mirrored by hand.
+
 ## Sections that must stay in sync
 
 When you change any of these in `index.html`, mirror the change to `retro.html`:
 
 | Concept | index.html (approx) | retro.html (approx) |
 |---|---|---|
-| Design tokens (`:root`, dark mode, reduced motion) | 12-77 | top of `<style>` |
-| Header chrome (`.conn`, `.sound-toggle`, `.help-toggle`) | 100-260 | inside `<style>` |
-| Help-overlay styling | 196-267 | inside `<style>` |
-| Form / button / panel base styles | 268-332 | inside `<style>` |
+| Header chrome (`.conn`, `.sound-toggle`, `.help-toggle`, `.ghost-link`) | 207-290 | inside `<style>` |
+| Help-overlay styling | 275-345 | inside `<style>` |
+| Form / button / panel base styles + `.btn-secondary` / `.btn-danger` | 346-420 | inside `<style>` |
+| Confetti CSS + `VO_CONFETTI` + `launchConfetti` | see below | see below |
+| `VO_AVATARS` / `avatarColors` (also in `stats.html`) | "Avatar helpers" | "Avatar helpers" |
 | Constants (`TOPIC_ROOT`, `STATS_GUID`, `BROKERS`, `ROLES`, `JIRA_*`) | 1257-1283 | start of script |
 | `clientId` bootstrap (sessionStorage) | 1290-1292 | start of script |
 | Sound IIFE (`tone`, `tick`, `reveal`, `vote`) | 1345-1384 | "Sound" section |
@@ -46,14 +63,60 @@ cross-talk.
 When you open a PR that touches:
 
 - presence / moderator / host-claim / kick logic — **mirror to the other file**
-- design tokens or shared CSS classes — **mirror to the other file**
+- design tokens or shared CSS classes — **run `./check-theme-drift.ps1`**
 - sound / confetti / avatar helpers — **mirror to the other file**
+  (confetti now really is a mirror; it used to inject its own keyframe at runtime)
 - broker selector / connection pill / sound toggle — **mirror to the other file**
 - `clientId` bootstrap or storage keys (`pp.*`) — **mirror to the other file**
 
 If you change *only* poker-specific (cards, voting, tickets, sessions) or
 *only* retro-specific (templates, phases, items, groups, votes, actions) logic,
 no mirroring needed.
+
+## VO house style — deliberate choices
+
+The three SPAs follow the Vlaamse Overheid house style as used in
+`c:\Projects\vo\narictools` (see `assets/css/common.css` there). Some deviations
+are intentional; do not "fix" them:
+
+- **Badge weight is 700, not VO's 600.** 600 is not a shipped Flanders Art Sans
+  weight, so the browser would synthesise it.
+- **`.04em` letter-spacing is kept on uppercase micro-labels.** Uppercase at
+  10–12px is measurably less legible without it.
+- **`--t-med` is 200ms, not the VO `--transition-duration` of 150ms.** 150ms clips
+  the card-flip choreography and flattens `--ease-spring`, which is the one
+  playful easing we keep.
+- **`--ease-spring` is retained**, scoped to the card deck and the modal pop-in.
+  It never touches chrome.
+- **`#f7c648` sits in the palette and is deliberately used nowhere.** As text it
+  is 1.6:1 on white and as a 2px border it fails 3:1; `--warn` / `--gold` resolve
+  to `--text-warning` (`#6d4c00`) instead. The only Flemish yellow on screen is
+  the 3px header stripe (`--flemish`), which is decorative.
+- **No `@font-face` and no font binaries.** `--font-sans` names
+  `'Flanders Art Sans'` first and falls back to Segoe UI. Flanders Art Sans is a
+  commissioned VO typeface without an open licence and this repo is public, so
+  shipping the woff2 files would be redistribution. VO-managed machines have the
+  font installed and render the real thing; everyone else gets the fallback.
+  **Check both** when changing anything width-sensitive (header wrap,
+  `.timer-text` `min-width`, badge widths).
+- **No dark mode.** narictools has none, so any dark palette would be invented.
+  `color-scheme: light` is set so browsers do not auto-darken form controls.
+
+### Colour roles
+
+`--border` (gray4, 1.53:1) is for dividers and table rules only. Control
+boundaries — inputs, selects, `.card-btn`, ghost buttons — use `--border-control`
+(gray3, 4.76:1), which is what WCAG 1.4.11 requires. Data marks in `stats.html`
+use `--brand-2`, never `--accent`, so charts do not read as controls.
+
+### Retro column colours
+
+Column colours carry two roles and are split accordingly: `--col-fill` for
+borders and underlines, `--col-text` for text. Always write both — `applyColColor()`
+does. The wire format still stores a single hex; `colColors()` maps it to the pair
+and `LEGACY_COLORS` rewrites pre-retheme terracotta hexes **at read time**, because
+column colours live in a *retained* MQTT topic and are baked into permanent stats
+shards. Removing that map turns every existing room and all history terracotta again.
 
 ## When to extract to shared modules
 

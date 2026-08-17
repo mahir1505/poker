@@ -2,7 +2,7 @@ $ErrorActionPreference = "Stop"
 $repo = "c:\Projects\vo\poker"
 Set-Location $repo
 
-$watcher = New-Object System.IO.FileSystemWatcher $repo, "index.html"
+$watcher = New-Object System.IO.FileSystemWatcher $repo, "*.html"
 $watcher.IncludeSubdirectories = $false
 $watcher.EnableRaisingEvents = $true
 
@@ -15,7 +15,8 @@ $action = {
     $script:pending = $false
 
     Set-Location "c:\Projects\vo\poker"
-    git add index.html | Out-Null
+    # stats.html staat in .gitignore en blijft bewust lokaal
+    git add index.html retro.html | Out-Null
     $changed = git diff --cached --name-only
     if (-not $changed) { return }
 
@@ -28,5 +29,5 @@ $action = {
 Register-ObjectEvent $watcher "Changed" -Action $action | Out-Null
 Register-ObjectEvent $watcher "Created" -Action $action | Out-Null
 
-Write-Host "Watching $repo\index.html - druk Ctrl+C om te stoppen"
+Write-Host "Watching $repo\*.html - druk Ctrl+C om te stoppen"
 while ($true) { Start-Sleep -Seconds 5 }
