@@ -17,11 +17,71 @@
 <meta http-equiv="Expires" content="0">
 <title>Planning Poker — Retro</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 -1 39 72'%3E%3Cg fill='%23ffe518'%3E%3Cpath d='M36.9,41.4c-2-1.6-3,0-4.3-0.1c-1.1-0.1-2.1-1.8-2.9-1.4c-1.6,0.8,0.6,3.7,1.6,4.3c0.9,0.5,2,1,2.2,1.1c1.3,0.6,1.8,1.5,2,2.9c0,0.3,0,1.1-0.1,1.4c-0.6,2.5-5,4.8-7.5,3c-1.2-0.8-2.3-1.9-2.6-3.7c-0.7-3.3-3-5.7-3.8-8.9c-0.5-1.9-0.8-4-1.3-6s-1-4-1.5-5.9c-0.4-1.7-1.2-4.3-1.8-5.8c-2.4-6.3-3.5-5.8-3.5-5.8s0.9,1.7,4,17.1c0.1,0.6,1.3,7.4,2.1,9.6c0.3,0.8,0.8,2.5,1.2,3.2c1,2.2,3.7,5.5,3.8,8.5c0.1,1.7,0.3,3.2,0.3,4.5c0,0.4,0.2,1.9,0.4,2.6c0.7,1.8,5.9,7.7,11.5,7.7v-4.5c-5.5,0-10.8-3.1-10.9-3.4c-0.1-0.1,0.3-2.3,0.7-3.2c0.7-1.8,2.1-3.5,4.5-3.7c2.7-0.2,4.3,0.6,5.7,0.6C36.7,55.5,36.9,41.4,36.9,41.4z'/%3E%3Cpath d='M12.8,25.2c-0.2,3.4-5.4,7.9-7,10.9C5,37.5,4,40,3.8,41.4c-0.7,4,0.2,6.5,1.2,8.8c1.7,4.1-0.3,5.7,1,4.8c1.7-1.4,1.4-4.5,1.3-6.5c-0.1-1.6-0.2-3.4,0-5.3c0.5-3.6,2.6-7.4,4.5-10.1C14,30,13.2,26.6,12.8,25.2z'/%3E%3Cpath d='M13.9,34.7c0,0,0.6,2.7-1.8,9.5C5.9,62,17.6,63.7,21,67.9c0,0,1.3-1.8-4-7.6c-1.9-2.1-3.7-6.8-2.2-13.5C17,37.1,13.9,34.7,13.9,34.7z'/%3E%3Cpath d='M2.3,23C2,21.9,1.9,21,2,20.1c0.3-4.2,4.1-5.9,5-6.5c0,0,1.7-1.2,1.9-2.4c0,0,1.8,4.4-2.3,6.9C4.6,19.5,3.3,21,2.3,23z'/%3E%3Cpath d='M11.9,18.9c0.2,0.4,1.8,2.7-4.7,8.1c-6.5,5.3-4.4,9.1-4.4,9.1s-6.9-3.8,1-10.5c7.9-6.6,6.3-8,6.3-8S11.3,17.7,11.9,18.9z'/%3E%3Cpath d='M20.3,21c1.1,0.1,1.8,3.6,4.4,4.4c1.9,0.6,3.9,0.3,4.4,1.4c-0.9,0.5-0.2,2,0.7,1.7C30.5,26.5,30.8,18.6,20.3,21z'/%3E%3Cpath d='M23.8,22.5c0.1-0.2,0.2,0,0.5-0.2c0.3-0.3,0.6-0.8,1.1-0.9c0.4-0.1,0.8-0.1,1.2,0.1c0.2,0.1,0.1,0.6-0.1,0.8c-0.3,0.3-1.4-0.2-1.4,0.6c0,1.3,1.7,0,2.6,0C28.1,25.9,23,25.1,23.8,22.5z'/%3E%3C/g%3E%3C/svg%3E">
-<meta name="theme-color" content="#ffffff">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#18202a" media="(prefers-color-scheme: dark)">
+<!-- == VO THEME BOOT START - byte-identiek in index.html / retro.html / stats.html == -->
+<script>
+(function () {
+  // De themakeuze staat los van de MQTT-sessie en overleeft die dus: localStorage,
+  // naast de andere pp.*-sleutels. Drie standen en niet twee, want met alleen
+  // licht/donker zou de app de systeemvoorkeur na de eerste klik nooit meer volgen.
+  var KEY = 'pp.theme';
+  var ORDER = ['system', 'light', 'dark'];
+  var LABEL = { system: 'systeem', light: 'licht', dark: 'donker' };
+
+  function stored() {
+    try {
+      var v = localStorage.getItem(KEY);
+      return ORDER.indexOf(v) >= 0 ? v : 'system';
+    } catch (e) {
+      return 'system';   // privémodus of storage geblokkeerd: val terug op het systeem
+    }
+  }
+
+  function apply(mode) {
+    // Geen attribuut = systeem; de media query pakt het dan op.
+    if (mode === 'system') document.documentElement.removeAttribute('data-theme');
+    else document.documentElement.setAttribute('data-theme', mode);
+  }
+
+  // Meteen toepassen, nog voor de eerste paint. Dit blok staat daarom in <head>
+  // en niet onderaan <body>: anders flitst de lichte versie op een donker systeem.
+  apply(stored());
+
+  function sync() {
+    var btn = document.getElementById('themeToggle');
+    if (!btn) return;
+    var mode = stored();
+    btn.dataset.mode = mode;
+    var next = ORDER[(ORDER.indexOf(mode) + 1) % ORDER.length];
+    var text = 'Thema: ' + LABEL[mode] + ' - klik voor ' + LABEL[next];
+    btn.title = text;
+    btn.setAttribute('aria-label', text);
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    var btn = document.getElementById('themeToggle');
+    if (!btn) return;
+    btn.addEventListener('click', function () {
+      var next = ORDER[(ORDER.indexOf(stored()) + 1) % ORDER.length];
+      try { localStorage.setItem(KEY, next); } catch (e) { /* niet fataal */ }
+      apply(next);
+      sync();
+    });
+    sync();
+  });
+
+  // Een tweede tab die het thema wijzigt trekt deze mee.
+  window.addEventListener('storage', function (e) {
+    if (e.key === KEY) { apply(stored()); sync(); }
+  });
+})();
+</script>
+<!-- == VO THEME BOOT END == -->
 <style>
   /* == VO THEME START - byte-identiek in index.html / retro.html / stats.html == */
   :root {
-    color-scheme: light;
+    color-scheme: light dark;
 
     /* ---- VO basispalet: verbatim uit narictools/assets/css/common.css ---- */
     --color-primary-dark: #15465b;
@@ -128,7 +188,155 @@
     --flemish: var(--color-flemish-dark);
     --font-sans: 'Flanders Art Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     --font-mono: ui-monospace, Consolas, "Courier New", monospace;
+
+    /* ---- Rollen die per thema van kant wisselen ----
+           Avatars houden hun eigen voorgrondkleur: VO_AVATARS is gekozen op
+           contrast met wit, dus die mag niet meeliften op --accent-fg, dat in
+           donker naar bijna-zwart omklapt. --avatar-tint mengt de schijf in
+           donker lichter bij, zodat hij niet wegvalt tegen de kaart. ---- */
+    --avatar-fg: var(--color-white);
+    --avatar-tint: 100%;
+    --danger-fg: var(--color-white);
+    --lion-fill: #333332;
+
+    /* ---- Kolomkleuren (retro).
+           De MQTT-payload blijft een enkele hex per kolom; colColors() vertaalt
+           die naar dit tokenpaar in plaats van naar een letterlijke kleur, zodat
+           kolommen het thema volgen zonder tweede palet in JS. Elke waarde is een
+           alias op een token dat het donkere blok hieronder al omzet. ---- */
+    --col-green-fill: var(--ok);             --col-green-text: var(--ok-text);
+    --col-red-fill:   var(--danger);         --col-red-text:   var(--danger-text);
+    --col-blue-fill:  var(--accent);         --col-blue-text:  var(--accent-2);
+    --col-amber-fill: var(--warn);           --col-amber-text: var(--warn);
+    --col-teal-fill:  var(--brand-2);        --col-teal-text:  var(--brand);
+    --col-grey-fill:  var(--border-control); --col-grey-text:  var(--muted);
   }
+  /* --------------------------------------------------------------------------
+     Donker thema. Narictools heeft er geen, dus dit is een afgeleide: de
+     VO-grijzen omgekeerd en de CTA-blauwen opgelicht tot ze op een donkere kaart
+     AA halen - #0055cc is daar 2,44:1 en onbruikbaar.
+     Alleen tokens die echt een andere waarde nodig hebben staan hier. Wat een
+     alias is op een token dat hier omgezet wordt (--glow, --warn, --gold,
+     --shadow-1..3, alle --col-*) volgt vanzelf. Aliassen op het VO-basispalet
+     (--ok-fill en verwanten) moeten wel expliciet, want dat palet is verbatim
+     overgenomen en verandert niet.
+     -------------------------------------------------------------------------- */
+  /* Twee ingangen naar hetzelfde palet: de systeemvoorkeur (tenzij de gebruiker
+     expliciet licht koos) en een expliciete keuze voor donker. Dat vraagt om
+     twee kopieën van dezelfde declaraties - CSS kan een media query en een
+     attribuutselector niet in één regel combineren. De drift-check dekt de hele
+     regio af, dus ze kunnen niet ongemerkt uit elkaar lopen. */
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #10161c;
+      --bg-grad-1: #131c25;
+      --bg-grad-2: #16202b;
+      --fg: #e9ebee;
+      --muted: #a8b3c0;              /* 7,7:1 op --card; gray3 zou hier 2,6:1 zijn */
+      --card: #18202a;
+      --surface-1: #1e2731;          /* dekkend: sticky thead in stats.html */
+      --surface-2: #18202a;
+      --border: #2b3642;
+      --border-strong: #3d4a58;
+      --border-control: #6b7c8c;     /* 3,8:1 als controlerand */
+      --accent: #6ea8ff;             /* 6,8:1 op --card */
+      --accent-2: #9cc4ff;           /* hover gaat in donker juist lichter */
+      --accent-fg: #0b1016;          /* klapt om naar bijna-zwart: 7,9:1 op --accent */
+      --danger: #ff6b70;
+      --ok: #6fbf73;
+      --header-bg: #18202a;
+
+      --text-success: #9fdca3;
+      --text-failure: #ff9d9f;
+      --text-warning: #f0cf7a;       /* --warn en --gold volgen hierop */
+      --text-info: #6ea8ff;
+      --btn-danger-hover: #ff9d9f;
+
+      --bg-info: rgba(110, 168, 255, 0.12);
+      --bg-neutral: #252e3a;
+      --bg-success: #16301a;
+      --bg-warning: #3a2f10;
+      --bg-failure: #3a1c1e;
+
+      --ok-fill: #16301a;
+      --danger-fill: #3a1c1e;
+      --warn-fill: #3a2f10;
+      --gold-fill: #3a2f10;
+
+      --brand: #8fc2dd;
+      --brand-2: #5c9dc4;
+      --data-empty: #6b7c8c;
+      --focus-ring: #6ea8ff;
+      --focus-soft: rgba(110, 168, 255, 0.20);
+
+      --avatar-fg: #0b1016;
+      --avatar-tint: 58%;
+      --danger-fg: #0b1016;
+      --lion-fill: #e9ebee;          /* #333332 is een veeg op #18202a */
+
+      --shadow: rgba(0, 0, 0, 0.55);
+      --shadow-sm: 0 1px 3px rgba(0,0,0,.5);
+      --shadow-md: 0 2px 10px rgba(0,0,0,.55);
+      --shadow-lg: 0 4px 24px rgba(0,0,0,.65);
+      --shadow-hover: 0 6px 22px rgba(0,0,0,.6);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #10161c;
+    --bg-grad-1: #131c25;
+    --bg-grad-2: #16202b;
+    --fg: #e9ebee;
+    --muted: #a8b3c0;              /* 7,7:1 op --card; gray3 zou hier 2,6:1 zijn */
+    --card: #18202a;
+    --surface-1: #1e2731;          /* dekkend: sticky thead in stats.html */
+    --surface-2: #18202a;
+    --border: #2b3642;
+    --border-strong: #3d4a58;
+    --border-control: #6b7c8c;     /* 3,8:1 als controlerand */
+    --accent: #6ea8ff;             /* 6,8:1 op --card */
+    --accent-2: #9cc4ff;           /* hover gaat in donker juist lichter */
+    --accent-fg: #0b1016;          /* klapt om naar bijna-zwart: 7,9:1 op --accent */
+    --danger: #ff6b70;
+    --ok: #6fbf73;
+    --header-bg: #18202a;
+
+    --text-success: #9fdca3;
+    --text-failure: #ff9d9f;
+    --text-warning: #f0cf7a;       /* --warn en --gold volgen hierop */
+    --text-info: #6ea8ff;
+    --btn-danger-hover: #ff9d9f;
+
+    --bg-info: rgba(110, 168, 255, 0.12);
+    --bg-neutral: #252e3a;
+    --bg-success: #16301a;
+    --bg-warning: #3a2f10;
+    --bg-failure: #3a1c1e;
+
+    --ok-fill: #16301a;
+    --danger-fill: #3a1c1e;
+    --warn-fill: #3a2f10;
+    --gold-fill: #3a2f10;
+
+    --brand: #8fc2dd;
+    --brand-2: #5c9dc4;
+    --data-empty: #6b7c8c;
+    --focus-ring: #6ea8ff;
+    --focus-soft: rgba(110, 168, 255, 0.20);
+
+    --avatar-fg: #0b1016;
+    --avatar-tint: 58%;
+    --danger-fg: #0b1016;
+    --lion-fill: #e9ebee;          /* #333332 is een veeg op #18202a */
+
+    --shadow: rgba(0, 0, 0, 0.55);
+    --shadow-sm: 0 1px 3px rgba(0,0,0,.5);
+    --shadow-md: 0 2px 10px rgba(0,0,0,.55);
+    --shadow-lg: 0 4px 24px rgba(0,0,0,.65);
+    --shadow-hover: 0 6px 22px rgba(0,0,0,.6);
+  }
+  /* Laat de browser formuliercontrols en scrollbars meelopen met de keuze. */
+  :root[data-theme="light"] { color-scheme: light; }
+  :root[data-theme="dark"] { color-scheme: dark; }
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
       animation-duration: .001ms !important;
@@ -184,7 +392,7 @@
     padding: 12px 24px;
   }
   .header-title { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
-  .header-title svg { flex-shrink: 0; }
+  .header-title svg { flex-shrink: 0; fill: var(--lion-fill); }
   /* Derde slot voor room-tag / actief ticket / fase-pill: krimpen i.p.v. de
      sticky header naar twee regels laten wrappen. */
   .header-context {
@@ -211,6 +419,33 @@
     .header-content { padding: 10px 16px; gap: 8px; }
     header h1 { font-size: var(--text-lg); }
   }
+  /* Themaknop. Deelt de maatvoering met .sound-toggle / .help-toggle, maar staat
+     hier omdat stats.html die twee niet heeft. */
+  .theme-toggle {
+    width: 36px; height: 36px;
+    display: inline-flex; align-items: center; justify-content: center;
+    padding: 0;
+    border-radius: var(--r-sm);
+    background: var(--surface-1);
+    border: 1px solid var(--border-control);
+    color: var(--muted);
+    cursor: pointer;
+    transition: color var(--t-fast), border-color var(--t-fast), background var(--t-fast);
+  }
+  .theme-toggle:hover { border-color: var(--accent); color: var(--accent); }
+  /* Een expliciete keuze is een actieve stand en krijgt de accentkleur; op
+     systeem blijft de knop neutraal. */
+  .theme-toggle[data-mode="light"], .theme-toggle[data-mode="dark"] {
+    color: var(--accent);
+    border-color: var(--accent);
+    background: var(--bg-info);
+  }
+  .theme-toggle svg { display: none; width: 16px; height: 16px; }
+  .theme-toggle .icon-system { display: block; }
+  .theme-toggle[data-mode="light"] .icon-system,
+  .theme-toggle[data-mode="dark"] .icon-system { display: none; }
+  .theme-toggle[data-mode="light"] .icon-light { display: block; }
+  .theme-toggle[data-mode="dark"] .icon-dark { display: block; }
   /* == VO CHROME END == */
   /* Ghost-link naar de zusterapp (spiegelt .ghost-link in index.html). */
   .ghost-link {
@@ -369,13 +604,13 @@
   }
   .btn-danger {
     background: var(--danger);
-    color: var(--color-white);
+    color: var(--danger-fg);
     border-color: var(--danger);
   }
   .btn-danger:hover:not(:disabled) {
     background: var(--btn-danger-hover);
     border-color: var(--btn-danger-hover);
-    color: var(--color-white);
+    color: var(--danger-fg);
   }
 
   main { max-width: 1240px; margin: 0 auto; padding: 1.5rem 1.5rem 3rem; }
@@ -521,8 +756,8 @@
     flex-shrink: 0;
     width: 32px; height: 32px; border-radius: var(--r-full);
     display: inline-flex; align-items: center; justify-content: center;
-    color: var(--accent-fg); font-weight: 700; font-size: var(--text-sm);
-    background: var(--av-1, var(--muted));
+    color: var(--avatar-fg); font-weight: 700; font-size: var(--text-sm);
+    background: color-mix(in srgb, var(--av-1, var(--muted)) var(--avatar-tint), var(--color-white));
   }
   .participant .name-wrap { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
   .participant .name {
@@ -673,23 +908,31 @@
   /* Redacted (collect phase, not author) — visible as a placeholder card so the
      count/feeling-of-progress is shared, but text stays private until reveal.
      Dit is een anonimiteits-affordance, geen decoratie: de arcering moet echt
-     zichtbaar zijn. Op --surface-1/--surface-2 kwam die na de VO-swap op ~1,2:1
-     uit - hij zou er prima uitzien en niets meer communiceren. Daarom vaste
-     gray3-strepen op wit (4,76:1). */
+     zichtbaar zijn, in beide thema's. --card tegen --border-control geeft 4,8:1
+     in licht en 3,7:1 in donker.
+     De puntjes krijgen hun eigen --card-chipje: over een gestreepte ondergrond
+     bestaat er geen tekstkleur die op beide banen AA haalt. Zo staan ze altijd
+     op een effen vlak (18,9:1 licht, 13,7:1 donker) en blijft de arcering
+     eromheen op volle sterkte. */
   .item-card.redacted {
     background: repeating-linear-gradient(
       135deg,
-      var(--color-white),
-      var(--color-white) 6px,
-      var(--color-gray3) 6px,
-      var(--color-gray3) 12px
+      var(--card),
+      var(--card) 6px,
+      var(--border-control) 6px,
+      var(--border-control) 12px
     );
-    /* --fg i.p.v. --muted: de puntjes staan afwisselend op wit en op gray3,
-       en halen zo 18,9:1 resp. 4,66:1. --muted zou op de strepen 1,6:1 zijn. */
-    color: var(--fg);
     user-select: none;
   }
-  .item-card.redacted .item-text { letter-spacing: .12em; font-weight: 700; }
+  .item-card.redacted .item-text {
+    letter-spacing: .12em;
+    font-weight: 700;
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: var(--r-sm);
+    background: var(--card);
+    color: var(--fg);
+  }
   .item-card.editing .item-text { display: none; }
   .item-card .edit-area {
     display: none;
@@ -1040,8 +1283,8 @@
   .action-row .a-mini-avatar {
     width: 22px; height: 22px; border-radius: var(--r-full);
     display: inline-flex; align-items: center; justify-content: center;
-    color: var(--accent-fg); font-weight: 700; font-size: var(--text-xs);
-    background: var(--av-1, var(--muted));
+    color: var(--avatar-fg); font-weight: 700; font-size: var(--text-xs);
+    background: color-mix(in srgb, var(--av-1, var(--muted)) var(--avatar-tint), var(--color-white));
   }
   .action-row .a-actions {
     display: flex; gap: 4px;
@@ -1147,6 +1390,11 @@
     <option value="hivemq">HiveMQ</option>
     <option value="emqx">EMQX</option>
   </select>
+  <button id="themeToggle" class="theme-toggle" type="button" title="Thema wisselen" aria-label="Thema wisselen">
+    <svg class="icon-system" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+    <svg class="icon-light" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+    <svg class="icon-dark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+  </button>
   <button id="helpToggle" class="help-toggle" type="button" title="Handleiding openen" aria-label="Handleiding openen">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
   </button>
@@ -1365,13 +1613,18 @@
   // spotlight-rand) en een tekstkleur. Eén hex voor beide werkte niet: het VO-geel
   // #f7c648 haalt als 2px rand maar 1,6:1. Vandaar de splitsing in --col-fill /
   // --col-text; zie ook de bijbehorende CSS-regels.
+  //
+  // De waarden zijn tokenverwijzingen, geen letterlijke kleuren. De hex in de
+  // MQTT-payload blijft de opslagvorm en is dus de sleutel; wat er getekend wordt
+  // komt uit :root. Zo volgen kolommen het donkere thema zonder dat er een tweede
+  // palet in JS bijkomt - en zonder dat bestaande kamers hoeven te worden herschreven.
   const VO_COLUMN_COLORS = {
-    '#2e7d32': { fill: '#2e7d32', text: '#1b5e20' }, // groen
-    '#d2373c': { fill: '#d2373c', text: '#b71c1c' }, // rood
-    '#0055cc': { fill: '#0055cc', text: '#004099' }, // CTA-blauw
-    '#6d4c00': { fill: '#6d4c00', text: '#6d4c00' }, // amber, op leesbare waarde
-    '#4a91ba': { fill: '#4a91ba', text: '#15465b' }, // lichtblauw
-    '#687483': { fill: '#687483', text: '#4d4d4b' }, // grijs
+    '#2e7d32': { fill: 'var(--col-green-fill)', text: 'var(--col-green-text)' },
+    '#d2373c': { fill: 'var(--col-red-fill)',   text: 'var(--col-red-text)' },
+    '#0055cc': { fill: 'var(--col-blue-fill)',  text: 'var(--col-blue-text)' },
+    '#6d4c00': { fill: 'var(--col-amber-fill)', text: 'var(--col-amber-text)' },
+    '#4a91ba': { fill: 'var(--col-teal-fill)',  text: 'var(--col-teal-text)' },
+    '#687483': { fill: 'var(--col-grey-fill)',  text: 'var(--col-grey-text)' },
   };
   // Kamers van vóór de retheme dragen de oude terracotta-hexen in een *retained*
   // MQTT-topic, en de statistiek-shards hebben ze permanent ingebakken. Zonder

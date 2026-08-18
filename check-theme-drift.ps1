@@ -8,7 +8,7 @@
 $ErrorActionPreference = "Stop"
 Set-Location $PSScriptRoot
 
-$regions = @('VO THEME', 'VO CHROME')
+$regions = @('VO THEME BOOT', 'VO THEME', 'VO CHROME')
 $files = @('index.html', 'retro.html', 'stats.html') | Where-Object { Test-Path $_ }
 $failed = $false
 

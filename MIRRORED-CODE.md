@@ -16,8 +16,9 @@ three files** — `index.html`, `retro.html` *and* `stats.html`:
 
 | Sentinel | Contents |
 |---|---|
-| `VO THEME START` … `VO THEME END` | the `:root` token block (VO base palette + poker alias layer) and the `prefers-reduced-motion` guard |
-| `VO CHROME START` … `VO CHROME END` | body base, focus rules, the VO header shell (`header`, `.header-content`, `.header-title`, `.header-context`, `header h1`), links, `.broker-label` |
+| `VO THEME BOOT START` … `VO THEME BOOT END` | the `<head>` script that applies the stored theme before first paint and wires the toggle |
+| `VO THEME START` … `VO THEME END` | the `:root` token block (VO base palette + poker alias layer), both dark blocks, and the `prefers-reduced-motion` guard |
+| `VO CHROME START` … `VO CHROME END` | body base, focus rules, the VO header shell (`header`, `.header-content`, `.header-title`, `.header-context`, `header h1`), links, `.broker-label`, `.theme-toggle` |
 
 Run `./check-theme-drift.ps1` before committing; it fails if the regions differ.
 Line endings are normalised in the comparison (`index.html` is CRLF, the other two
@@ -99,8 +100,51 @@ are intentional; do not "fix" them:
   font installed and render the real thing; everyone else gets the fallback.
   **Check both** when changing anything width-sensitive (header wrap,
   `.timer-text` `min-width`, badge widths).
-- **No dark mode.** narictools has none, so any dark palette would be invented.
-  `color-scheme: light` is set so browsers do not auto-darken form controls.
+- **Dark mode is ours, not VO's.** narictools is light-only, so the dark palette
+  is derived: VO greys inverted, CTA blues lifted until they clear AA on a dark
+  card (`#0055cc` is 2.44:1 there and unusable). Keep it AA in *both* themes.
+
+### Theming
+
+Three states, stored in `localStorage` under `pp.theme` alongside the other
+`pp.*` keys: `system` (default), `light`, `dark`. The header button cycles
+through them. `system` stores the string but sets **no** `data-theme` attribute,
+so the media query takes over.
+
+The dark declarations exist **twice**, and must stay identical:
+
+```css
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { … } }
+:root[data-theme="dark"] { … }
+```
+
+CSS cannot combine a media query and an attribute selector into one rule, so the
+duplication is unavoidable; the drift check covers the whole region, so the two
+copies cannot silently diverge across files — but keep them in sync *within* a
+file by hand.
+
+The `VO THEME BOOT` script lives in `<head>`, before `<style>`, on purpose: it
+applies the stored choice before the first paint. Move it to the end of `<body>`
+and every dark-mode user gets a white flash on load.
+
+### Tokens that flip roles between themes
+
+These do not simply get lighter or darker — they change which side they are on:
+
+- `--accent-fg` flips from white to near-black, because the dark accent is a
+  light blue. Anything sitting on `--accent` follows it automatically.
+- `--avatar-fg` / `--avatar-tint` are **separate from** `--accent-fg` on purpose.
+  `VO_AVATARS` are dark hues chosen for contrast with white, so they must not
+  follow the flip. In dark mode `--avatar-tint` mixes the disc lighter (58%
+  toward white) so it does not vanish against the card, and the initials go dark.
+- `--danger-fg` exists because white text on the dark-mode danger fill
+  (`#ff6b70`) is only 2.8:1.
+- `--lion-fill` overrides the Flemish Lion's inline `fill="#333332"`, which is a
+  presentation attribute and loses to any CSS rule.
+- The retro column tokens (`--col-*-fill` / `--col-*-text`) are aliases on themed
+  tokens, so `colColors()` returns `var(--col-green-fill)` rather than a hex. The
+  MQTT payload still stores one hex per column — that stays the persisted form
+  and the lookup key; only what gets painted comes from `:root`.
 
 ### Colour roles
 
