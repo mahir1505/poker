@@ -406,6 +406,7 @@
             <div class="header-title">
                 <h1>Feedback AI-ticketvalidatie</h1>
             </div>
+            <a class="btn-back" href="../index.html">&larr; Terug naar dashboard</a>
         </div>
     </header>
 
@@ -787,6 +788,45 @@
             var FU_MAP = {};
             FOLLOWUPS.forEach(function (f) { FU_MAP[f.group] = f; });
 
+            var SCORE_ITEMS = [
+                { name: 'q_nps',             weight: 10, norm: function (v) { return parseInt(v, 10) / 10; } },
+                { name: 'q_level_sat',       weight: 4,  norm: function (v) { return parseInt(v, 10) / 5; } },
+                { name: 'q_sub_clarity',     weight: 4,  norm: function (v) { return parseInt(v, 10) / 5; } },
+                { name: 'q_comments_useful', weight: 4,  norm: function (v) { return parseInt(v, 10) / 5; } },
+                { name: 'q_trust',           weight: 3,  map: { 'Veel vertrouwen': 1, 'Voldoende vertrouwen': 0.75, 'Beperkt vertrouwen': 0.35, 'Geen vertrouwen': 0 } },
+                { name: 'q_coverage',        weight: 2,  map: { 'Volledig': 1, 'Grotendeels': 0.75, 'Deels': 0.35, 'Nauwelijks': 0 } },
+                { name: 'q_relevance',       weight: 2,  map: { 'Meestal relevante bugs': 1, 'Wisselend': 0.5, 'Vaak bijzaken': 0.25, 'Weinig relevant': 0 } },
+                { name: 'q_compare',         weight: 1,  map: { 'Duidelijke verbetering': 1, 'Vergelijkbaar': 0.5, 'Een stap achteruit': 0, 'Ken vorige aanpak niet goed': 0.5 } }
+            ];
+            var SCORE_TOTAL_WEIGHT = SCORE_ITEMS.reduce(function (s, it) { return s + it.weight; }, 0);
+
+            var QUIZ_CORRECT_ANSWERS = {
+                q_quiz:       'Nooit, elke actie vereist menselijke bevestiging',
+                q_quiz_env:   'UFT',
+                q_quiz_writes: 'Precies 4',
+                q_quiz_bug:   'Automatisch een sub-defect aanmaken (na bevestiging)'
+            };
+
+            function buildScore() {
+                var points = 0;
+                SCORE_ITEMS.forEach(function (it) {
+                    var v = getValue({ name: it.name, type: 'radio' });
+                    if (!v) {
+                        return;
+                    }
+                    var n = it.norm ? it.norm(v) : (it.map[v] !== undefined ? it.map[v] : 0);
+                    points += n * it.weight;
+                });
+                var sentiment = Math.round((points / SCORE_TOTAL_WEIGHT) * 60);
+                var quizJuist = 0;
+                Object.keys(QUIZ_CORRECT_ANSWERS).forEach(function (name) {
+                    if (getValue({ name: name, type: 'radio' }) === QUIZ_CORRECT_ANSWERS[name]) {
+                        quizJuist++;
+                    }
+                });
+                return { total: sentiment + quizJuist * 10, quizJuist: quizJuist };
+            }
+
             function getValue(q) {
                 if (q.type === 'text') {
                     return (document.getElementById(q.name).value || '').trim();
@@ -818,6 +858,7 @@
             function buildBody() {
                 var lines = ['FEEDBACK TICKET-VALIDATOR'];
                 lines.push('Verzonden: ' + new Date().toLocaleString('nl-BE'));
+                lines.push('Totale score: ' + buildScore().total + '/100');
                 lines.push('');
                 var counter = 0;
                 QUESTIONS.forEach(function (q) {
@@ -846,7 +887,12 @@
             }
 
             function buildJson() {
-                var obj = { verzonden: new Date().toISOString() };
+                var score = buildScore();
+                var obj = {
+                    verzonden: new Date().toISOString(),
+                    score: score.total,
+                    quiz_juist: score.quizJuist + '/4'
+                };
                 QUESTIONS.forEach(function (q) {
                     var v = getValue(q);
                     if (q.type === 'checkbox') {
