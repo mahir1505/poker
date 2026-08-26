@@ -681,12 +681,16 @@
                         <label class="option"><input type="radio" name="q_quiz_bug" value="De volledige validatie onmiddellijk stoppen"> De volledige validatie onmiddellijk stoppen</label>
                     </div>
                 </div>
+                <div class="question">
+                    <label class="question-label" for="q_quiz_count">30. Strikvraag: hoeveel tickets heeft de ticket-validator al getest?<span class="required-mark">*</span></label>
+                    <input type="text" id="q_quiz_count" name="q_quiz_count" required inputmode="numeric" placeholder="Je gok &mdash; een exact getal">
+                </div>
             </fieldset>
 
             <fieldset class="section">
                 <legend>Slotvraag</legend>
                 <div class="question">
-                    <span class="question-label">30. In welke mate ben je ervan overtuigd dat we deze AI-validatie moeten blijven gebruiken en verder uitrollen?<span class="required-mark">*</span></span>
+                    <span class="question-label">31. In welke mate ben je ervan overtuigd dat we deze AI-validatie moeten blijven gebruiken en verder uitrollen?<span class="required-mark">*</span></span>
                     <div class="options inline" role="radiogroup" aria-label="Overtuiging blijvend uitrollen">
                         <label class="option"><input type="radio" name="q_nps" value="0" required> 0</label>
                         <label class="option"><input type="radio" name="q_nps" value="1"> 1</label>
@@ -763,6 +767,7 @@
                 { name: 'q_quiz_env',        label: 'Strikvraag: standaard testomgeving',      type: 'radio' },
                 { name: 'q_quiz_writes',     label: 'Strikvraag: soorten schrijfacties',       type: 'radio' },
                 { name: 'q_quiz_bug',        label: 'Strikvraag: actie bij gevonden bug',      type: 'radio' },
+                { name: 'q_quiz_count',      label: 'Strikvraag: aantal geteste tickets',      type: 'text' },
                 { name: 'q_nps',             label: 'Blijven gebruiken & uitrollen (0-10)',    type: 'radio' }
             ];
 
