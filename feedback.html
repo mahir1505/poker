@@ -1,0 +1,967 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Naric Tools - Feedback AI-ticketvalidatie</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 -1 39 72'%3E%3Cg fill='%23ffe518'%3E%3Cpath d='M36.9,41.4c-2-1.6-3,0-4.3-0.1c-1.1-0.1-2.1-1.8-2.9-1.4c-1.6,0.8,0.6,3.7,1.6,4.3c0.9,0.5,2,1,2.2,1.1c1.3,0.6,1.8,1.5,2,2.9c0,0.3,0,1.1-0.1,1.4c-0.6,2.5-5,4.8-7.5,3c-1.2-0.8-2.3-1.9-2.6-3.7c-0.7-3.3-3-5.7-3.8-8.9c-0.5-1.9-0.8-4-1.3-6s-1-4-1.5-5.9c-0.4-1.7-1.2-4.3-1.8-5.8c-2.4-6.3-3.5-5.8-3.5-5.8s0.9,1.7,4,17.1c0.1,0.6,1.3,7.4,2.1,9.6c0.3,0.8,0.8,2.5,1.2,3.2c1,2.2,3.7,5.5,3.8,8.5c0.1,1.7,0.3,3.2,0.3,4.5c0,0.4,0.2,1.9,0.4,2.6c0.7,1.8,5.9,7.7,11.5,7.7v-4.5c-5.5,0-10.8-3.1-10.9-3.4c-0.1-0.1,0.3-2.3,0.7-3.2c0.7-1.8,2.1-3.5,4.5-3.7c2.7-0.2,4.3,0.6,5.7,0.6C36.7,55.5,36.9,41.4,36.9,41.4z'/%3E%3Cpath d='M12.8,25.2c-0.2,3.4-5.4,7.9-7,10.9C5,37.5,4,40,3.8,41.4c-0.7,4,0.2,6.5,1.2,8.8c1.7,4.1-0.3,5.7,1,4.8c1.7-1.4,1.4-4.5,1.3-6.5c-0.1-1.6-0.2-3.4,0-5.3c0.5-3.6,2.6-7.4,4.5-10.1C14,30,13.2,26.6,12.8,25.2z'/%3E%3Cpath d='M13.9,34.7c0,0,0.6,2.7-1.8,9.5C5.9,62,17.6,63.7,21,67.9c0,0,1.3-1.8-4-7.6c-1.9-2.1-3.7-6.8-2.2-13.5C17,37.1,13.9,34.7,13.9,34.7z'/%3E%3Cpath d='M2.3,23C2,21.9,1.9,21,2,20.1c0.3-4.2,4.1-5.9,5-6.5c0,0,1.7-1.2,1.9-2.4c0,0,1.8,4.4-2.3,6.9C4.6,19.5,3.3,21,2.3,23z'/%3E%3Cpath d='M11.9,18.9c0.2,0.4,1.8,2.7-4.7,8.1c-6.5,5.3-4.4,9.1-4.4,9.1s-6.9-3.8,1-10.5c7.9-6.6,6.3-8,6.3-8S11.3,17.7,11.9,18.9z'/%3E%3Cpath d='M20.3,21c1.1,0.1,1.8,3.6,4.4,4.4c1.9,0.6,3.9,0.3,4.4,1.4c-0.9,0.5-0.2,2,0.7,1.7C30.5,26.5,30.8,18.6,20.3,21z'/%3E%3Cpath d='M23.8,22.5c0.1-0.2,0.2,0,0.5-0.2c0.3-0.3,0.6-0.8,1.1-0.9c0.4-0.1,0.8-0.1,1.2,0.1c0.2,0.1,0.1,0.6-0.1,0.8c-0.3,0.3-1.4-0.2-1.4,0.6c0,1.3,1.7,0,2.6,0C28.1,25.9,23,25.1,23.8,22.5z'/%3E%3C/g%3E%3C/svg%3E">
+    <style>
+        :root {
+            --primary-dark: #15465b;
+            --primary-light: #4a91ba;
+            --cta-base: #0055cc;
+            --cta-dark: #004099;
+            --gray1: #141010;
+            --gray2: #4d4d4b;
+            --gray3: #687483;
+            --gray4: #cbd2da;
+            --gray5: #e9ebee;
+            --gray6: #f7f9fc;
+            --white: #ffffff;
+            --green1: #2e7d32;
+            --red1: #d2373c;
+            --flemish: #ffe518;
+            --radius-sm: 4px;
+            --radius-md: 8px;
+            --radius-lg: 12px;
+            --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Flanders Art Sans', Helvetica, Arial, sans-serif;
+            background-color: var(--gray6);
+            color: var(--gray1);
+            line-height: 1.55;
+        }
+
+        .header {
+            background-color: var(--white);
+            border-top: 3px solid var(--flemish);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 900px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            padding: 0.75rem 1.5rem;
+        }
+
+        .header-title h1 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary-dark);
+        }
+
+        .btn-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.5rem 1rem;
+            background-color: transparent;
+            color: var(--gray2);
+            border: 1px solid var(--gray4);
+            border-radius: var(--radius-sm);
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .btn-back:hover {
+            background-color: var(--gray6);
+            color: var(--gray1);
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 1.5rem;
+        }
+
+        .intro-card {
+            background-color: var(--white);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .intro-card h2 {
+            font-size: 1.15rem;
+            color: var(--primary-dark);
+            margin-bottom: 0.5rem;
+        }
+
+        .intro-card p {
+            color: var(--gray2);
+            font-size: 0.92rem;
+            margin-bottom: 0.4rem;
+        }
+
+        .intro-card p:last-child {
+            margin-bottom: 0;
+        }
+
+        fieldset.section {
+            background-color: var(--white);
+            border: none;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            padding: 1.5rem;
+            margin-bottom: 1.25rem;
+        }
+
+        fieldset.section legend {
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: var(--primary-dark);
+            padding: 0 0.5rem 0.35rem 0;
+            border-bottom: 2px solid var(--primary-dark);
+            margin-bottom: 0.25rem;
+        }
+
+        .question {
+            padding: 1rem 0;
+            border-bottom: 1px solid var(--gray5);
+        }
+
+        fieldset.section .question:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        fieldset.section .question:first-of-type {
+            padding-top: 0.5rem;
+        }
+
+        .question-label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 0.65rem;
+        }
+
+        .required-mark {
+            color: var(--red1);
+            margin-left: 0.15rem;
+        }
+
+        input[type="text"],
+        textarea {
+            width: 100%;
+            max-width: 640px;
+            padding: 0.625rem 0.75rem;
+            border: 1px solid var(--gray4);
+            border-radius: var(--radius-sm);
+            font-size: 0.95rem;
+            font-family: inherit;
+            transition: border-color 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        input[type="text"]:focus,
+        textarea:focus {
+            outline: none;
+            border-color: var(--cta-base);
+            box-shadow: 0 0 0 3px rgba(0, 85, 204, 0.12);
+        }
+
+        textarea {
+            min-height: 90px;
+            resize: vertical;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 0.45rem;
+        }
+
+        .options.inline {
+            flex-direction: row;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .options.vertical {
+            max-width: 520px;
+        }
+
+        .option {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            cursor: pointer;
+            font-size: 0.92rem;
+            color: var(--gray1);
+        }
+
+        .options.inline .option {
+            padding: 0.4rem 0.85rem;
+            border: 1px solid var(--gray4);
+            border-radius: 20px;
+            transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .options.inline .option:hover {
+            border-color: var(--cta-base);
+            background-color: rgba(0, 85, 204, 0.05);
+        }
+
+        .options.inline input[type="radio"] {
+            accent-color: var(--cta-base);
+        }
+
+        .options.vertical input[type="radio"],
+        .options.vertical input[type="checkbox"] {
+            accent-color: var(--cta-base);
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+
+        .scale-legend {
+            display: flex;
+            justify-content: space-between;
+            max-width: 420px;
+            font-size: 0.75rem;
+            color: var(--gray3);
+            margin-top: 0.35rem;
+        }
+
+        .followup {
+            display: none;
+            margin-top: 0.65rem;
+        }
+
+        .followup.visible {
+            display: block;
+        }
+
+        .followup label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--gray2);
+            margin-bottom: 0.35rem;
+        }
+
+        .followup textarea {
+            min-height: 64px;
+            max-width: 520px;
+            font-size: 0.88rem;
+        }
+
+        .btn-row {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            margin-top: 0.5rem;
+        }
+
+        button.btn-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            background-color: var(--cta-base);
+            color: var(--white);
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: 1rem;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: background-color 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        button.btn-primary:hover {
+            background-color: var(--cta-dark);
+        }
+
+        button.btn-secondary {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            background-color: transparent;
+            color: var(--cta-base);
+            border: 1px solid var(--cta-base);
+            border-radius: var(--radius-md);
+            font-size: 1rem;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: background-color 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        button.btn-secondary:hover {
+            background-color: rgba(0, 85, 204, 0.06);
+        }
+
+        .error-message {
+            display: none;
+            margin: 1rem 0;
+            padding: 0.85rem 1rem;
+            background-color: #fec5c7;
+            color: #a02a2e;
+            border-radius: var(--radius-md);
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .error-message.visible {
+            display: block;
+        }
+
+        .success-note {
+            display: none;
+            margin: 1rem 0;
+            padding: 0.85rem 1rem;
+            background-color: #d6eed5;
+            color: #21601f;
+            border-radius: var(--radius-md);
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .success-note.visible {
+            display: block;
+        }
+
+        .fallback {
+            display: none;
+            background-color: var(--white);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .fallback.visible {
+            display: block;
+        }
+
+        .fallback h2 {
+            font-size: 1.05rem;
+            color: var(--primary-dark);
+            margin-bottom: 0.5rem;
+        }
+
+        .fallback p {
+            font-size: 0.88rem;
+            color: var(--gray2);
+            margin-bottom: 0.75rem;
+        }
+
+        .fallback textarea {
+            max-width: none;
+            font-family: 'Courier New', monospace;
+            font-size: 0.82rem;
+            min-height: 200px;
+            background-color: var(--gray6);
+        }
+
+        .submit-hint {
+            margin-top: 0.75rem;
+            font-size: 0.8rem;
+            color: var(--gray3);
+        }
+
+        footer {
+            text-align: center;
+            font-size: 0.78rem;
+            color: var(--gray3);
+            padding: 1.5rem 1rem 2.5rem;
+        }
+
+        @media (max-width: 640px) {
+            .container {
+                padding: 1rem;
+            }
+
+            fieldset.section,
+            .intro-card {
+                padding: 1.1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <div class="header-title">
+                <h1>Feedback AI-ticketvalidatie</h1>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="intro-card">
+            <h2>Onze AI-testagent levert goed werk &mdash; help ons het n&oacute;g beter maken</h2>
+            <p>Onze AI-agent (<strong>ticket-validator</strong>) valideert NARIC-tickets automatisch v&oacute;&oacute;r ze naar productie gaan. Je ziet dat resultaat vooral terug in <strong>Jira</strong>: geplaatst commentaar, aangemaakte sub-defecten, statuswijzigingen en het AI-Agent-label. Intussen werden op die manier al tientallen tickets gevalideerd, telkens met een gedetailleerd rapport vol screenshots als bewijs.</p>
+            <p>We zijn overtuigd van de meerwaarde en willen deze werking daarom <strong>blijvend verder uitbouwen</strong>. Met dit formulier wil ik horen wat jou het meest aanspreekt, hoe tevreden je bent over het <strong>niveau van testen</strong> en waar nog extra winst zit, zodat we er samen iets sterker van maken. Invullen duurt ongeveer 4 minuten.</p>
+            <p>Je antwoorden worden via je e-mailprogramma verstuurd naar <strong>mahir.lokvancic@ond.vlaanderen.be</strong>. Velden met een <span class="required-mark">*</span> zijn verplicht.</p>
+        </div>
+
+        <form id="feedback-form" novalidate>
+            <fieldset class="section">
+                <legend>Zichtbaarheid in Jira</legend>
+                <div class="question">
+                    <span class="question-label">1. Hoe vaak kom je in Jira tickets tegen waarop de AI-agent actief is geweest?<span class="required-mark">*</span></span>
+                    <div class="options vertical" role="radiogroup" aria-label="Frequentie AI-agent tegengekomen">
+                        <label class="option"><input type="radio" name="q_freq" value="Dagelijks" required> Dagelijks</label>
+                        <label class="option"><input type="radio" name="q_freq" value="Wekelijks"> Wekelijks</label>
+                        <label class="option"><input type="radio" name="q_freq" value="Maandelijks"> Maandelijks</label>
+                        <label class="option"><input type="radio" name="q_freq" value="Zelden"> Zelden</label>
+                    </div>
+                </div>
+                <div class="question">
+                    <span class="question-label">2. Waar zie je het werk van de agent doorgaans?<span class="required-mark">*</span></span>
+                    <div class="options vertical" role="group" aria-label="Zichtbaarheid van agentwerk">
+                        <label class="option"><input type="checkbox" name="q_channels" value="Aangemaakte sub-defecten" required> Aangemaakte sub-defecten</label>
+                        <label class="option"><input type="checkbox" name="q_channels" value="Commentaar op het ticket"> Commentaar op het ticket</label>
+                        <label class="option"><input type="checkbox" name="q_channels" value="Statuswijzigingen (bv. Test bezig)"> Statuswijzigingen (bv. Test bezig)</label>
+                        <label class="option"><input type="checkbox" name="q_channels" value="AI-Agent-label"> AI-Agent-label</label>
+                        <label class="option"><input type="checkbox" name="q_channels" value="Validatierapporten"> Validatierapporten</label>
+                        <label class="option"><input type="checkbox" name="q_channels" value="Het viel me nog niet echt op"> Het viel me nog niet echt op</label>
+                    </div>
+                </div>
+            </fieldset>
+
+            <fieldset class="section">
+                <legend>Logging in Jira</legend>
+                <div class="question">
+                    <span class="question-label">3. Hoe duidelijk zijn de sub-defecten die de agent aanmaakt (titel, beschrijving, reproductiestappen)?<span class="required-mark">*</span></span>
+                    <div class="options inline" role="radiogroup" aria-label="Duidelijkheid sub-defecten">
+                        <label class="option"><input type="radio" name="q_sub_clarity" value="1" required> 1</label>
+                        <label class="option"><input type="radio" name="q_sub_clarity" value="2"> 2</label>
+                        <label class="option"><input type="radio" name="q_sub_clarity" value="3"> 3</label>
+                        <label class="option"><input type="radio" name="q_sub_clarity" value="4"> 4</label>
+                        <label class="option"><input type="radio" name="q_sub_clarity" value="5"> 5</label>
+                    </div>
+                    <span class="scale-legend"><span>1 = onduidelijk</span><span>5 = kristalhelder</span></span>
+                </div>
+                <div class="question">
+                    <span class="question-label">4. Hoe ervaar je het aantal sub-defecten dat per ticket wordt aangemaakt?<span class="required-mark">*</span></span>
+                    <div class="options vertical" role="radiogroup" aria-label="Volume sub-defecten">
+                        <label class="option"><input type="radio" name="q_sub_volume" value="Net goed" required> Net goed</label>
+                        <label class="option"><input type="radio" name="q_sub_volume" value="Liever nog meer detail"> Liever nog meer detail</label>
+                        <label class="option"><input type="radio" name="q_sub_volume" value="Iets te veel"> Iets te veel</label>
+                        <label class="option"><input type="radio" name="q_sub_volume" value="Veel te veel"> Veel te veel</label>
+                    </div>
+                </div>
+                <div class="question">
+                    <span class="question-label">5. In welk formaat wil je de gevonden problemen in Jira terugvinden?<span class="required-mark">*</span></span>
+                    <div class="options vertical" role="radiogroup" aria-label="Formaat bevindingen">
+                        <label class="option"><input type="radio" name="q_defect_format" value="Aparte sub-defecten" required> Aparte sub-defecten</label>
+                        <label class="option"><input type="radio" name="q_defect_format" value="Gebundelde lijst op het ticket"> Gebundelde lijst op het ticket</label>
+                        <label class="option"><input type="radio" name="q_defect_format" value="Geen voorkeur"> Geen voorkeur</label>
+                    </div>
+                </div>
+                <div class="question">
+                    <span class="question-label">6. Hoeveel updates wil je per gevalideerd ticket in Jira?<span class="required-mark">*</span></span>
+                    <div class="options vertical" role="radiogroup" aria-label="Hoeveelheid updates">
+                        <label class="option"><input type="radio" name="q_update_granularity" value="E&eacute;n eindsummary" required> E&eacute;n eindsummary</label>
+                        <label class="option"><input type="radio" name="q_update_granularity" value="Enkele gerichte updates"> Enkele gerichte updates (2&ndash;3)</label>
+                        <label class="option"><input type="radio" name="q_update_granularity" value="Live updates tijdens de run"> Live updates tijdens de run</label>
+                    </div>
+                </div>
+                <div class="question">
+                    <span class="question-label">7. Hoe nuttig vind je screenshots en bewijsstukken rechtstreeks in de Jira-updates?<span class="required-mark">*</span></span>
+                    <div class="options vertical" role="radiogroup" aria-label="Screenshots in Jira-updates">
+                        <label class="option"><input type="radio" name="q_screenshots" value="Zeer nuttig" required> Zeer nuttig</label>
+                        <label class="option"><input type="radio" name="q_screenshots" value="Af en toe nuttig"> Af en toe nuttig</label>
+                        <label class="option"><input type="radio" name="q_screenshots" value="Niet nodig, het rapport volstaat"> Niet nodig, het rapport volstaat</label>
+                    </div>
+                </div>
+                <div class="question">
+                    <span class="question-label">8. Hoe bruikbaar is het commentaar dat de agent op tickets plaatst (verduidelijkingen, bevindingen)?<span class="required-mark">*</span></span>
+                    <div class="options inline" role="radiogroup" aria-label="Bruikbaarheid commentaar">
+                        <label class="option"><input type="radio" name="q_comments_useful" value="1" required> 1</label>
+                        <label class="option"><input type="radio" name="q_comments_useful" value="2"> 2</label>
+                        <label class="option"><input type="radio" name="q_comments_useful" value="3"> 3</label>
+                        <label class="option"><input type="radio" name="q_comments_useful" value="4"> 4</label>
+                        <label class="option"><input type="radio" name="q_comments_useful" value="5"> 5</label>
+                    </div>
+                    <span class="scale-legend"><span>1 = niet bruikbaar</span><span>5 = zeer bruikbaar</span></span>
+                </div>
+                <div class="question">
+                    <span class="question-label">9. Hoe zijn formulering en taal van de teksten van de agent (commentaar en sub-defecten)?<span class="required-mark">*</span></span>
+                    <div class="options vertical" role="radiogroup" aria-label="Kwaliteit formulering">
+                        <label class="option"><input type="radio" name="q_texts_quality" value="Altijd verzorgd" required> Altijd verzorgd</label>
+                        <label class="option"><input type="radio" name="q_texts_quality" value="Meestal verzorgd"> Meestal verzorgd</label>
+                        <label class="option"><input type="radio" name="q_texts_quality" value="Soms slordig"> Soms slordig</label>
+                        <label class="option"><input type="radio" name="q_texts_quality" value="Vaak slordig"> Vaak slordig</label>
+                    </div>
+                </div>
+                <div class="question">
+                    <span class="question-label">10. Is het duidelijk dat een tekst door de AI-agent is geschreven (o.a. handtekening &quot;automatisch opgesteld door de AI-agent&quot;)?<span class="required-mark">*</span></span>
+                    <div class="options vertical" role="radiogroup" aria-label="Herkenbaarheid agentteksten">
+                        <label class="option"><input type="radio" name="q_recognizable" value="Altijd duidelijk" required> Altijd duidelijk</label>
+                        <label class="option"><input type="radio" name="q_recognizable" value="Meestal duidelijk"> Meestal duidelijk</label>
+                        <label class="option"><input type="radio" name="q_recognizable" value="Niet altijd duidelijk"> Niet altijd duidelijk</label>
+                    </div>
+                </div>
+                <div class="question">
+                    <span class="question-label">11. Wat vind je ervan dat de agent zelf de status wijzigt (bv. naar Test bezig) en zichzelf toewijst?<span class="required-mark">*</span></span>
+                    <div class="options vertical" role="radiogroup" aria-label="Statuswijzigingen door agent">
+                        <label class="option"><input type="radio" name="q_status_writes" value="Geen enkel probleem" required> Geen enkel probleem</label>
+                        <label class="option"><input type="radio" name="q_status_writes" value="OK, maar liever niet op mijn tickets"> OK, maar liever niet op mijn tickets</label>
+                        <label class="option"><input type="radio" name="q_status_writes" value="Liever niet"> Liever niet</label>
+                        <label class="option"><input type="radio" name="q_status_writes" value="Storend, liever manueel"> Storend, liever manueel</label>
+                    </div>
+                </div>
+                <div class="question">
+                    <span class="question-label">12. Ervaar je de Jira-updates van de agent als toegevoegde waarde of als ruis?<span class="required-mark">*</span></span>
+                    <div class="options vertical" role="radiogroup" aria-label="Waarde vs ruis">
+                        <label class="option"><input type="radio" name="q_noise" value="Vooral toegevoegde waarde" required> Vooral toegevoegde waarde</label>
+                        <label class="option"><input type="radio" name="q_noise" value="Mix van beide"> Mix van beide</label>
+                        <label class="option"><input type="radio" name="q_noise" value="Vooral ruis"> Vooral ruis</label>
+                    </div>
+                </div>
+                <div class="question">
+                    <span class="question-label">13. Wat is tot nu toe voor jou de grootste meerwaarde van de AI-validatie geweest?<span class="required-mark">*</span></span>
+                    <div class="options vertical" role="group" aria-label="Grootste meerwaarde">
+                        <label class="option"><input type="checkbox" name="q_added_value" value="Bugs die sneller boven water komen" required> Bugs die sneller boven water komen</label>
+                        <label class="option"><input type="checkbox" name="q_added_value" value="Tickets die sneller klaar zijn voor release"> Tickets die sneller klaar zijn voor release</label>
+                        <label class="option"><input type="checkbox" name="q_added_value" value="Duidelijk bewijs dankzij rapporten en screenshots"> Duidelijk bewijs dankzij rapporten en screenshots</label>
+                        <label class="option"><input type="checkbox" name="q_added_value" value="Minder herhaaldelijk manueel testwerk"> Minder herhaaldelijk manueel testwerk</label>
+                        <label class="option"><input type="checkbox" name="q_added_value" value="Consistente en grondige aanpak"> Consistente en grondige aanpak</label>
+                    </div>
+                </div>
+                <div class="question">
+                    <span class="question-label">14. Welke informatie mis je in wat de agent in Jira logt?</span>
+                    <textarea id="q_missing_info" name="q_missing_info" placeholder="Optioneel"></textarea>
+                </div>
+                <div class="question">
+                    <span class="question-label">15. Als je &eacute;&eacute;n ding zou mogen veranderen aan hoe de agent zijn werk in Jira logt, wat zou dat zijn?</span>
+                    <textarea id="q_change_logging" name="q_change_logging" placeholder="Optioneel"></textarea>
+                </div>
+            </fieldset>
+
+            <fieldset class="section">
+                <legend>Niveau van testen</legend>
+                <div class="question">
+                    <span class="question-label">16. Hoe tevreden ben je over het niveau (diepgang) van de tests die de agent uitvoert?<span class="required-mark">*</span></span>
+                    <div class="options inline" role="radiogroup" aria-label="Tevredenheid testniveau">
+                        <label class="option"><input type="radio" name="q_level_sat" value="1" required> 1</label>
+                        <label class="option"><input type="radio" name="q_level_sat" value="2"> 2</label>
+                        <label class="option"><input type="radio" name="q_level_sat" value="3"> 3</label>
+                        <label class="option"><input type="radio" name="q_level_sat" value="4"> 4</label>
+                        <label class="option"><input type="radio" name="q_level_sat" value="5"> 5</label>
+                    </div>
+                    <span class="scale-legend"><span>1 = zeer ontevreden</span><span>5 = zeer tevreden</span></span>
+                </div>
+                <div class="question">
+                    <span class="question-label">17. In welke mate dekt de validatie de zaken die jij belangrijk vindt (randgevallen, negatieve flows, foutafhandeling)?<span class="required-mark">*</span></span>
+                    <div class="options vertical" role="radiogroup" aria-label="Dekking belangrijkste zaken">
+                        <label class="option"><input type="radio" name="q_coverage" value="Volledig" required> Volledig</label>
+                        <label class="option"><input type="radio" name="q_coverage" value="Grotendeels"> Grotendeels</label>
+                        <label class="option"><input type="radio" name="q_coverage" value="Deels"> Deels</label>
+                        <label class="option"><input type="radio" name="q_coverage" value="Nauwelijks"> Nauwelijks</label>
+                    </div>
+                </div>
+                <div class="question">
+                    <span class="question-label">18. Hoe relevant zijn de bevindingen die de agent rapporteert?<span class="required-mark">*</span></span>
+                    <div class="options vertical" role="radiogroup" aria-label="Relevantie bevindingen">
+                        <label class="option"><input type="radio" name="q_relevance" value="Meestal relevante bugs" required> Meestal relevante bugs</label>
+                        <label class="option"><input type="radio" name="q_relevance" value="Wisselend"> Wisselend</label>
+                        <label class="option"><input type="radio" name="q_relevance" value="Vaak bijzaken"> Vaak bijzaken</label>
+                        <label class="option"><input type="radio" name="q_relevance" value="Weinig relevant"> Weinig relevant</label>
+                    </div>
+                </div>
+                <div class="question">
+                    <span class="question-label">19. Vergeleken met hoe tickets vroeger werden getest, is de AI-validatie voor jou ...<span class="required-mark">*</span></span>
+                    <div class="options vertical" role="radiogroup" aria-label="Vergelijking met vroegere aanpak">
+                        <label class="option"><input type="radio" name="q_compare" value="Duidelijke verbetering" required> Een duidelijke verbetering</label>
+                        <label class="option"><input type="radio" name="q_compare" value="Vergelijkbaar"> Vergelijkbaar</label>
+                        <label class="option"><input type="radio" name="q_compare" value="Een stap achteruit"> Een stap achteruit</label>
+                        <label class="option"><input type="radio" name="q_compare" value="Ken vorige aanpak niet goed"> Ik ken de vorige aanpak niet goed genoeg</label>
+                    </div>
+                </div>
+                <div class="question">
+                    <span class="question-label">20. Hoeveel vertrouwen heb je in een GOEDGEKEURD-verdict van de agent?<span class="required-mark">*</span></span>
+                    <div class="options vertical" role="radiogroup" aria-label="Vertrouwen in verdict">
+                        <label class="option"><input type="radio" name="q_trust" value="Veel vertrouwen" required> Veel vertrouwen</label>
+                        <label class="option"><input type="radio" name="q_trust" value="Voldoende vertrouwen"> Voldoende vertrouwen</label>
+                        <label class="option"><input type="radio" name="q_trust" value="Beperkt vertrouwen"> Beperkt vertrouwen</label>
+                        <label class="option"><input type="radio" name="q_trust" value="Geen vertrouwen"> Geen vertrouwen</label>
+                    </div>
+                </div>
+                <div class="question">
+                    <span class="question-label">21. Heb je al eens een bug in productie gezien die de validatie had moeten opvangen?<span class="required-mark">*</span></span>
+                    <div class="options vertical" role="radiogroup" aria-label="Gemiste bugs">
+                        <label class="option"><input type="radio" name="q_missed_bug" value="Ja" required> Ja</label>
+                        <label class="option"><input type="radio" name="q_missed_bug" value="Neen"> Neen</label>
+                        <label class="option"><input type="radio" name="q_missed_bug" value="Weet niet"> Weet niet</label>
+                    </div>
+                </div>
+                <div class="question">
+                    <span class="question-label">22. Welke controles zou de agent volgens jou ook nog kunnen oppakken (bv. randgevallen, API-payloads, foutmeldingen, performance)?</span>
+                    <textarea id="q_extra_checks" name="q_extra_checks" placeholder="Optioneel"></textarea>
+                </div>
+            </fieldset>
+
+            <fieldset class="section">
+                <legend>Wat moet de agent anders doen?</legend>
+                <div class="question">
+                    <span class="question-label">23. Welk verbeterpunt voor de agent is voor jou het belangrijkst?<span class="required-mark">*</span></span>
+                    <div class="options vertical" role="radiogroup" aria-label="Belangrijkste verbeterpunt">
+                        <label class="option"><input type="radio" name="q_change_priority" value="Duidelijkere en kortere teksten in Jira" required> Duidelijkere en kortere teksten in Jira</label>
+                        <label class="option"><input type="radio" name="q_change_priority" value="Minder of relevantere sub-defecten"> Minder of relevantere sub-defecten</label>
+                        <label class="option"><input type="radio" name="q_change_priority" value="Andere of extra controles"> Andere of extra controles</label>
+                        <label class="option"><input type="radio" name="q_change_priority" value="Betere samenvatting op het hoofdticket"> Betere samenvatting op het hoofdticket</label>
+                    </div>
+                </div>
+                <div class="question">
+                    <span class="question-label">24. Wat moet de agent concreet anders doen (formulering, aantal meldingen, soort controles, ...)?</span>
+                    <textarea id="q_improve_detail" name="q_improve_detail" placeholder="Optioneel &mdash; elk concreet advies helpt om de skill bij te sturen"></textarea>
+                </div>
+            </fieldset>
+
+            <fieldset class="section">
+                <legend>Blik vooruit</legend>
+                <div class="question">
+                    <span class="question-label">25. Zou je deze AI-validatie ook nuttig vinden voor andere teams of projecten?<span class="required-mark">*</span></span>
+                    <div class="options vertical" role="radiogroup" aria-label="Bruikbaar in andere teams">
+                        <label class="option"><input type="radio" name="q_other_teams" value="Zeker, brede toepasbaarheid" required> Zeker, brede toepasbaarheid</label>
+                        <label class="option"><input type="radio" name="q_other_teams" value="Waarschijnlijk voor sommige teams"> Waarschijnlijk voor sommige teams</label>
+                        <label class="option"><input type="radio" name="q_other_teams" value="Eerder niet"> Eerder niet</label>
+                        <label class="option"><input type="radio" name="q_other_teams" value="Geen zicht op andere teams"> Geen zicht op andere teams</label>
+                    </div>
+                </div>
+                <div class="question">
+                    <span class="question-label">26. Strikvraag: wanneer keurt de agent een ticket goed zonder dat er ooit een mens naar kijkt?<span class="required-mark">*</span></span>
+                    <div class="options vertical" role="radiogroup" aria-label="Strikvraag">
+                        <label class="option"><input type="radio" name="q_quiz" value="Als confidence HOOG is" required> Als het verdict met HOGE confidence gepaard gaat</label>
+                        <label class="option"><input type="radio" name="q_quiz" value="Voor eenvoudige tickets"> Voor eenvoudige tickets zonder sub-defecten</label>
+                        <label class="option"><input type="radio" name="q_quiz" value="'s Nachts, buiten kantooruren"> 's Nachts, buiten kantooruren</label>
+                        <label class="option"><input type="radio" name="q_quiz" value="Nooit, elke actie vereist menselijke bevestiging"> Nooit &mdash; elke Jira-schrijfactie en elk verdict gaan altijd via menselijke bevestiging</label>
+                    </div>
+                </div>
+                <div class="question">
+                    <span class="question-label">27. Strikvraag: in welke omgeving test de agent standaard?<span class="required-mark">*</span></span>
+                    <div class="options vertical" role="radiogroup" aria-label="Standaard testomgeving">
+                        <label class="option"><input type="radio" name="q_quiz_env" value="Productie" required> Productie</label>
+                        <label class="option"><input type="radio" name="q_quiz_env" value="Staging (stage)"> Staging (stage)</label>
+                        <label class="option"><input type="radio" name="q_quiz_env" value="UFT"> UFT</label>
+                        <label class="option"><input type="radio" name="q_quiz_env" value="Dev"> Dev</label>
+                    </div>
+                </div>
+                <div class="question">
+                    <span class="question-label">28. Strikvraag: hoeveel verschillende soorten schrijfacties mag de agent maximaal uitvoeren op &eacute;&eacute;n Jira-ticket?<span class="required-mark">*</span></span>
+                    <div class="options vertical" role="radiogroup" aria-label="Maximale schrijfacties per ticket">
+                        <label class="option"><input type="radio" name="q_quiz_writes" value="Onbeperkt" required> Onbeperkt</label>
+                        <label class="option"><input type="radio" name="q_quiz_writes" value="Maximaal 1"> Maximaal 1</label>
+                        <label class="option"><input type="radio" name="q_quiz_writes" value="Precies 4"> Precies 4</label>
+                        <label class="option"><input type="radio" name="q_quiz_writes" value="Tien of meer"> Tien of meer</label>
+                    </div>
+                </div>
+                <div class="question">
+                    <span class="question-label">29. Strikvraag: wat doet de agent wanneer hij tijdens de validatie een bug vindt?<span class="required-mark">*</span></span>
+                    <div class="options vertical" role="radiogroup" aria-label="Gevonden bug afhandelen">
+                        <label class="option"><input type="radio" name="q_quiz_bug" value="De agent herstelt de bug zelf in de code" required> De agent herstelt de bug zelf in de code</label>
+                        <label class="option"><input type="radio" name="q_quiz_bug" value="Automatisch een sub-defect aanmaken (na bevestiging)"> Automatisch een sub-defect aanmaken (na bevestiging)</label>
+                        <label class="option"><input type="radio" name="q_quiz_bug" value="Een mail naar de analist sturen"> Een mail naar de analist sturen</label>
+                        <label class="option"><input type="radio" name="q_quiz_bug" value="De volledige validatie onmiddellijk stoppen"> De volledige validatie onmiddellijk stoppen</label>
+                    </div>
+                </div>
+            </fieldset>
+
+            <fieldset class="section">
+                <legend>Slotvraag</legend>
+                <div class="question">
+                    <span class="question-label">30. In welke mate ben je ervan overtuigd dat we deze AI-validatie moeten blijven gebruiken en verder uitrollen?<span class="required-mark">*</span></span>
+                    <div class="options inline" role="radiogroup" aria-label="Overtuiging blijvend uitrollen">
+                        <label class="option"><input type="radio" name="q_nps" value="0" required> 0</label>
+                        <label class="option"><input type="radio" name="q_nps" value="1"> 1</label>
+                        <label class="option"><input type="radio" name="q_nps" value="2"> 2</label>
+                        <label class="option"><input type="radio" name="q_nps" value="3"> 3</label>
+                        <label class="option"><input type="radio" name="q_nps" value="4"> 4</label>
+                        <label class="option"><input type="radio" name="q_nps" value="5"> 5</label>
+                        <label class="option"><input type="radio" name="q_nps" value="6"> 6</label>
+                        <label class="option"><input type="radio" name="q_nps" value="7"> 7</label>
+                        <label class="option"><input type="radio" name="q_nps" value="8"> 8</label>
+                        <label class="option"><input type="radio" name="q_nps" value="9"> 9</label>
+                        <label class="option"><input type="radio" name="q_nps" value="10"> 10</label>
+                    </div>
+                    <span class="scale-legend"><span>0 = helemaal niet overtuigd</span><span>10 = ten zeerste overtuigd</span></span>
+                </div>
+            </fieldset>
+
+            <div class="error-message" id="error-box" role="alert"></div>
+
+            <div class="btn-row">
+                <button type="submit" class="btn-primary">Versturen via e-mail</button>
+                <button type="button" class="btn-secondary" id="copy-btn">Tekst kopi&euml;ren</button>
+            </div>
+            <p class="submit-hint">Je e-mailprogramma (bv. Outlook) opent daarna met een kant-en-klaar ingevuld bericht naar mahir.lokvancic@ond.vlaanderen.be &mdash; jij hoeft enkel nog op verzenden te klikken.</p>
+            <div class="success-note" id="success-note"></div>
+        </form>
+
+        <div class="fallback" id="fallback-panel">
+            <h2>Opent je e-mailprogramma niet?</h2>
+            <p>Kopieer dan onderstaande tekst en mail die manueel naar <strong>mahir.lokvancic@ond.vlaanderen.be</strong>.</p>
+            <textarea id="fallback-text" readonly></textarea>
+        </div>
+    </main>
+
+    <footer>NARIC-Vlaanderen &middot; feedbackformulier bij de AI-ticketvalidatie (ticket-validator) &middot; antwoorden gaan naar mahir.lokvancic@ond.vlaanderen.be</footer>
+
+    <script>
+        (function () {
+            var FORM = document.getElementById('feedback-form');
+            var ERROR_BOX = document.getElementById('error-box');
+            var SUCCESS_NOTE = document.getElementById('success-note');
+            var FALLBACK_PANEL = document.getElementById('fallback-panel');
+            var FALLBACK_TEXT = document.getElementById('fallback-text');
+            var COPY_BTN = document.getElementById('copy-btn');
+            var RECIPIENT = 'mahir.lokvancic@ond.vlaanderen.be';
+
+            var QUESTIONS = [
+                { name: 'q_freq',            label: 'Frequentie AI-agent in Jira',             type: 'radio' },
+                { name: 'q_channels',        label: 'Zichtbaar via',                           type: 'checkbox' },
+                { name: 'q_sub_clarity',     label: 'Duidelijkheid sub-defecten (1-5)',        type: 'radio' },
+                { name: 'q_sub_volume',      label: 'Volume sub-defecten',                     type: 'radio' },
+                { name: 'q_defect_format',   label: 'Gewenst formaat bevindingen',             type: 'radio' },
+                { name: 'q_update_granularity', label: 'Gewenste hoeveelheid updates',         type: 'radio' },
+                { name: 'q_screenshots',     label: 'Screenshots in Jira-updates',             type: 'radio' },
+                { name: 'q_comments_useful', label: 'Bruikbaarheid commentaar (1-5)',          type: 'radio' },
+                { name: 'q_texts_quality',   label: 'Formulering agentteksten',                type: 'radio' },
+                { name: 'q_recognizable',    label: 'Herkenbaarheid agentteksten',             type: 'radio' },
+                { name: 'q_status_writes',   label: 'Statuswijzigingen door agent',            type: 'radio' },
+                { name: 'q_noise',           label: 'Updates: waarde vs ruis',                 type: 'radio' },
+                { name: 'q_added_value',     label: 'Grootste meerwaarde',                     type: 'checkbox' },
+                { name: 'q_missing_info',    label: 'Ontbrekende info',                        type: 'text' },
+                { name: 'q_change_logging',  label: 'Te veranderen aan logging',               type: 'text' },
+                { name: 'q_level_sat',       label: 'Tevredenheid testniveau (1-5)',           type: 'radio' },
+                { name: 'q_coverage',        label: 'Dekking belangrijke zaken',               type: 'radio' },
+                { name: 'q_relevance',       label: 'Relevantie bevindingen',                  type: 'radio' },
+                { name: 'q_compare',         label: 'Vergelijking met vroegere aanpak',        type: 'radio' },
+                { name: 'q_trust',           label: 'Vertrouwen in GOEDGEKEURD-verdict',       type: 'radio' },
+                { name: 'q_missed_bug',      label: 'Gemiste productiebug meegemaakt',         type: 'radio' },
+                { name: 'q_extra_checks',    label: 'Extra controles voor agent',              type: 'text' },
+                { name: 'q_change_priority', label: 'Belangrijkste verbeterpunt',              type: 'radio' },
+                { name: 'q_improve_detail',  label: 'Wat de agent concreet anders moet doen',  type: 'text' },
+                { name: 'q_other_teams',     label: 'Bruikbaar in andere teams',               type: 'radio' },
+                { name: 'q_quiz',            label: 'Strikvraag: goedkeuring zonder mens',     type: 'radio' },
+                { name: 'q_quiz_env',        label: 'Strikvraag: standaard testomgeving',      type: 'radio' },
+                { name: 'q_quiz_writes',     label: 'Strikvraag: soorten schrijfacties',       type: 'radio' },
+                { name: 'q_quiz_bug',        label: 'Strikvraag: actie bij gevonden bug',      type: 'radio' },
+                { name: 'q_nps',             label: 'Blijven gebruiken & uitrollen (0-10)',    type: 'radio' }
+            ];
+
+            var FOLLOWUPS = [
+                { group: 'q_freq',            values: ['Zelden'],                                 prompt: 'Wat weerhoudt jou om vaker gebruik te maken van de validatie?' },
+                { group: 'q_sub_clarity',     values: ['1', '2'],                                 prompt: 'Wat is er onduidelijk aan de sub-defecten?' },
+                { group: 'q_sub_volume',      values: ['Iets te veel', 'Veel te veel'],            prompt: 'Wat zou je minder willen zien in de sub-defecten?' },
+                { group: 'q_comments_useful', values: ['1', '2'],                                 prompt: 'Wat maakt het commentaar minder bruikbaar?' },
+                { group: 'q_texts_quality',   values: ['Soms slordig', 'Vaak slordig'],            prompt: 'Wat loopt er mis in de formulering?' },
+                { group: 'q_recognizable',    values: ['Niet altijd duidelijk'],                   prompt: 'Waarom was dat niet altijd duidelijk?' },
+                { group: 'q_status_writes',   values: ['OK, maar liever niet op mijn tickets', 'Liever niet', 'Storend, liever manueel'], prompt: 'Wat stoort je aan de automatische statuswijzigingen?' },
+                { group: 'q_noise',           values: ['Mix van beide', 'Vooral ruis'],            prompt: 'Welke updates ervaar je als ruis?' },
+                { group: 'q_level_sat',       values: ['1', '2'],                                 prompt: 'Wat ontbreekt er in het niveau van testen?' },
+                { group: 'q_coverage',        values: ['Deels', 'Nauwelijks'],                     prompt: 'Welke zaken worden volgens jou niet gedekt?' },
+                { group: 'q_relevance',       values: ['Vaak bijzaken', 'Weinig relevant'],        prompt: 'Welke bevindingen waren niet relevant?' },
+                { group: 'q_compare',         values: ['Een stap achteruit'],                      prompt: 'Wat ging toen beter?' },
+                { group: 'q_trust',           values: ['Beperkt vertrouwen', 'Geen vertrouwen'],   prompt: 'Wat zou je vertrouwen in het verdict doen toenemen?' },
+                { group: 'q_missed_bug',      values: ['Ja'],                                     prompt: 'Voorbeeld (ticketnummer + korte omschrijving)' },
+                { group: 'q_other_teams',     values: ['Zeker, brede toepasbaarheid', 'Waarschijnlijk voor sommige teams'], prompt: 'Bij welke teams of projecten zie je dat zitten?' },
+                { group: 'q_nps',             values: ['0', '1', '2', '3', '4', '5', '6'],         prompt: 'Wat moet er volgens jou beter voordat we dit verder uitrollen?' }
+            ];
+
+            var FU_MAP = {};
+            FOLLOWUPS.forEach(function (f) { FU_MAP[f.group] = f; });
+
+            function getValue(q) {
+                if (q.type === 'text') {
+                    return (document.getElementById(q.name).value || '').trim();
+                }
+                var checked = Array.prototype.slice.call(FORM.querySelectorAll('[name="' + q.name + '"]:checked'));
+                return checked.map(function (el) { return el.value; }).join(', ');
+            }
+
+            function validate() {
+                var errors = [];
+                QUESTIONS.forEach(function (q) {
+                    if (q.type === 'text') {
+                        var el = document.getElementById(q.name);
+                        if (el.hasAttribute('required') && !el.value.trim()) {
+                            errors.push('Verplicht veld "' + q.label + '" is leeg.');
+                        }
+                        return;
+                    }
+                    var anyChecked = FORM.querySelector('[name="' + q.name + '"]:checked') !== null;
+                    var firstInput = FORM.querySelector('[name="' + q.name + '"]');
+                    var groupRequired = firstInput ? firstInput.hasAttribute('required') : false;
+                    if (!anyChecked && groupRequired) {
+                        errors.push('Vraag over "' + q.label + '" is nog niet ingevuld.');
+                    }
+                });
+                return errors;
+            }
+
+            function buildBody() {
+                var lines = ['FEEDBACK TICKET-VALIDATOR'];
+                lines.push('Verzonden: ' + new Date().toLocaleString('nl-BE'));
+                lines.push('');
+                var counter = 0;
+                QUESTIONS.forEach(function (q) {
+                    var value = getValue(q) || '-';
+                    if (q.identity) {
+                        lines.push(q.label + ': ' + value);
+                        return;
+                    }
+                    counter++;
+                    lines.push(counter + '. ' + q.label + ': ' + value);
+                    if (FU_MAP[q.name]) {
+                        var ta = document.getElementById('ta_' + q.name);
+                        var note = ta ? ta.value.trim() : '';
+                        if (note) {
+                            lines.push('   Toelichting: ' + note);
+                        }
+                    }
+                });
+                lines.push('');
+                lines.push('----- JSON (voor statistiek) -----');
+                lines.push(buildJson());
+                lines.push('----- EINDE JSON -----');
+                lines.push('');
+                lines.push('(Verzonden via feedback\\feedback.html)');
+                return lines.join('\r\n');
+            }
+
+            function buildJson() {
+                var obj = { verzonden: new Date().toISOString() };
+                QUESTIONS.forEach(function (q) {
+                    var v = getValue(q);
+                    if (q.type === 'checkbox') {
+                        obj[q.name] = v ? v.split(', ') : [];
+                    } else {
+                        obj[q.name] = v || '';
+                    }
+                });
+                FOLLOWUPS.forEach(function (f) {
+                    var ta = document.getElementById('ta_' + f.group);
+                    obj['ta_' + f.group] = ta && ta.value.trim() ? ta.value.trim() : '';
+                });
+                return JSON.stringify(obj);
+            }
+
+            function buildSubject() {
+                return 'Feedback ticket-validator';
+            }
+
+            function showError(messages) {
+                ERROR_BOX.textContent = messages.join(' ');
+                ERROR_BOX.classList.add('visible');
+                SUCCESS_NOTE.classList.remove('visible');
+                ERROR_BOX.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+
+            function hideError() {
+                ERROR_BOX.classList.remove('visible');
+            }
+
+            FORM.addEventListener('submit', function (e) {
+                e.preventDefault();
+                hideError();
+                SUCCESS_NOTE.classList.remove('visible');
+                var errors = validate();
+                if (errors.length > 0) {
+                    showError(errors);
+                    return;
+                }
+                var body = buildBody();
+                var subject = buildSubject();
+                var mailto = 'mailto:' + RECIPIENT +
+                    '?subject=' + encodeURIComponent(subject) +
+                    '&body=' + encodeURIComponent(body);
+                FALLBACK_TEXT.value = body;
+                FALLBACK_PANEL.classList.add('visible');
+                window.__lastMailto = mailto;
+                window.location.href = mailto;
+                SUCCESS_NOTE.textContent = 'Je e-mailprogramma (bv. Outlook) wordt geopend met een volledig ingevuld bericht naar ' + RECIPIENT + '. Je hoeft enkel nog op verzenden te klikken. Opent er niets? Gebruik dan het kader hieronder.';
+                SUCCESS_NOTE.classList.add('visible');
+                SUCCESS_NOTE.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            });
+
+            COPY_BTN.addEventListener('click', function () {
+                hideError();
+                var body = buildBody();
+                FALLBACK_TEXT.value = body;
+                FALLBACK_PANEL.classList.add('visible');
+                var markCopied = function () {
+                    COPY_BTN.textContent = 'Gekopieerd!';
+                    setTimeout(function () { COPY_BTN.innerHTML = 'Tekst kopi&euml;ren'; }, 2000);
+                };
+                var legacyCopy = function () {
+                    FALLBACK_TEXT.focus();
+                    FALLBACK_TEXT.select();
+                    var ok = false;
+                    try {
+                        ok = document.execCommand('copy');
+                    } catch (err) {
+                        ok = false;
+                    }
+                    if (ok) {
+                        markCopied();
+                    } else {
+                        FALLBACK_TEXT.select();
+                    }
+                };
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(body).then(markCopied).catch(legacyCopy);
+                } else {
+                    legacyCopy();
+                }
+            });
+
+            FOLLOWUPS.forEach(function (f) {
+                var firstInput = FORM.querySelector('[name="' + f.group + '"]');
+                var container = firstInput ? firstInput.closest('.question') : null;
+                if (!container) {
+                    return;
+                }
+                var box = document.createElement('div');
+                box.className = 'followup';
+                var lab = document.createElement('label');
+                lab.setAttribute('for', 'ta_' + f.group);
+                lab.textContent = f.prompt + ' (optioneel)';
+                var ta = document.createElement('textarea');
+                ta.id = 'ta_' + f.group;
+                ta.name = 'ta_' + f.group;
+                ta.placeholder = 'Optioneel';
+                box.appendChild(lab);
+                box.appendChild(ta);
+                container.appendChild(box);
+
+                Array.prototype.forEach.call(FORM.querySelectorAll('[name="' + f.group + '"]'), function (radio) {
+                    radio.addEventListener('change', function () {
+                        var current = getValue({ name: f.group, type: 'radio' });
+                        var negative = f.values.indexOf(current) !== -1;
+                        box.classList.toggle('visible', negative);
+                        if (!negative) {
+                            ta.value = '';
+                        }
+                    });
+                });
+            });
+        })();
+    </script>
+</body>
+</html>
