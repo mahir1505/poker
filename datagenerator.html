@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Naric Tools - Datagenerator</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 -1 39 72'%3E%3Cg fill='%23ffe518'%3E%3Cpath d='M36.9,41.4c-2-1.6-3,0-4.3-0.1c-1.1-0.1-2.1-1.8-2.9-1.4c-1.6,0.8,0.6,3.7,1.6,4.3c0.9,0.5,2,1,2.2,1.1c1.3,0.6,1.8,1.5,2,2.9c0,0.3,0,1.1-0.1,1.4c-0.6,2.5-5,4.8-7.5,3c-1.2-0.8-2.3-1.9-2.6-3.7c-0.7-3.3-3-5.7-3.8-8.9c-0.5-1.9-0.8-4-1.3-6s-1-4-1.5-5.9c-0.4-1.7-1.2-4.3-1.8-5.8c-2.4-6.3-3.5-5.8-3.5-5.8s0.9,1.7,4,17.1c0.1,0.6,1.3,7.4,2.1,9.6c0.3,0.8,0.8,2.5,1.2,3.2c1,2.2,3.7,5.5,3.8,8.5c0.1,1.7,0.3,3.2,0.3,4.5c0,0.4,0.2,1.9,0.4,2.6c0.7,1.8,5.9,7.7,11.5,7.7v-4.5c-5.5,0-10.8-3.1-10.9-3.4c-0.1-0.1,0.3-2.3,0.7-3.2c0.7-1.8,2.1-3.5,4.5-3.7c2.7-0.2,4.3,0.6,5.7,0.6C36.7,55.5,36.9,41.4,36.9,41.4z'/%3E%3Cpath d='M12.8,25.2c-0.2,3.4-5.4,7.9-7,10.9C5,37.5,4,40,3.8,41.4c-0.7,4,0.2,6.5,1.2,8.8c1.7,4.1-0.3,5.7,1,4.8c1.7-1.4,1.4-4.5,1.3-6.5c-0.1-1.6-0.2-3.4,0-5.3c0.5-3.6,2.6-7.4,4.5-10.1C14,30,13.2,26.6,12.8,25.2z'/%3E%3Cpath d='M13.9,34.7c0,0,0.6,2.7-1.8,9.5C5.9,62,17.6,63.7,21,67.9c0,0,1.3-1.8-4-7.6c-1.9-2.1-3.7-6.8-2.2-13.5C17,37.1,13.9,34.7,13.9,34.7z'/%3E%3Cpath d='M2.3,23C2,21.9,1.9,21,2,20.1c0.3-4.2,4.1-5.9,5-6.5c0,0,1.7-1.2,1.9-2.4c0,0,1.8,4.4-2.3,6.9C4.6,19.5,3.3,21,2.3,23z'/%3E%3Cpath d='M11.9,18.9c0.2,0.4,1.8,2.7-4.7,8.1c-6.5,5.3-4.4,9.1-4.4,9.1s-6.9-3.8,1-10.5c7.9-6.6,6.3-8,6.3-8S11.3,17.7,11.9,18.9z'/%3E%3Cpath d='M20.3,21c1.1,0.1,1.8,3.6,4.4,4.4c1.9,0.6,3.9,0.3,4.4,1.4c-0.9,0.5-0.2,2,0.7,1.7C30.5,26.5,30.8,18.6,20.3,21z'/%3E%3Cpath d='M23.8,22.5c0.1-0.2,0.2,0,0.5-0.2c0.3-0.3,0.6-0.8,1.1-0.9c0.4-0.1,0.8-0.1,1.2,0.1c0.2,0.1,0.1,0.6-0.1,0.8c-0.3,0.3-1.4-0.2-1.4,0.6c0,1.3,1.7,0,2.6,0C28.1,25.9,23,25.1,23.8,22.5z'/%3E%3C/g%3E%3C/svg%3E">
+    <style>
+        :root {
+            --primary-dark: #15465b;
+            --primary-light: #4a91ba;
+            --cta-base: #0055cc;
+            --cta-dark: #004099;
+            --gray1: #141010;
+            --gray2: #4d4d4b;
+            --gray3: #687483;
+            --gray4: #cbd2da;
+            --gray5: #e9ebee;
+            --gray6: #f7f9fc;
+            --white: #ffffff;
+            --red1: #d2373c;
+            --flemish: #ffe518;
+            --radius-sm: 4px;
+            --radius-md: 8px;
+            --radius-lg: 12px;
+            --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.08);
+            --font-mono: Consolas, 'Courier New', monospace;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Flanders Art Sans', Helvetica, Arial, sans-serif;
+            background-color: var(--gray6);
+            color: var(--gray1);
+            line-height: 1.55;
+        }
+
+        .header {
+            background-color: var(--white);
+            border-top: 3px solid var(--flemish);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 900px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            padding: 0.75rem 1.5rem;
+        }
+
+        .header-title h1 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary-dark);
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 1.5rem;
+        }
+
+        fieldset.section {
+            background-color: var(--white);
+            border: none;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            padding: 1.5rem;
+            margin-bottom: 1.25rem;
+        }
+
+        fieldset.section legend {
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: var(--primary-dark);
+            padding: 0 0.5rem 0.35rem 0;
+            border-bottom: 2px solid var(--primary-dark);
+            margin-bottom: 0.25rem;
+        }
+
+        .section-intro {
+            color: var(--gray2);
+            font-size: 0.92rem;
+            padding-top: 0.75rem;
+        }
+
+        .question {
+            padding: 1rem 0;
+            border-bottom: 1px solid var(--gray5);
+        }
+
+        .question-label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 0.65rem;
+        }
+
+        .field-hint {
+            font-weight: 400;
+            font-size: 0.85rem;
+            color: var(--gray2);
+        }
+
+        .date-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem 1rem;
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+        }
+
+        .field label {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--gray2);
+        }
+
+        input[type="number"] {
+            width: 5.5rem;
+            padding: 0.625rem 0.75rem;
+            border: 1px solid var(--gray3);
+            border-radius: var(--radius-sm);
+            font-size: 0.95rem;
+            font-family: inherit;
+            transition: border-color 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        input#insz-year {
+            width: 7rem;
+        }
+
+        input[type="number"]:focus {
+            outline: none;
+            border-color: var(--cta-base);
+            box-shadow: 0 0 0 3px rgba(0, 85, 204, 0.12);
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 0.45rem;
+        }
+
+        .options.inline {
+            flex-direction: row;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .option {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            cursor: pointer;
+            font-size: 0.92rem;
+            color: var(--gray1);
+        }
+
+        .options.inline .option {
+            padding: 0.4rem 0.85rem;
+            border: 1px solid var(--gray3);
+            border-radius: 20px;
+            transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .options.inline .option:hover {
+            border-color: var(--cta-base);
+            background-color: rgba(0, 85, 204, 0.05);
+        }
+
+        .options input[type="radio"] {
+            accent-color: var(--cta-base);
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+
+        .options.is-disabled {
+            opacity: 0.5;
+        }
+
+        .options.is-disabled .option,
+        .options.is-disabled input[type="radio"] {
+            cursor: not-allowed;
+        }
+
+        .btn-row {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            margin-top: 1.25rem;
+        }
+
+        button.btn-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            background-color: var(--cta-base);
+            color: var(--white);
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: 1rem;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: background-color 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        button.btn-primary:hover {
+            background-color: var(--cta-dark);
+        }
+
+        button.btn-secondary {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            background-color: transparent;
+            color: var(--cta-base);
+            border: 1px solid var(--cta-base);
+            border-radius: var(--radius-md);
+            font-size: 1rem;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: background-color 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        button.btn-secondary:hover {
+            background-color: rgba(0, 85, 204, 0.06);
+        }
+
+        button.btn-copy {
+            padding: 0.3rem 0.75rem;
+            background-color: var(--white);
+            color: var(--cta-base);
+            border: 1px solid var(--gray3);
+            border-radius: var(--radius-sm);
+            font-size: 0.85rem;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+        }
+
+        button.btn-copy:hover {
+            border-color: var(--cta-base);
+        }
+
+        .error-message {
+            display: none;
+            margin-top: 1rem;
+            padding: 0.85rem 1rem;
+            background-color: #fec5c7;
+            color: #a02a2e;
+            border-radius: var(--radius-md);
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .error-message.visible {
+            display: block;
+        }
+
+        .result {
+            margin-top: 1.25rem;
+            padding: 1rem 1.25rem;
+            background-color: var(--gray6);
+            border: 1px solid var(--gray4);
+            border-left: 4px solid var(--cta-base);
+            border-radius: var(--radius-md);
+        }
+
+        .result-line {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+        }
+
+        .result-line + .result-line {
+            margin-top: 0.4rem;
+        }
+
+        .insz-value {
+            font-family: var(--font-mono);
+            font-size: 1.6rem;
+            font-weight: 700;
+            letter-spacing: 0.03em;
+            color: var(--primary-dark);
+        }
+
+        .insz-value.raw {
+            font-size: 1.05rem;
+            font-weight: 400;
+            color: var(--gray2);
+        }
+
+        .breakdown {
+            display: grid;
+            grid-template-columns: max-content 1fr;
+            gap: 0.3rem 1rem;
+            margin-top: 1rem;
+            padding-top: 0.85rem;
+            border-top: 1px solid var(--gray4);
+            font-size: 0.88rem;
+        }
+
+        .breakdown dt {
+            color: var(--gray2);
+        }
+
+        .breakdown dd {
+            font-family: var(--font-mono);
+        }
+
+        footer {
+            text-align: center;
+            font-size: 0.78rem;
+            color: var(--gray3);
+            padding: 1.5rem 1rem 2.5rem;
+        }
+
+        @media (max-width: 640px) {
+            .container {
+                padding: 1rem;
+            }
+
+            fieldset.section {
+                padding: 1.1rem;
+            }
+
+            .insz-value {
+                font-size: 1.35rem;
+            }
+
+            .breakdown {
+                grid-template-columns: 1fr;
+                gap: 0 1rem;
+            }
+
+            .breakdown dd {
+                margin-bottom: 0.4rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <div class="header-title">
+                <h1>Datagenerator</h1>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <form id="insz-form" novalidate>
+            <fieldset class="section">
+                <legend>INSZ-generator</legend>
+                <p class="section-intro">Genereert een geldig INSZ (rijksregister- of BIS-nummer) op basis van een geboortedatum. Het volgnummer en het controlegetal worden automatisch bepaald.</p>
+
+                <div class="question">
+                    <span class="question-label">Geboortedatum</span>
+                    <div class="date-row">
+                        <div class="field">
+                            <label for="insz-year">Geboortejaar</label>
+                            <input type="number" id="insz-year" min="1900" step="1" placeholder="bv. 1985">
+                        </div>
+                        <div class="field">
+                            <label for="insz-month">Maand</label>
+                            <input type="number" id="insz-month" min="1" max="12" step="1" placeholder="1&ndash;12">
+                        </div>
+                        <div class="field">
+                            <label for="insz-day">Dag</label>
+                            <input type="number" id="insz-day" min="1" max="31" step="1" placeholder="1&ndash;31">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="question">
+                    <span class="question-label">Geslacht</span>
+                    <div class="options inline" id="insz-gender" role="radiogroup" aria-label="Geslacht">
+                        <label class="option"><input type="radio" name="insz-gender" value="M" checked> Man</label>
+                        <label class="option"><input type="radio" name="insz-gender" value="V"> Vrouw</label>
+                    </div>
+                </div>
+
+                <div class="question">
+                    <span class="question-label">Type nummer</span>
+                    <div class="options" role="radiogroup" aria-label="Type nummer">
+                        <label class="option"><input type="radio" name="insz-type" value="rr" checked> Rijksregisternummer</label>
+                        <label class="option"><input type="radio" name="insz-type" value="bis40"> BIS-nummer, geslacht gekend (maand + 40)</label>
+                        <label class="option"><input type="radio" name="insz-type" value="bis20"> BIS-nummer, geslacht onbekend (maand + 20)</label>
+                    </div>
+                </div>
+
+                <div class="question">
+                    <div class="field">
+                        <label for="insz-seq">Volgnummer <span class="field-hint">(optioneel, 1&ndash;998 &mdash; leeg = willekeurig)</span></label>
+                        <input type="number" id="insz-seq" min="1" max="998" step="1">
+                    </div>
+                </div>
+
+                <div class="btn-row">
+                    <button type="submit" class="btn-primary">Genereer</button>
+                    <button type="button" class="btn-secondary" id="random-date-btn">Willekeurige datum</button>
+                </div>
+
+                <div class="error-message" id="error-box" role="alert"></div>
+
+                <div class="result" id="insz-result" aria-live="polite" hidden>
+                    <div class="result-line">
+                        <span class="insz-value" id="insz-formatted"></span>
+                        <button type="button" class="btn-copy" data-copy="insz-formatted">Kopieer</button>
+                    </div>
+                    <div class="result-line">
+                        <span class="insz-value raw" id="insz-raw"></span>
+                        <button type="button" class="btn-copy" data-copy="insz-raw">Kopieer</button>
+                    </div>
+                    <dl class="breakdown">
+                        <dt>Geboortedatum</dt>
+                        <dd id="insz-date-out"></dd>
+                        <dt>Volgnummer</dt>
+                        <dd id="insz-seq-out"></dd>
+                        <dt>Controlegetal</dt>
+                        <dd id="insz-check-out"></dd>
+                    </dl>
+                </div>
+            </fieldset>
+        </form>
+    </main>
+
+    <footer>NARIC-Vlaanderen &middot; datagenerator voor testomgevingen &middot; gegenereerde nummers zijn wiskundig geldig en kunnen toevallig samenvallen met een bestaand nummer &middot; voor de statistieken wordt enkel bijgehouden h&oacute;&eacute;veel nummers er gegenereerd worden, niet welke</footer>
+
+    <script src="https://unpkg.com/mqtt@5.3.4/dist/mqtt.min.js"></script>
+    <script>
+        (function () {
+            var FORM = document.getElementById('insz-form');
+            var YEAR = document.getElementById('insz-year');
+            var MONTH = document.getElementById('insz-month');
+            var DAY = document.getElementById('insz-day');
+            var SEQ = document.getElementById('insz-seq');
+            var GENDER_GROUP = document.getElementById('insz-gender');
+            var RANDOM_DATE_BTN = document.getElementById('random-date-btn');
+            var ERROR_BOX = document.getElementById('error-box');
+            var RESULT = document.getElementById('insz-result');
+            var OUT_FORMATTED = document.getElementById('insz-formatted');
+            var OUT_RAW = document.getElementById('insz-raw');
+            var OUT_DATE = document.getElementById('insz-date-out');
+            var OUT_SEQ = document.getElementById('insz-seq-out');
+            var OUT_CHECK = document.getElementById('insz-check-out');
+
+            // BIS-nummers verschuiven de geboortemaand: +40 als het geslacht gekend is, +20 als het onbekend is
+            var MONTH_OFFSET = { rr: 0, bis40: 40, bis20: 20 };
+            var CURRENT_YEAR = new Date().getFullYear();
+            YEAR.max = CURRENT_YEAR;
+
+            // Gespiegeld uit index.html / retro.html; stats.html leest alles onder STATS_ROOT
+            var TOPIC_ROOT = 'vo-planpoker-4f9k';
+            var STATS_GUID = '99761b44-ed34-4072-ada3-709cff3c2a0e';
+            var STATS_ROOT = TOPIC_ROOT + '/stats/' + STATS_GUID;
+            var BROKERS = {
+                hivemq: 'wss://broker.hivemq.com:8884/mqtt',
+                emqx: 'wss://broker.emqx.io:8084/mqtt'
+            };
+            var usageClient = null;
+
+            function pad(n, len) {
+                return String(n).padStart(len, '0');
+            }
+
+            function randomInt(min, max) {
+                return min + Math.floor(Math.random() * (max - min + 1));
+            }
+
+            function daysInMonth(year, month) {
+                return new Date(year, month, 0).getDate();
+            }
+
+            function radioValue(name) {
+                return FORM.querySelector('[name="' + name + '"]:checked').value;
+            }
+
+            function readInt(input) {
+                var v = input.value.trim();
+                return /^\d+$/.test(v) ? parseInt(v, 10) : NaN;
+            }
+
+            function fillRandomDate() {
+                var year = randomInt(1940, CURRENT_YEAR - 18);
+                var month = randomInt(1, 12);
+                YEAR.value = year;
+                MONTH.value = month;
+                DAY.value = randomInt(1, daysInMonth(year, month));
+            }
+
+            // Oneven volgnummers zijn mannen (001-997), even volgnummers vrouwen (002-998)
+            function randomSeq(gender) {
+                if (gender === 'M') {
+                    return 2 * randomInt(0, 498) + 1;
+                }
+                if (gender === 'V') {
+                    return 2 * randomInt(1, 499);
+                }
+                return randomInt(1, 998);
+            }
+
+            function buildInsz(year, month, day, seq, type) {
+                var digits = pad(year % 100, 2) + pad(month + MONTH_OFFSET[type], 2) + pad(day, 2) + pad(seq, 3);
+                // Wie vanaf 2000 geboren is, krijgt een 2 voor de 9 cijfers bij de modulo-97-berekening
+                var base = (year >= 2000 ? '2' : '') + digits;
+                var check = 97 - (parseInt(base, 10) % 97);
+                return { base: base, check: check, raw: digits + pad(check, 2) };
+            }
+
+            function format(raw) {
+                return raw.slice(0, 2) + '.' + raw.slice(2, 4) + '.' + raw.slice(4, 6) + '-' + raw.slice(6, 9) + '.' + raw.slice(9);
+            }
+
+            function validate(year, month, day, seq, gender) {
+                var errors = [];
+                if (isNaN(year) || year < 1900 || year > CURRENT_YEAR) {
+                    errors.push('Geboortejaar moet tussen 1900 en ' + CURRENT_YEAR + ' liggen.');
+                }
+                if (isNaN(month) || month < 1 || month > 12) {
+                    errors.push('Maand moet tussen 1 en 12 liggen.');
+                }
+                if (isNaN(day) || day < 1 || day > 31) {
+                    errors.push('Dag moet tussen 1 en 31 liggen.');
+                }
+                if (!errors.length && day > daysInMonth(year, month)) {
+                    errors.push(pad(day, 2) + '/' + pad(month, 2) + '/' + year + ' is geen bestaande datum.');
+                }
+                if (!errors.length && new Date(year, month - 1, day) > new Date()) {
+                    errors.push('De geboortedatum ligt in de toekomst.');
+                }
+                if (seq !== null) {
+                    if (isNaN(seq) || seq < 1 || seq > 998) {
+                        errors.push('Volgnummer moet tussen 1 en 998 liggen.');
+                    } else if (gender && (seq % 2 === 1) !== (gender === 'M')) {
+                        errors.push('Volgnummer ' + pad(seq, 3) + ' is ' + (seq % 2 ? 'oneven (man)' : 'even (vrouw)') +
+                            ', maar het gekozen geslacht is ' + (gender === 'M' ? 'man' : 'vrouw') + '.');
+                    }
+                }
+                return errors;
+            }
+
+            function generate() {
+                var year = readInt(YEAR);
+                var month = readInt(MONTH);
+                var day = readInt(DAY);
+                var type = radioValue('insz-type');
+                var gender = type === 'bis20' ? null : radioValue('insz-gender');
+                var seq = SEQ.value.trim() === '' ? null : readInt(SEQ);
+
+                var errors = validate(year, month, day, seq, gender);
+                if (errors.length) {
+                    ERROR_BOX.textContent = errors.join(' ');
+                    ERROR_BOX.classList.add('visible');
+                    RESULT.hidden = true;
+                    return;
+                }
+                ERROR_BOX.classList.remove('visible');
+
+                if (seq === null) {
+                    seq = randomSeq(gender);
+                }
+                var insz = buildInsz(year, month, day, seq, type);
+                var offset = MONTH_OFFSET[type];
+
+                OUT_FORMATTED.textContent = format(insz.raw);
+                OUT_RAW.textContent = insz.raw;
+                OUT_DATE.textContent = pad(day, 2) + '/' + pad(month, 2) + '/' + year +
+                    (offset ? ' (maand in nummer: ' + pad(month + offset, 2) + ' = ' + month + ' + ' + offset + ')' : '');
+                OUT_SEQ.textContent = pad(seq, 3) + (gender ? (seq % 2 ? ' (oneven = man)' : ' (even = vrouw)') : '');
+                OUT_CHECK.textContent = pad(insz.check, 2) + ' = 97 - (' + insz.base + ' mod 97)';
+                RESULT.hidden = false;
+                countUsage(type);
+            }
+
+            function storageGet(key) {
+                try {
+                    return localStorage.getItem(key);
+                } catch (err) {
+                    return null;
+                }
+            }
+
+            function storageSet(key, value) {
+                try {
+                    localStorage.setItem(key, value);
+                    return true;
+                } catch (err) {
+                    return false;
+                }
+            }
+
+            function browserId() {
+                var id = storageGet('pp.dg.id');
+                if (!id) {
+                    id = Math.random().toString(36).slice(2, 10);
+                    if (!storageSet('pp.dg.id', id)) {
+                        return null;
+                    }
+                }
+                return id;
+            }
+
+            function todayKey() {
+                var d = new Date();
+                return d.getFullYear() + '-' + pad(d.getMonth() + 1, 2) + '-' + pad(d.getDate(), 2);
+            }
+
+            function storedUsage() {
+                try {
+                    var usage = JSON.parse(storageGet('pp.dg.usage'));
+                    return usage && usage.day && usage.insz ? usage : null;
+                } catch (err) {
+                    return null;
+                }
+            }
+
+            // Eén retained shard per browser per dag, met de absolute dagtelling. Zo heeft elke
+            // shard maar één schrijver en is opnieuw publiceren altijd veilig.
+            function publishUsage(usage) {
+                if (!usageClient || !usageClient.connected) {
+                    return;
+                }
+                usageClient.publish(
+                    STATS_ROOT + '/tools/datagenerator/' + browserId() + '/' + usage.day,
+                    JSON.stringify({ v: 1, day: usage.day, insz: usage.insz, lastAt: Date.now() }),
+                    { qos: 0, retain: true }
+                );
+            }
+
+            function connectUsage() {
+                if (usageClient || typeof mqtt === 'undefined') {
+                    return;
+                }
+                usageClient = mqtt.connect(BROKERS[storageGet('pp.broker')] || BROKERS.hivemq, {
+                    clientId: 'pp-dg-' + Math.random().toString(36).slice(2, 10),
+                    clean: true,
+                    keepalive: 30,
+                    reconnectPeriod: 5000,
+                    connectTimeout: 10000
+                });
+                // Tellingen van voor de verbinding er was alsnog doorsturen
+                usageClient.on('connect', function () {
+                    var usage = storedUsage();
+                    if (usage) {
+                        publishUsage(usage);
+                    }
+                });
+                usageClient.on('error', function () {});
+            }
+
+            function countUsage(type) {
+                var usage = storedUsage();
+                if (!usage || usage.day !== todayKey()) {
+                    usage = { day: todayKey(), insz: { rr: 0, bis40: 0, bis20: 0 } };
+                }
+                usage.insz[type] = (usage.insz[type] || 0) + 1;
+                // Zonder localStorage geen vaste browser-id en geen dagtelling: dan niet meetellen,
+                // anders levert elke klik een nieuwe "browser" op in de statistieken
+                if (!storageSet('pp.dg.usage', JSON.stringify(usage)) || !browserId()) {
+                    return;
+                }
+                connectUsage();
+                publishUsage(usage);
+            }
+
+            function legacyCopy(text) {
+                var ta = document.createElement('textarea');
+                ta.value = text;
+                document.body.appendChild(ta);
+                ta.select();
+                var ok = false;
+                try {
+                    ok = document.execCommand('copy');
+                } catch (err) {
+                    ok = false;
+                }
+                document.body.removeChild(ta);
+                return ok;
+            }
+
+            function copyText(text) {
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    return navigator.clipboard.writeText(text).catch(function () {
+                        if (!legacyCopy(text)) {
+                            throw new Error('copy failed');
+                        }
+                    });
+                }
+                return legacyCopy(text) ? Promise.resolve() : Promise.reject(new Error('copy failed'));
+            }
+
+            function syncGender() {
+                var unknown = radioValue('insz-type') === 'bis20';
+                GENDER_GROUP.classList.toggle('is-disabled', unknown);
+                Array.prototype.forEach.call(GENDER_GROUP.querySelectorAll('input'), function (radio) {
+                    radio.disabled = unknown;
+                });
+            }
+
+            FORM.addEventListener('submit', function (e) {
+                e.preventDefault();
+                generate();
+            });
+
+            RANDOM_DATE_BTN.addEventListener('click', fillRandomDate);
+
+            Array.prototype.forEach.call(FORM.querySelectorAll('[name="insz-type"]'), function (radio) {
+                radio.addEventListener('change', syncGender);
+            });
+
+            Array.prototype.forEach.call(document.querySelectorAll('[data-copy]'), function (btn) {
+                btn.addEventListener('click', function () {
+                    var text = document.getElementById(btn.getAttribute('data-copy')).textContent;
+                    copyText(text).then(function () {
+                        btn.textContent = 'Gekopieerd!';
+                    }, function () {
+                        btn.innerHTML = 'Kopi&euml;ren mislukt';
+                    }).then(function () {
+                        setTimeout(function () { btn.textContent = 'Kopieer'; }, 1500);
+                    });
+                });
+            });
+
+            fillRandomDate();
+            syncGender();
+        })();
+    </script>
+</body>
+</html>

@@ -59,6 +59,12 @@ Retro uses `${TOPIC_ROOT}/retro/${roomId}/...` and stats `${STATS_ROOT}/retros/.
 The disjoint namespaces let the same kamer-code be used for both apps without
 cross-talk.
 
+`datagenerator.html` only counts usage, under `${STATS_ROOT}/tools/datagenerator/{browserId}/{yyyy-mm-dd}`:
+one retained shard per browser per day holding that day's absolute count per INSZ
+type. Each shard has a single writer, so there is no read-modify-write race on the
+broker. It carries its own copy of `TOPIC_ROOT` / `STATS_GUID` / `BROKERS` — mirror
+changes to those constants there too.
+
 ## PR checklist
 
 When you open a PR that touches:
